@@ -1,0 +1,10 @@
+The following .DAT files shoulf be placed in this directory:
+
+    client_cell_1.dat
+    client_highres.dat
+    client_local_English.dat
+    client_portal.dat
+
+These can be found in <http://content.turbine.com/acpatch/ac_data.zip> and
+are also included with the client software of Asheron's Call.
+<http://content.turbine.com/sites/clientdl/ac1/ac1install.exe>.

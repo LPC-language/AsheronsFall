@@ -1,0 +1,4 @@
+An Asheron's Call server implemented in LPC.  It requires the Cloud
+Server library.  The client software can be downloaded here:
+
+    <http://content.turbine.com/sites/clientdl/ac1/ac1install.exe>
