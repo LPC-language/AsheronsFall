@@ -2,6 +2,7 @@
  * DAT image reader.  After creation, use an iterator to retrieve all the
  * items, sorted by ID.
  */
+
 # include <String.h>
 # include <Iterator.h>
 # include "Serialized.h"
@@ -90,14 +91,16 @@ private StringBuffer getData(int block, int length)
     string chunk;
 
     buffer = new StringBuffer;
-    for (n = (length - 1) / (blockSize - 4); n != 0; --n) {
-	chunk = getBlock(block);
-	({ block }) = deSerialize(chunk, "i");
-	buffer->append(chunk[4 ..]);
-    }
+    if (length != 0) {
+	for (n = (length - 1) / (blockSize - 4); n != 0; --n) {
+	    chunk = getBlock(block);
+	    ({ block }) = deSerialize(chunk, "i");
+	    buffer->append(chunk[4 ..]);
+	}
 
-    chunk = getBlock(block);
-    buffer->append(chunk[4 .. length % (blockSize - 4) + 3]);
+	chunk = getBlock(block);
+	buffer->append(chunk[4 .. (length - 1) % (blockSize - 4) + 4]);
+    }
     return buffer;
 }
 
