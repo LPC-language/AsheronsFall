@@ -113,14 +113,11 @@ private BTree getBTree(int block)
 }
 
 /*
- * given a BTree entry, load an item from the DAT image
+ * load the data for a DatItem
  */
-private DatItem getDatItem(int *entry)
+StringBuffer getItemData(DatItem item)
 {
-    int flags, id, block, length, timeStamp, iteration;
-
-    ({ flags, id, block, length, timeStamp, iteration }) = entry;
-    return new DatItem(flags, id, timeStamp, iteration, getData(block, length));
+    return getData(item->block(), item->length());
 }
 
 
@@ -153,7 +150,8 @@ mixed *iteratorNext(mixed stack)
 {
     int size, offset, i;
     BTree node;
-    int *branches, **entries;
+    int *branches;
+    DatItem *entries;
 
     if (stack) {
 	size = sizeof(stack);
@@ -181,10 +179,10 @@ mixed *iteratorNext(mixed stack)
 
 	    if (i < sizeof(entries)) {
 		/*
-		 * get DatItem from entry
+		 * return DatItem entry
 		 */
 		stack[size - 1] = offset + 1;
-		return ({ stack, getDatItem(entries[i]) });
+		return ({ stack, entries[i] });
 	    }
 
 	    /*

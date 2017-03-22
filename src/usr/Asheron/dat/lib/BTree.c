@@ -4,13 +4,15 @@
  */
 
 # include "Serialized.h"
+# include "Dat.h"
 
 # define ENTRY_SIZE	24	/* size of BTree entry, 6 * sizeof(uint32_t) */
+
 
 inherit Serialized;
 
 private int *branches;
-private int **entries;
+private DatItem *entries;
 
 static void create(string node)
 {
@@ -25,10 +27,9 @@ static void create(string node)
     }
     entries = allocate(n);
     for (offset = 252, i = 0; i < n; offset += ENTRY_SIZE, i++) {
-	entries[i] = deSerialize(node[offset .. offset + ENTRY_SIZE - 1],
-				 "iiiiii");
+	entries[i] = new DatItem(node[offset .. offset + ENTRY_SIZE - 1]);
     }
 }
 
-int *branches()	{ return branches; }
-int **entries()	{ return entries; }
+int *branches()		{ return branches; }
+DatItem *entries()	{ return entries; }
