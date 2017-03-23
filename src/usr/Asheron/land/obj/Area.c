@@ -3,14 +3,14 @@
 
 int x, y;
 Cell *blockGrid;
-Cell *infoGrid;
+mapping infoMap;
 
 static void create(int x, int y)
 {
     ::x = x;
     ::y = y;
     blockGrid = allocate(AREA_XDIM * AREA_YDIM);
-    infoGrid = allocate(AREA_XDIM * AREA_YDIM);
+    infoMap = ([ ]);
 }
 
 void setBlock(int x, int y, Cell landblock)
@@ -23,7 +23,7 @@ void setBlock(int x, int y, Cell landblock)
 void setInfo(int x, int y, Cell info)
 {
     if (previous_program() == LANDBLOCKS) {
-	infoGrid[x - ::x + (y - ::y) * AREA_XDIM] = info;
+	infoMap[x + y * AREA_XDIM] = info;
     }
 }
 
@@ -37,6 +37,6 @@ Cell block(int x, int y)
 Cell info(int x, int y)
 {
     if (previous_program() == LANDBLOCKS) {
-	return infoGrid[x - ::x + (y - ::y) * AREA_XDIM];
+	return infoMap[x + y * AREA_XDIM];
     }
 }
