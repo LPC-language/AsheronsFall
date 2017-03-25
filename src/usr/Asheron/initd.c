@@ -43,10 +43,6 @@ private string getCellData(DatItem item)
 
     chunk = cell_1->getItemData(item)->chunk();
     id = item->id();
-    if (id == 0xffff0001) {
-	return chunk;
-    }
-
     match = "    ";
     match[0] = id;
     match[1] = id >> 8;
@@ -81,9 +77,13 @@ static void initCells(Iterator cells)
 	    break;
 
 	default:
-	    dungeons->setCell(x, y, id & 0xffff, getCellData(item),
-			      item->flags(), item->timeStamp(),
-			      item->iteration());
+	    if (id == 0xffff0001) {
+		land->setConfig(cell_1->getItemData(item)->chunk());
+	    } else {
+		dungeons->setCell(x, y, id & 0xffff, getCellData(item),
+				  item->flags(), item->timeStamp(),
+				  item->iteration());
+	    }
 	    break;
 	}
 
