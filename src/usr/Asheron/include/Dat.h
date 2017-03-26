@@ -3,3 +3,5 @@
 
 # define DatImage	object DATIMAGE
 # define DatItem	object DATITEM
+
+# define DAT_ITERATION	0xffff0001

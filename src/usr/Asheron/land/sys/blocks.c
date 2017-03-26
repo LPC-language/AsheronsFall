@@ -3,6 +3,7 @@
 
 
 object *grid;
+string iteration;
 
 static void create()
 {
@@ -54,3 +55,10 @@ Cell info(int x, int y)
 {
     return grid[x / AREA_XDIM + y / AREA_YDIM * (255 / AREA_XDIM)]->info(x, y);
 }
+
+void setIterationData(string iteration)
+{
+    ::iteration = iteration;
+}
+
+string iteration() { return iteration; }

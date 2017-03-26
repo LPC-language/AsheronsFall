@@ -77,8 +77,8 @@ static void initCells(Iterator cells)
 	    break;
 
 	default:
-	    if (id == 0xffff0001) {
-		land->setConfig(cell_1->getItemData(item)->chunk());
+	    if (id == DAT_ITERATION) {
+		land->setIteration(cell_1->getItemData(item)->chunk());
 	    } else {
 		dungeons->setCell(x, y, id & 0xffff, getCellData(item),
 				  item->flags(), item->timeStamp(),
