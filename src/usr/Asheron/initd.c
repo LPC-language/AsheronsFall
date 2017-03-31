@@ -63,15 +63,15 @@ static void initCells(Iterator cells)
     item = cells->next();
     if (item) {
 	id = item->id();
-	x = (id >> 24) & 0xff;
-	y = (id >> 16) & 0xff;
-	switch (id & 0xffff) {
-	case 0xfffe:
+	x = DAT_CELL_X(id);
+	y = DAT_CELL_Y(id);
+	switch (id & DAT_CELL_MASK) {
+	case DAT_CELL_LANDINFO:
 	    land->setInfo(x, y, getCellData(item), item->flags(),
 			  item->timeStamp(), item->iteration());
 	    break;
 
-	case 0xffff:
+	case DAT_CELL_LANDBLOCK:
 	    land->setBlock(x, y, getCellData(item), item->flags(),
 			   item->timeStamp(), item->iteration());
 	    break;
@@ -80,7 +80,7 @@ static void initCells(Iterator cells)
 	    if (id == DAT_ITERATION) {
 		land->setIteration(cell_1->getItemData(item)->chunk());
 	    } else {
-		dungeons->setCell(x, y, id & 0xffff, getCellData(item),
+		dungeons->setCell(x, y, id & DAT_CELL_MASK, getCellData(item),
 				  item->flags(), item->timeStamp(),
 				  item->iteration());
 	    }

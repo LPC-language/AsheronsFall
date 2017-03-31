@@ -35,7 +35,7 @@ Cell block(int x, int y)
     return grid[x / AREA_XDIM + y / AREA_YDIM * (255 / AREA_XDIM)]->block(x, y);
 }
 
-void setInfo(int x, int y, string landblock, int flags, int timeStamp,
+void setInfo(int x, int y, string landinfo, int flags, int timeStamp,
 	     int iteration)
 {
     int gridX, gridY;
@@ -48,7 +48,7 @@ void setInfo(int x, int y, string landblock, int flags, int timeStamp,
 	area = grid[gridX + gridY * (255 / AREA_XDIM)] =
 	       clone_object(AREA, gridX * AREA_XDIM, gridY * AREA_YDIM);
     }
-    area->setInfo(x, y, new Info(landblock, flags, timeStamp, iteration));
+    area->setInfo(x, y, new Info(landinfo, flags, timeStamp, iteration));
 }
 
 Cell info(int x, int y)
