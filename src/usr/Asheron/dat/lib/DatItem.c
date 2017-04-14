@@ -23,7 +23,7 @@ static void create(string entry)
 	length,
 	timeStamp,
 	iteration
-    }) = deSerialize(entry, "iiiiii");
+    }) = deSerialize(entry, "iiiiii")[1 ..];
 }
 
 int flags()		{ return flags; }

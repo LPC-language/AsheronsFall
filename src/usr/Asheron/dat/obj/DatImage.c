@@ -46,7 +46,7 @@ private void loadHeader()
 	freeTail,
 	freeCount,
 	blockBTree
-    }) = deSerialize(read_file(fileName, HEADER_OFFSET, 36), "iiiiiiiii");
+    }) = deSerialize(read_file(fileName, HEADER_OFFSET, 36), "iiiiiiiii")[1 ..];
 
     /*
      * Perform some minimal sanity checks.
@@ -94,8 +94,8 @@ private StringBuffer getData(int block, int length)
     if (length != 0) {
 	for (n = (length - 1) / (blockSize - 4); n != 0; --n) {
 	    chunk = getBlock(block);
-	    ({ block }) = deSerialize(chunk, "i");
-	    buffer->append(chunk[4 ..]);
+	    ({ chunk, block }) = deSerialize(chunk, "i");
+	    buffer->append(chunk);
 	}
 
 	chunk = getBlock(block);

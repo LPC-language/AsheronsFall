@@ -18,8 +18,8 @@ static void create(string node)
 {
     int n, i, offset;
 
-    branches = deSerialize(node[.. 247], "i", 62);
-    ({ n }) = deSerialize(node[248 .. 251], "i");
+    branches = deSerialize(node[.. 247], "i", 62)[1 ..];
+    ({ n }) = deSerialize(node[248 .. 251], "i")[1 ..];
     if (branches[0] == 0) {
 	branches = ({ });	/* leaf node */
     } else {
