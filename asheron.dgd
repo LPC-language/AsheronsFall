@@ -1,0 +1,34 @@
+telnet_port	= ([ "localhost" : 8023, /* telnet dev port */
+		     "*" : 9050 ]);	/* telnet player port */
+binary_port	= 8080;			/* http port */
+datagram_port	= 9050;			/* UDP player port */
+directory	= "/home/server/asheron/src";
+					/* base directory */
+ed_tmpfile	= "../state/ed";	/* proto editor tmpfile */
+swap_file	= "../state/swap";	/* swap file */
+swap_size	= 65535;		/* # sectors in swap file */
+sector_size	= 4096;			/* swap sector size */
+swap_fragment	= 256;			/* fragment to swap out */
+static_chunk	= 64512;		/* static memory chunk */
+dynamic_chunk	= 261120;		/* dynamic memory chunk */
+dump_file	= "../state/snapshot";	/* snapshot file */
+dump_interval	= 3600;			/* snapshot rebuild interval */
+hotboot		= ({ "../bin/dgd",	/* hotboot binary */
+		     "../asheron.dgd",	/* hotboot config file */
+		     "../state/snapshot",
+		     "../state/snapshot.old" });
+
+typechecking	= 2;			/* global typechecking */
+include_file	= "/include/std.h";	/* standard include file */
+include_dirs	= ({ "/include", "~/include", "~/api/include" });
+					/* include directories to search */
+auto_object	= "/kernel/lib/auto";	/* automatically inherited object */
+driver_object	= "/kernel/sys/driver";	/* driver object */
+create		= "_F_create";		/* low-level create function */
+
+users		= 130;			/* max # of users */
+datagram_users	= 125;			/* max # of datagram users */
+editors		= 5;			/* max # of editor sessions */
+objects		= 65535;		/* max # of objects */
+call_outs	= 65535;		/* max # of call_outs */
+array_size	= 32767;		/* max array size */

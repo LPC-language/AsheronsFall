@@ -7,13 +7,13 @@
  */
 static string serialize(string format, varargs mixed args...)
 {
-    int len, i, n, num, exponent;
+    int len, i, n, offset, num, exponent;
     string *result, str;
     float mantissa, bits;
 
     len = strlen(format);
     result = allocate(len);
-    n = 0;
+    n = offset = 0;
     for (i = 0; i < len; i++) {
 	switch (format[i]) {
 	case '0':
@@ -21,6 +21,7 @@ static string serialize(string format, varargs mixed args...)
 	     * zero padding
 	     */
 	    str = "\0";
+	    offset++;
 	    break;
 
 	case 'i':
@@ -33,6 +34,7 @@ static string serialize(string format, varargs mixed args...)
 	    str[1] = num >> 8;
 	    str[2] = num >> 16;
 	    str[3] = num >> 24;
+	    offset += 4;
 	    break;
 
 	case 'p':
@@ -44,12 +46,14 @@ static string serialize(string format, varargs mixed args...)
 		str = "\0\0";
 		str[0] = num;
 		str[1] = num >> 8;
+		offset += 2;
 	    } else {
 		str = "\0\0\0\0";
 		str[0] = num >> 16;
 		str[1] = (num >> 24) + 0x80;
 		str[2] = num;
 		str[3] = num >> 8;
+		offset += 4;
 	    }
 	    break;
 
@@ -61,6 +65,7 @@ static string serialize(string format, varargs mixed args...)
 	    str = "\0\0";
 	    str[0] = num;
 	    str[1] = num >> 8;
+	    offset += 2;
 	    break;
 
 	case 'c':
@@ -69,6 +74,22 @@ static string serialize(string format, varargs mixed args...)
 	     */
 	    str = "\0";
 	    str[0] = args[n++];
+	    offset++;
+	    break;
+
+	case 't':
+	    /*
+	     * variable length text
+	     */
+	    str = args[n++];
+	    num = strlen(str);
+	    str = "\0\0" + str;
+	    str[0] = num;
+	    str[1] = num >> 8;
+	    if (offset & 3) {
+		str += "\0\0\0"[.. 3 - (offset & 3)];
+		offset = (offset + 3) & ~3;
+	    }
 	    break;
 
 	case 'f':
@@ -76,6 +97,7 @@ static string serialize(string format, varargs mixed args...)
 	     * 4 byte IEEE float, little endian
 	     */
 	    str = "\0\0\0\0";
+	    offset += 4;
 	    ({ mantissa, exponent }) = frexp(args[n++]);
 	    if (mantissa != 0.0) {
 		exponent += FLT_BIAS - 1;
@@ -107,6 +129,7 @@ static string serialize(string format, varargs mixed args...)
 	     * 8 byte IEEE double, little endian
 	     */
 	    str = "\0\0\0\0\0\0\0\0";
+	    offset += 8;
 	    ({ mantissa, exponent }) = frexp(args[n++]);
 	    if (mantissa != 0.0) {
 		exponent += DBL_BIAS - 1;
@@ -220,6 +243,17 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		 */
 		x = serialized[offset];
 		offset++;
+		break;
+
+	    case 't':
+		/*
+		 * variable length text
+		 */
+		x = serialized[offset] +
+		    (serialized[offset + 1] << 8);
+		offset += 2 + x;
+		x = serialized[offset - x .. offset - 1];
+		offset = (offset + 3) & ~3;
 		break;
 
 	    case 'f':

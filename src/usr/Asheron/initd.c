@@ -3,6 +3,7 @@
 # include "Dat.h"
 # include "landblock.h"
 # include "dungeon.h"
+# include "Interface.h"
 
 
 object cell_1;
@@ -15,6 +16,7 @@ object dungeons;
 
 static void create()
 {
+    /* DAT image handling */
     compile_object(BTREE);
     compile_object(DATITEM);
     compile_object(DATIMAGE);
@@ -25,9 +27,14 @@ static void create()
     english = clone_object(DATIMAGE,
 			   "/usr/Asheron/dat/data/client_local_English.dat");
 
+    /* land */
     land = compile_object(LANDBLOCKS);
     dungeons = compile_object(DUNGEONS);
-    call_out("initCells", 0, cell_1->iterator());
+    /* call_out("initCells", 0, cell_1->iterator()); */
+
+    /* player login */
+    compile_object(TELNET_SERVER);
+    compile_object(UDP_SERVER);
 }
 
 object cell_1() { return cell_1; }
