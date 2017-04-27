@@ -269,6 +269,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		if (exponent == 0) {
 		    if (mantissa24 == 0) {
 			x = 0.0;
+			offset += 4;
 			break;
 		    }
 		    exponent = 1;		/* denormalized */
@@ -298,6 +299,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		if (exponent == 0) {
 		    if (mantissa24 | mantissa28 == 0) {
 			x = 0.0;
+			offset += 8;
 			break;
 		    }
 		    exponent = 1;		/* denormalized */
@@ -309,6 +311,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		if (serialized[offset + 7] & 0x80) {
 		    x = -x;	/* negative */
 		}
+		offset += 8;
 		break;
 
 	    default:
