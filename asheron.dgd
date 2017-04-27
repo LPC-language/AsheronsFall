@@ -1,7 +1,8 @@
 telnet_port	= ([ "localhost" : 8023, /* telnet dev port */
 		     "*" : 9050 ]);	/* telnet player port */
 binary_port	= 8080;			/* http port */
-datagram_port	= 9050;			/* UDP player port */
+datagram_port	= ([ "*" : 9050,	/* UDP login port */
+		     "*" : 9051 ]);	/* UDP connection port */
 directory	= "/home/server/asheron/src";
 					/* base directory */
 ed_tmpfile	= "../state/ed";	/* proto editor tmpfile */
