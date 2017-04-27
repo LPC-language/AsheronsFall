@@ -86,6 +86,7 @@ static string serialize(string format, varargs mixed args...)
 	    str = "\0\0" + str;
 	    str[0] = num;
 	    str[1] = num >> 8;
+	    offset += num + 2;
 	    if (offset & 3) {
 		str += "\0\0\0"[.. 3 - (offset & 3)];
 		offset = (offset + 3) & ~3;
