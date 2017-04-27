@@ -14,17 +14,17 @@ private int id;			/* packet ID */
 private int time;		/* time */
 private int size;		/* size of data */
 private int table;		/* packet table */
-private NetworkData *data;	/* networkdata blobs in this packet */
+private mapping data;		/* networkdata blobs in this packet */
 private Fragment *fragments;	/* fragments in this packet */
 
 /*
  * Bad Todd checksum calculation
  */
-static int badTodd(string data)
+static int badTodd(string blob)
 {
     int len, tail, checksum, c0, c1, c2, c3, i;
 
-    len = strlen(data);
+    len = strlen(blob);
 
     /* include length */
     checksum = len << 16;
@@ -35,27 +35,27 @@ static int badTodd(string data)
 
     /* little endian */
     for (i = 0; i < len; i += 4) {
-	c0 += data[i];
-	c1 += data[i + 1];
-	c2 += data[i + 2];
-	c3 += data[i + 3];
+	c0 += blob[i];
+	c1 += blob[i + 1];
+	c2 += blob[i + 2];
+	c3 += blob[i + 3];
     }
 
     /* big endian */
     switch (tail) {
     case 3:
-	c3 += data[i];
-	c2 += data[i + 1];
-	c1 += data[i + 2];
+	c3 += blob[i];
+	c2 += blob[i + 1];
+	c1 += blob[i + 2];
 	break;
 
     case 2:
-	c3 += data[i];
-	c2 += data[i + 1];
+	c3 += blob[i];
+	c2 += blob[i + 1];
 	break;
 
     case 1:
-	c3 += data[i];
+	c3 += blob[i];
 	break;
     }
 
@@ -84,16 +84,18 @@ int size()
 string transport()
 {
     string *packet, blob;
-    int n, size, i;
+    int n, sz, i;
+    NetworkData *packetData;
 
-    packet = allocate(1 + sizeof(data) + sizeof(fragments));
+    packet = allocate(1 + map_sizeof(data) + sizeof(fragments));
     packet[0] = serialize(headerLayout(), sequence, flags, 0, id, time, size,
 			  table);
     n = 1;
-    for (size = sizeof(data), i = 0; i < size; i++) {
-	packet[n++] = data[i]->transport();
+    packetData = map_values(data);
+    for (sz = sizeof(packetData), i = 0; i < sz; i++) {
+	packet[n++] = packetData[i]->transport();
     }
-    for (size = sizeof(fragments), i = 0; i < size; i++) {
+    for (sz = sizeof(fragments), i = 0; i < sz; i++) {
 	packet[n++] = fragments[i]->transport();
     }
 
@@ -123,7 +125,7 @@ static void create(int sequence, int flags, int checksum, int id, int time,
     ::time = time;
     ::size = 0;
     ::table = table;
-    data = ({ });
+    data = ([ ]);
     fragments = ({ });
 }
 
@@ -132,8 +134,16 @@ static void create(int sequence, int flags, int checksum, int id, int time,
  */
 int addData(NetworkData item)
 {
-    data += ({ item });
+    data[item->networkDataType()] = item;
     size += item->size();
+}
+
+/*
+ * retrieve a particular piece of info from a packet
+ */
+NetworkData getData(int type)
+{
+    return data[type];
 }
 
 /*
@@ -154,5 +164,5 @@ int checksum()		{ return checksum; }
 int id()		{ return id; }
 int time()		{ return time; }
 int table()		{ return table; }
-NetworkData *data()	{ return data[..]; }
+NetworkData *data()	{ return map_values(data); }
 Fragment *fragments()	{ return fragments[..]; }
