@@ -1,20 +1,10 @@
-# define NETWORKDATA	"/usr/Asheron/player/lib/packet/NetworkData"
-# define PACKET		"/usr/Asheron/player/lib/packet/Packet"
-# define CLIENTPACKET	"/usr/Asheron/player/lib/packet/ClientPacket"
-# define FRAGMENT	"/usr/Asheron/player/lib/packet/Fragment"
-# define CLIENTFRAGMENT	"/usr/Asheron/player/lib/packet/ClientFragment"
-# define LOGINREQUEST	"/usr/Asheron/player/lib/packet/LoginRequest"
-# define CLIENTLOGINREQUEST	\
-			"/usr/Asheron/player/lib/packet/ClientLoginRequest"
-
-# define NetworkData	object NETWORKDATA
-# define Packet		object PACKET
-# define ClientPacket	object CLIENTPACKET
-# define Fragment	object FRAGMENT
-# define ClientFragment	object CLIENTFRAGMENT
-# define LoginRequest	object LOGINREQUEST
-# define ClientLoginRequest	\
-			object CLIENTLOGINREQUEST
+# define NetworkData		object "~/player/lib/packet/NetworkData"
+# define Packet			object "~/player/lib/packet/Packet"
+# define ClientPacket		object "~/player/lib/packet/ClientPacket"
+# define Fragment		object "~/player/lib/packet/Fragment"
+# define ClientFragment		object "~/player/lib/packet/ClientFragment"
+# define LoginRequest		object "~/player/lib/packet/LoginRequest"
+# define ClientLoginRequest	object "~/player/lib/packet/ClientLoginRequest"
 
 /* NetworkData types */
 # define NDTYPE_PACKET			1

@@ -1,2 +1,1 @@
-# define CELL		"/usr/Asheron/lib/Cell"
-# define Cell		object CELL
+# define Cell		object "/usr/Asheron/lib/Cell"

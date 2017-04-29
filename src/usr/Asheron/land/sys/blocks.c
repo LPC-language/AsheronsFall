@@ -7,9 +7,9 @@ string iteration;
 
 static void create()
 {
-    compile_object(CELLBLOCK);
-    compile_object(CELLINFO);
-    compile_object(AREA);
+    compile_object(OBJECT_PATH(Block));
+    compile_object(OBJECT_PATH(Info));
+    compile_object(OBJECT_PATH(Area));
 
     grid = allocate((255 / AREA_XDIM) * (255 / AREA_YDIM));
 }
@@ -25,7 +25,8 @@ void setBlock(int x, int y, string landblock, int flags, int timeStamp,
     area = grid[gridX + gridY * (255 / AREA_XDIM)];
     if (!area) {
 	area = grid[gridX + gridY * (255 / AREA_XDIM)] =
-	       clone_object(AREA, gridX * AREA_XDIM, gridY * AREA_YDIM);
+	       clone_object(OBJECT_PATH(Area), gridX * AREA_XDIM,
+			    gridY * AREA_YDIM);
     }
     area->setBlock(x, y, new Block(landblock, flags, timeStamp, iteration));
 }
@@ -46,7 +47,8 @@ void setInfo(int x, int y, string landinfo, int flags, int timeStamp,
     area = grid[gridX + gridY * (255 / AREA_XDIM)];
     if (!area) {
 	area = grid[gridX + gridY * (255 / AREA_XDIM)] =
-	       clone_object(AREA, gridX * AREA_XDIM, gridY * AREA_YDIM);
+	       clone_object(OBJECT_PATH(Area), gridX * AREA_XDIM,
+			    gridY * AREA_YDIM);
     }
     area->setInfo(x, y, new Info(landinfo, flags, timeStamp, iteration));
 }

@@ -17,14 +17,16 @@ object dungeons;
 static void create()
 {
     /* DAT image handling */
-    compile_object(BTREE);
-    compile_object(DATITEM);
-    compile_object(DATIMAGE);
-    cell_1 = clone_object(DATIMAGE, "/usr/Asheron/dat/data/client_cell_1.dat");
-    portal = clone_object(DATIMAGE, "/usr/Asheron/dat/data/client_portal.dat");
-    highres = clone_object(DATIMAGE,
+    compile_object(OBJECT_PATH(BTree));
+    compile_object(OBJECT_PATH(DatItem));
+    compile_object(OBJECT_PATH(DatImage));
+    cell_1 = clone_object(OBJECT_PATH(DatImage),
+			  "/usr/Asheron/dat/data/client_cell_1.dat");
+    portal = clone_object(OBJECT_PATH(DatImage),
+			  "/usr/Asheron/dat/data/client_portal.dat");
+    highres = clone_object(OBJECT_PATH(DatImage),
 			   "/usr/Asheron/dat/data/client_highres.dat");
-    english = clone_object(DATIMAGE,
+    english = clone_object(OBJECT_PATH(DatImage),
 			   "/usr/Asheron/dat/data/client_local_English.dat");
 
     /* land */

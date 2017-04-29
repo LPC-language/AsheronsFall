@@ -1,2 +1,1 @@
-# define SERIALIZED	"~/lib/Serialized"
-# define Serialized	object SERIALIZED
+# define Serialized	object "/usr/Asheron/lib/Serialized"

@@ -6,8 +6,8 @@ mapping dungeons;
 
 static void create()
 {
-    compile_object(DUNGEONCELL);
-    compile_object(DUNGEONAREA);
+    compile_object(OBJECT_PATH(DungeonCell));
+    compile_object(OBJECT_PATH(DungeonArea));
 
     dungeons = ([ ]);
 }
@@ -20,9 +20,9 @@ void setCell(int x, int y, int index, string cell, int flags, int timeStamp,
     area = dungeons[x + y * 255];
     if (!area) {
 	area = dungeons[x + y * 255] =
-	       clone_object(DUNGEONAREA);
+	       clone_object(OBJECT_PATH(DungeonArea));
     }
-    area->setCell(index, new DUNGEONCELL(cell, flags, timeStamp, iteration));
+    area->setCell(index, new DungeonCell(cell, flags, timeStamp, iteration));
 }
 
 Cell cell(int x, int y, int index)

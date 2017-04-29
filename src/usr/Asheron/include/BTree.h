@@ -1,4 +1,3 @@
-# define BTREE		"/usr/Asheron/dat/lib/BTree"
-# define BTREE_SIZE	1716
+# define BTree		object "/usr/Asheron/dat/lib/BTree"
 
-# define BTree		object BTREE
+# define BTREE_SIZE	1716
