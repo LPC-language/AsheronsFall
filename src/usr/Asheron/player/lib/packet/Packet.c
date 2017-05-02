@@ -116,7 +116,7 @@ string transport()
 static void create(int sequence, int flags, int checksum, int id, int time,
 		   int table)
 {
-    ::create(NDTYPE_PACKET);
+    ::create(0);
 
     ::sequence = sequence;
     ::flags = flags;
@@ -134,7 +134,11 @@ static void create(int sequence, int flags, int checksum, int id, int time,
  */
 int addData(NetworkData item)
 {
-    data[item->networkDataType()] = item;
+    int type;
+
+    type = item->networkDataType();
+    flags |= type;
+    data[type] = item;
     size += item->size();
 }
 

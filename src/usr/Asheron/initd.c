@@ -4,6 +4,7 @@
 # include "landblock.h"
 # include "dungeon.h"
 # include "Interface.h"
+# include "Account.h"
 
 
 object cell_1;
@@ -37,6 +38,8 @@ static void create()
     /* player login */
     compile_object(TELNET_SERVER);
     compile_object(UDP_SERVER);
+    compile_object(UDP_RELAY_SERVER);
+    compile_object(ACCOUNT_SERVER);
 }
 
 object cell_1() { return cell_1; }

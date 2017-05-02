@@ -15,7 +15,7 @@ private string ticket;		/* GLS ticket (password starting with \n) */
 /*
  * layout of everything but the ticket
  */
-string headerLayout()
+static string headerLayout()
 {
     return "tissiitii";
 }
@@ -57,7 +57,7 @@ string transport()
 static void create(string version, int flags, int time, string account,
 		   string ticket)
 {
-    ::create(NDTYPE_LOGIN_REQUEST);
+    ::create(PACKET_LOGIN_REQUEST);
 
     ::version = version;
     ::size = 20 + 2 + strlen(account);

@@ -36,4 +36,11 @@ static void create(string blob)
 	addData(loginRequest);
 	blob = blob[loginRequest->size() ..];
     }
+    if (flags & PACKET_CONNECT_RESPONSE) {
+	ConnectResponse connectResponse;
+
+	connectResponse = new ClientConnectResponse(blob);
+	addData(connectResponse);
+	blob = blob[connectResponse->size() ..];
+    }
 }

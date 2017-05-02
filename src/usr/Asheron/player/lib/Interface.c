@@ -2,11 +2,10 @@ inherit "~System/lib/user";
 inherit "/lib/util/string";
 
 
-static void login(object connection, string name)
+static void login(string name)
 {
-    ::connection(connection);
-    /*
     ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
+    /*
     account = ACCOUNT_SERVER->login(this_object(), name);
     */
 }

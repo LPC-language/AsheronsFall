@@ -5,10 +5,9 @@
 # define ClientFragment		object "~/player/lib/packet/ClientFragment"
 # define LoginRequest		object "~/player/lib/packet/LoginRequest"
 # define ClientLoginRequest	object "~/player/lib/packet/ClientLoginRequest"
-
-/* NetworkData types */
-# define NDTYPE_PACKET			1
-# define NDTYPE_LOGIN_REQUEST		2
+# define ConnectRequest		object "~/player/lib/packet/ConnectRequest"
+# define ConnectResponse	object "~/player/lib/packet/ConnectResponse"
+# define ClientConnectResponse	object "~/player/lib/packet/ClientConnectResponse"
 
 /* packet flags */
 # define PACKET_RETRANSMISSION		0x00000001
