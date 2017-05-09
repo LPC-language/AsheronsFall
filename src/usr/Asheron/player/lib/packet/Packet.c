@@ -6,6 +6,7 @@ inherit Serialized;
 
 
 # define HEADER_SIZE	20
+# define BADTODD	0xBADD70DD
 
 private int sequence;		/* packet sequence number */
 private int flags;		/* bitflags */
@@ -59,9 +60,9 @@ static int badTodd(string blob)
 	break;
     }
 
-    return (checksum + c0 + (c1 << 8) + (c2 << 16) + (c3 << 24) + 0xBADD70DD) &
-	   0xffffffff;
+    return checksum + c0 + (c1 << 8) + (c2 << 16) + (c3 << 24);
 }
+
 /*
  * packet header layout string
  */
@@ -84,23 +85,26 @@ int size()
 string transport()
 {
     string *packet, blob;
-    int n, sz, i;
+    int n, sz, i, bodyChecksum;
     NetworkData *packetData;
 
     packet = allocate(1 + map_sizeof(data) + sizeof(fragments));
     packet[0] = serialize(headerLayout(), sequence, flags, 0, id, time, size,
 			  table);
+    checksum = badTodd(packet[0]) + BADTODD;
     n = 1;
     packetData = map_values(data);
     for (sz = sizeof(packetData), i = 0; i < sz; i++) {
 	packet[n++] = packetData[i]->transport();
     }
+    bodyChecksum = (sz != 0) ? badTodd(implode(packet[1 .. sz], "")) : 0;
     for (sz = sizeof(fragments), i = 0; i < sz; i++) {
-	packet[n++] = fragments[i]->transport();
+	packet[n] = fragments[i]->transport();
+	bodyChecksum += badTodd(packet[n++]);
     }
 
     blob = implode(packet, "");
-    checksum = badTodd(blob);
+    checksum = (checksum + bodyChecksum) & 0xffffffff;
     blob[8] = checksum;
     blob[9] = checksum >> 8;
     blob[10] = checksum >> 16;
