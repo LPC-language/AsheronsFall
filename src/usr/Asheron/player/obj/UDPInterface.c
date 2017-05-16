@@ -106,7 +106,7 @@ int establish(Interface relay, int cookie)
     if (previous_program() == OBJECT_PATH(UDPRelay) && !::relay &&
 	cookie == sessionCookie) {
 	::relay = relay;
-	::login(name);
+	::login(name, serverSeed, clientSeed);
 	return TRUE;
     }
     return FALSE;

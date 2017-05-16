@@ -9,8 +9,7 @@ private inherit "/lib/util/string";
 object userd;		/* kernel user daemon */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize this object
+ * initialize telnet connection manager
  */
 static void create()
 {
@@ -20,8 +19,7 @@ static void create()
 }
 
 /*
- * NAME:	select()
- * DESCRIPTION:	select interface based on loginname
+ * select telnet interface for all valid logins
  */
 object select(string name)
 {
@@ -37,8 +35,7 @@ object select(string name)
 }
 
 /*
- * NAME:	query_timeout()
- * DESCRIPTION:	return the login timeout
+ * the default timeout for a telnet login
  */
 int query_timeout(object obj)
 {
@@ -46,8 +43,7 @@ int query_timeout(object obj)
 }
 
 /*
- * NAME:	query_banner()
- * DESCRIPTION:	return the login banner
+ * the login banner for a telnet connection
  */
 string query_banner(object obj)
 {
@@ -55,8 +51,7 @@ string query_banner(object obj)
 }
 
 /*
- * NAME:	login()
- * DESCRIPTION:	display an errormessage and disconnect
+ * fallback for invalid login names
  */
 int login(string str)
 {

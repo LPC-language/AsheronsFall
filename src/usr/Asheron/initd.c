@@ -1,4 +1,5 @@
 # include <Iterator.h>
+# include "RandSeq.h"
 # include "BTree.h"
 # include "Dat.h"
 # include "landblock.h"
@@ -17,6 +18,9 @@ object dungeons;
 
 static void create()
 {
+    /* general utility */
+    compile_object(OBJECT_PATH(RandSeq));
+
     /* DAT image handling */
     compile_object(OBJECT_PATH(BTree));
     compile_object(OBJECT_PATH(DatItem));

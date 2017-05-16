@@ -7,22 +7,25 @@
 object userd;		/* kernel user daemon */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize this object
+ * initialize UDP connection manager
  */
 static void create()
 {
     userd = find_object(USERD);
     compile_object(OBJECT_PATH(UDPInterface));
     compile_object(OBJECT_PATH(ClientPacket));
+    compile_object(OBJECT_PATH(ClientFragment));
+    compile_object(OBJECT_PATH(ClientAckSequence));
     compile_object(OBJECT_PATH(ClientLoginRequest));
     compile_object(OBJECT_PATH(ConnectRequest));
+    compile_object(OBJECT_PATH(ClientTimeSynch));
+    compile_object(OBJECT_PATH(ClientFlow));
+
     SYS_INITD->set_connection_manager("datagram", 0, this_object());
 }
 
 /*
- * NAME:	select()
- * DESCRIPTION:	select interface based on login packet
+ * select the same interface for all logins
  */
 object select(string login)
 {
@@ -32,8 +35,7 @@ object select(string login)
 }
 
 /*
- * NAME:	query_timeout()
- * DESCRIPTION:	return the login timeout
+ * let the interface handle timeouts
  */
 int query_timeout(object obj)
 {

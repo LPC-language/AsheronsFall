@@ -11,6 +11,7 @@ inherit Serialized;
 private int sequence;		/* packet sequence number */
 private int flags;		/* bitflags */
 private int checksum;		/* badTodd checksum */
+private int xorValue;		/* value to xor with body checksum */
 private int id;			/* packet ID */
 private int time;		/* time */
 private int size;		/* size of data */
@@ -104,7 +105,7 @@ string transport()
     }
 
     blob = implode(packet, "");
-    checksum = (checksum + bodyChecksum) & 0xffffffff;
+    checksum = (checksum + (bodyChecksum ^ xorValue)) & 0xffffffff;
     blob[8] = checksum;
     blob[9] = checksum >> 8;
     blob[10] = checksum >> 16;
@@ -117,14 +118,15 @@ string transport()
 /*
  * create a packet with a given header
  */
-static void create(int sequence, int flags, int checksum, int id, int time,
-		   int table)
+static void create(int sequence, int flags, int checksum, int xorValue, int id,
+		   int time, int table)
 {
     ::create(0);
 
     ::sequence = sequence;
     ::flags = flags;
     ::checksum = checksum;
+    ::xorValue = xorValue;
     ::id = id;
     ::time = time;
     ::size = 0;
@@ -147,18 +149,11 @@ int addData(NetworkData item)
 }
 
 /*
- * retrieve a particular piece of info from a packet
- */
-NetworkData getData(int type)
-{
-    return data[type];
-}
-
-/*
  * add a fragment to a packet
  */
 int addFragment(Fragment fragment)
 {
+    flags |= PACKET_BLOB_FRAGMENTS;
     fragments += ({ fragment });
     size += fragment->size();
 }
@@ -166,11 +161,13 @@ int addFragment(Fragment fragment)
 /*
  * fields
  */
-int sequence()		{ return sequence; }
-int flags()		{ return flags; }
-int checksum()		{ return checksum; }
-int id()		{ return id; }
-int time()		{ return time; }
-int table()		{ return table; }
-NetworkData *data()	{ return map_values(data); }
-Fragment *fragments()	{ return fragments[..]; }
+int sequence()			{ return sequence; }
+int flags()			{ return flags; }
+int checksum()			{ return checksum; }
+int xorValue()			{ return xorValue; }
+int id()			{ return id; }
+int time()			{ return time; }
+int table()			{ return table; }
+NetworkData data(int type)	{ return data[type]; }
+int numFragments()		{ return sizeof(fragments); }
+Fragment fragment(int n)	{ return fragments[n]; }

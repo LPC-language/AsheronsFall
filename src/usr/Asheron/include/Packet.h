@@ -3,11 +3,17 @@
 # define ClientPacket		object "~/player/lib/packet/ClientPacket"
 # define Fragment		object "~/player/lib/packet/Fragment"
 # define ClientFragment		object "~/player/lib/packet/ClientFragment"
+# define AckSequence		object "~/player/lib/packet/AckSequence"
+# define ClientAckSequence	object "~/player/lib/packet/ClientAckSequence"
 # define LoginRequest		object "~/player/lib/packet/LoginRequest"
 # define ClientLoginRequest	object "~/player/lib/packet/ClientLoginRequest"
 # define ConnectRequest		object "~/player/lib/packet/ConnectRequest"
 # define ConnectResponse	object "~/player/lib/packet/ConnectResponse"
 # define ClientConnectResponse	object "~/player/lib/packet/ClientConnectResponse"
+# define TimeSynch		object "~/player/lib/packet/TimeSynch"
+# define ClientTimeSynch	object "~/player/lib/packet/ClientTimeSynch"
+# define Flow			object "~/player/lib/packet/Flow"
+# define ClientFlow		object "~/player/lib/packet/ClientFlow"
 
 /* packet flags */
 # define PACKET_RETRANSMISSION		0x00000001
