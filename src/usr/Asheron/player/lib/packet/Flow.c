@@ -5,7 +5,7 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int prevSize;		/* size of prev+1 packet received */
+private int prevSize;		/* sum of sizes of packets with prevTime */
 private int prevTime;		/* time of prev+1 packet received */
 
 /*

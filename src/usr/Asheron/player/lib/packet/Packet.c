@@ -159,6 +159,15 @@ int addFragment(Fragment fragment)
 }
 
 /*
+ * Prepare to retransmit packet.  All that changes in retransmitted packets
+ * is the checksum and 1 bit in the flags; i.e. flow is not updated.
+ */
+void retransmit()
+{
+    flags |= PACKET_RETRANSMISSION;
+}
+
+/*
  * fields
  */
 int sequence()			{ return sequence; }
