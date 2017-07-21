@@ -5,39 +5,64 @@
 inherit Interface;
 
 
-Interface interface;
+/*
+ * AC uses different UDP ports to send and receive on.  This is an optimization
+ * at the kernel level, where an internal lock on the output socket will
+ * not block the input socket.
+ */
 
+Interface interface;	/* the interface to relay for */
+
+/*
+ * start a relay connection
+ */
+static int _login(string str, object connObj)
+{
+    Packet packet;
+    ConnectResponse connectResponse;
+    int clientId, interfaceCookie, sessionCookie;
+
+    catch {
+	packet = new ClientPacket(str, nil);
+    } : {
+	/* drop connection without sending anything back */
+	return MODE_DISCONNECT;
+    }
+
+    if (packet->flags() != PACKET_CONNECT_RESPONSE) {
+	/* don't bother responding to anything but a ConnectResponse */
+	return MODE_DISCONNECT;
+    }
+
+    /* verify that all parameters are correct */
+    clientId = packet->id();
+    connectResponse = packet->data(PACKET_CONNECT_RESPONSE);
+    interfaceCookie = connectResponse->interfaceCookie();
+    sessionCookie = connectResponse->sessionCookie();
+    interface = find_object(OBJECT_PATH(UDPInterface) + "#" + interfaceCookie);
+    if (!interface ||
+	!interface->establish(this_object(), clientId, sessionCookie)) {
+	return MODE_DISCONNECT;
+    }
+
+    connection(connObj);
+    return MODE_NOCHANGE;
+}
+
+/*
+ * login with limits
+ */
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	Packet packet;
-	ConnectResponse connectResponse;
-	int interfaceCookie, sessionCookie;
-
-	catch {
-	    packet = new ClientPacket(str);
-	} : {
-	    return MODE_DISCONNECT;
-	}
-
-	if (packet->flags() != PACKET_CONNECT_RESPONSE) {
-	    return MODE_DISCONNECT;
-	}
-	connectResponse = packet->getData(PACKET_CONNECT_RESPONSE);
-	interfaceCookie = connectResponse->interfaceCookie();
-	sessionCookie = connectResponse->sessionCookie();
-
-	interface = find_object(OBJECT_PATH(UDPInterface) + "#" +
-				interfaceCookie);
-	if (!interface || !interface->establish(this_object(), sessionCookie)) {
-	    return MODE_DISCONNECT;
-	}
-
-	connection(previous_object());
+	return call_limited("_login", str, previous_object());
     }
     return MODE_NOCHANGE;
 }
 
+/*
+ * destruct interface on logout
+ */
 void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
@@ -45,24 +70,33 @@ void logout(int quit)
     }
 }
 
+/*
+ * ignore all input here; the client should send directly to the interface
+ */
 int receive_message(string str)
 {
-    /*
-     * ignore all input here; the client should send directly to the interface
-     */
     return MODE_NOCHANGE;
 }
 
-int relaySend(string str)
+/*
+ * relay a message for the main interface
+ */
+int message(string str)
 {
     if (previous_object() == interface) {
-	return message(str);
+	return ::message(str);
     }
 }
 
-void relayQuit()
+/*
+ * let the main interface terminate the connection
+ */
+void disconnect()
 {
     if (previous_object() == interface) {
-	disconnect();
+	::disconnect();
     }
 }
+
+
+object interface()	{ return interface; }

@@ -1,113 +1,160 @@
 # include <kernel/user.h>
+# include <status.h>
 # include "Interface.h"
 # include "Packet.h"
-# include "Account.h"
 
 inherit PacketInterface;
 
 
-# define LEAFCULL_BIRTH		862952622
-# define SERVER_ID		0xAC
+# define SERVER_ID	0xAC
 
-string name;		/* account name */
-int clientId;		/* ID in messages from the client */
+string loginBlob;	/* first packet blob received */
 int sessionCookie;	/* random cookie which the client has to echo */
-int serverSeed;		/* ISAAC seed for server */
-int clientSeed;		/* ISAAC seed for client */
 Interface relay;	/* outgoing packet relay */
 
+/*
+ * TODO: move this to a better location
+ */
 private float gameTime()
 {
     int time;
     float milli;
 
     ({ time, milli }) = millitime();
-    return (float) (time - LEAFCULL_BIRTH) + milli;
+    return (float) (time - status(ST_STARTTIME)) + milli;
 }
 
+/*
+ * keep sending ConnectionRequests until client responds, or timeout
+ */
 static void sendConnectRequest(string connectBlob, int tries)
 {
     if (!relay) {
 	if (tries == 0) {
 	    disconnect();
 	} else {
-	    message(connectBlob);
+	    ::message(connectBlob);
 	    call_out("sendConnectRequest", 1, connectBlob, tries - 1);
 	}
     }
 }
 
+/*
+ * start a UDP connection
+ */
+static int _login(string str, object connObj)
+{
+    Packet packet;
+    LoginRequest loginRequest;
+    string name, ticket, password;
+    int interfaceCookie, clientId, serverSeed, clientSeed;
+
+    catch {
+	packet = new ClientPacket(str, nil);
+    } : {
+	/* drop connection without sending anything back */
+	return MODE_DISCONNECT;
+    }
+
+    if (packet->flags() != PACKET_LOGIN_REQUEST) {
+	/* don't bother responding to anything but a login request */
+	return MODE_DISCONNECT;
+    }
+
+    loginBlob = str;
+    loginRequest = packet->data(PACKET_LOGIN_REQUEST);
+    name = loginRequest->account();
+    ticket = loginRequest->ticket();
+    if (ticket) {
+	sscanf(ticket, "\n%s", password);
+    } else {
+	/* PhatAC method */
+	sscanf(name, "%s:%s", name, password);
+    }
+    if (!password) {
+	/* missing password */
+	return MODE_DISCONNECT;
+    }
+
+    connection(connObj);
+    sscanf(object_name(this_object()), "%*s#%d", interfaceCookie);
+    clientId = interfaceCookie & 0xffff;
+    sessionCookie = random(0) & 0xffffffff;
+    serverSeed = random(0) & 0xffffffff;
+    clientSeed = random(0) & 0xffffffff;
+    packet = ::login(name, password, SERVER_ID, clientId, serverSeed,
+		     clientSeed);
+    if (packet) {
+	/* login failed */
+	::message(packet->transport());
+	return MODE_DISCONNECT;
+    }
+
+    packet = new Packet(0, 0, 0, 0, SERVER_ID, 0, 0);
+    packet->addData(new ConnectRequest(gameTime(), interfaceCookie,
+				       sessionCookie, clientId, serverSeed,
+				       clientSeed, 0));
+    sendConnectRequest(packet->transport(), 5);
+    return MODE_NOCHANGE;
+}
+
+/*
+ * login with limits
+ */
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	Packet packet;
-	LoginRequest loginRequest;
-	string ticket, password;
-	int interfaceCookie;
-
-	catch {
-	    packet = new ClientPacket(str);
-	} : {
-	    /* drop connection without sending anything back */
-	    return MODE_DISCONNECT;
-	}
-
-	connection(previous_object());
-
-	if (packet->flags() != PACKET_LOGIN_REQUEST) {
-	    /* XXX send back some error */
-	    return MODE_DISCONNECT;
-	}
-	loginRequest = packet->getData(PACKET_LOGIN_REQUEST);
-	name = loginRequest->account();
-	ticket = loginRequest->ticket();
-	if (ticket) {
-	    sscanf(ticket, "\n%s", password);
-	} else {
-	    /* PhatAC method */
-	    sscanf(name, "%s:%s", name, password);
-	}
-	/* XXX account/password check XXX */
-
-	sscanf(object_name(this_object()), "%*s#%d", interfaceCookie);
-	clientId = interfaceCookie & 0xffff;
-	sessionCookie = random(0) & 0xffffffff;
-	serverSeed = random(0) & 0xffffffff;
-	clientSeed = random(0) & 0xffffffff;
-	packet = new Packet(0, 0, 0, SERVER_ID, 0, 0);
-	packet->addData(new ConnectRequest(gameTime(), interfaceCookie,
-					   sessionCookie, clientId,
-					   serverSeed, clientSeed, 0));
-	sendConnectRequest(packet->transport(), 5);
+	return call_limited("_login", str, previous_object());
     }
     return MODE_NOCHANGE;
 }
 
+/*
+ * also disconnect the relay on logout
+ */
 void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
 	::logout();
+	if (relay) {
+	    relay->disconnect();
+	}
 	destruct_object(this_object());
     }
 }
 
-int n;
-
-int receive_message(string str)
-{
-    if (previous_program() == LIB_CONN) {
-	write_file("/usr/Asheron/data/r" + n++, str);
-    }
-    return MODE_NOCHANGE;
-}
-
-int establish(Interface relay, int cookie)
+/*
+ * establish a relay for this interface
+ */
+int establish(Interface relay, int clientId, int cookie)
 {
     if (previous_program() == OBJECT_PATH(UDPRelay) && !::relay &&
-	cookie == sessionCookie) {
+	clientId == clientId() && cookie == sessionCookie) {
 	::relay = relay;
-	::login(name, serverSeed, clientSeed);
+	::establish();
 	return TRUE;
     }
     return FALSE;
 }
+
+/*
+ * pass on an incoming packet to the lower level
+ */
+int receive_message(string str)
+{
+    if (previous_program() == LIB_CONN && str != loginBlob) {
+	return call_limited("receivePacket", str);
+    }
+    return MODE_NOCHANGE;
+}
+
+/*
+ * send out a packet through the relay
+ */
+static int message(string str)
+{
+    return relay->message(str);
+}
+
+
+object relay() { return relay; }

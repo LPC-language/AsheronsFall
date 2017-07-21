@@ -1,4 +1,5 @@
 # include "Packet.h"
+# include "RandSeq.h"
 
 inherit Packet;
 
@@ -9,7 +10,7 @@ inherit Packet;
 /*
  * create a packet from a blob
  */
-static void create(string blob, object randGen)
+static void create(string blob, RandSeq randGen)
 {
     string body;
     int sequence, flags, checksum, id, time, size, table, verify, bodyVerify,
@@ -40,7 +41,7 @@ static void create(string blob, object randGen)
 	error("Bad packet flags: " + flags);
     }
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-	xorValue = randGen->randSequence(sequence);
+	xorValue = randGen->rand(sequence - 2);
     }
     ::create(sequence, flags, checksum, xorValue, id, time, table);
     verify = badTodd(blob[.. HEADER_SIZE - 1]) + BADTODD;

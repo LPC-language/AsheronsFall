@@ -1,21 +1,30 @@
+# include "Account.h"
+
 inherit "~System/lib/user";
-inherit "/lib/util/string";
 
 
-static void login(string name)
+/*
+ * login through the account server
+ */
+static Account login(string name, string password)
 {
-    ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
-    /*
-    account = ACCOUNT_SERVER->login(this_object(), name);
-    */
+    Account account;
+
+    if (query_conn()) {
+	account = ACCOUNT_SERVER->login(this_object(), name, password);
+	if (account) {
+	    ::login("Connection: " + name + " from " + address() + "\n");
+	}
+    }
+    return account;
 }
 
-static void logout()
+/*
+ * logout through the account server
+ */
+static void logout(Account account)
 {
-    /*
     if (query_conn()) {
-	ACCOUNT_SERVER->logout(this_object());
-	::logout();
+	ACCOUNT_SERVER->logout(account);
     }
-    */
 }

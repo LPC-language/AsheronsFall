@@ -2,6 +2,7 @@
 # include "Interface.h"
 # include "Packet.h"
 
+
 # define SYS_INITD	"/usr/System/initd"
 
 object userd;		/* kernel user daemon */
@@ -40,7 +41,7 @@ object select(string login)
 }
 
 /*
- * let the interface handle timeouts
+ * let the interface handle login timeouts
  */
 int query_timeout(object obj)
 {

@@ -2,6 +2,7 @@
 # include "Interface.h"
 # include "Packet.h"
 
+
 # define SYS_INITD	"/usr/System/initd"
 
 object userd;		/* kernel user daemon */

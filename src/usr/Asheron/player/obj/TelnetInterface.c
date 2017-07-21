@@ -3,10 +3,11 @@
 
 inherit Interface;
 
+
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
 	connection(previous_object());
-	::login(str);
+	/* XXX */
     }
 }
