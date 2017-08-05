@@ -1,4 +1,5 @@
 # include <kernel/user.h>
+# include <status.h>
 # include "Interface.h"
 # include "Account.h"
 # include "Packet.h"
@@ -31,6 +32,18 @@ private int serverId, clientId;		/* session IDs */
 private RandSeq serverRand, clientRand;	/* for checksum encryption */
 private int startTime;			/* session start time */
 private int serverSeq, clientSeq;	/* sequence numbers */
+
+/*
+ * time since the server first booted
+ */
+static mixed *gameTime()
+{
+    mixed *times;
+
+    times = millitime();
+    times[0] -= status(ST_STARTTIME);
+    return times;
+}
 
 /*
  * login during 3-way handshake, in case of an error return a packet to send

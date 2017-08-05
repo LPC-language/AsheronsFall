@@ -5,7 +5,8 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private float time;		/* game time */
+private int time;		/* game time */
+private float mtime;		/* game millitime */
 private int interfaceCookie;	/* interface cookie (clone number) */
 private int sessionCookie;	/* random session cookie */
 private int clientId;		/* ID the client must use */
@@ -15,7 +16,7 @@ private int something;		/* flags?  PhatAC uses 0x2 here */
 
 static string headerLayout()
 {
-    return "diiiiii";
+    return "DDiiiiii";
 }
 
 int size()
@@ -25,16 +26,19 @@ int size()
 
 string transport()
 {
-    return serialize(headerLayout(), time, interfaceCookie, sessionCookie,
-		     clientId, serverSeed, clientSeed, something);
+    return serialize(headerLayout(), time, mtime, interfaceCookie,
+		     sessionCookie, clientId, serverSeed, clientSeed,
+		     something);
 }
 
-static void create(float time, int interfaceCookie, int sessionCookie,
-		   int clientId, int serverSeed, int clientSeed, int something)
+static void create(int time, float mtime, int interfaceCookie,
+		   int sessionCookie, int clientId, int serverSeed,
+		   int clientSeed, int something)
 {
     ::create(PACKET_CONNECT_REQUEST);
 
     ::time = time;
+    ::mtime = mtime;
     ::interfaceCookie = interfaceCookie;
     ::sessionCookie = sessionCookie;
     ::clientId = clientId;
@@ -46,7 +50,8 @@ static void create(float time, int interfaceCookie, int sessionCookie,
 /*
  * fields
  */
-float time()		{ return time; }
+int time()		{ return time; }
+float mtime()		{ return mtime; }
 int interfaceCookie()	{ return interfaceCookie; }
 int sessionCookie()	{ return sessionCookie; }
 int clientId()		{ return clientId; }

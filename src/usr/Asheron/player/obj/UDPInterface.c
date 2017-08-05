@@ -1,5 +1,4 @@
 # include <kernel/user.h>
-# include <status.h>
 # include "Interface.h"
 # include "Packet.h"
 
@@ -11,18 +10,6 @@ inherit PacketInterface;
 string loginBlob;	/* first packet blob received */
 int sessionCookie;	/* random cookie which the client has to echo */
 Interface relay;	/* outgoing packet relay */
-
-/*
- * TODO: move this to a better location
- */
-private float gameTime()
-{
-    int time;
-    float milli;
-
-    ({ time, milli }) = millitime();
-    return (float) (time - status(ST_STARTTIME)) + milli;
-}
 
 /*
  * keep sending ConnectionRequests until client responds, or timeout
@@ -47,7 +34,8 @@ static int _login(string str, object connObj)
     Packet packet;
     LoginRequest loginRequest;
     string name, ticket, password;
-    int interfaceCookie, clientId, serverSeed, clientSeed;
+    int interfaceCookie, clientId, serverSeed, clientSeed, time;
+    float mtime;
 
     catch {
 	packet = new ClientPacket(str, nil);
@@ -90,8 +78,9 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
+    ({ time, mtime }) = gameTime();
     packet = new Packet(0, 0, 0, 0, SERVER_ID, 0, 0);
-    packet->addData(new ConnectRequest(gameTime(), interfaceCookie,
+    packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
 				       sessionCookie, clientId, serverSeed,
 				       clientSeed, 0));
     sendConnectRequest(packet->transport(), 5);
