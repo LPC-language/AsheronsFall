@@ -8,11 +8,13 @@ inherit TimeSynch;
  */
 static void create(string blob)
 {
-    float time;
+    int time;
+    float mtime;
 
     ({
 	blob,
-	time
+	time,
+	mtime
     }) = deSerialize(blob, headerLayout());
-    ::create(time);
+    ::create(time, mtime);
 }

@@ -5,14 +5,15 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private float time;	/* time to sync with */
+private int time;	/* time to sync with */
+private float mtime;	/* mtime to sync with */
 
 /*
- * layout of time
+ * layout of TimeSync
  */
 static string headerLayout()
 {
-    return "d";
+    return "DD";
 }
 
 /*
@@ -34,14 +35,16 @@ string transport()
 /*
  * create a TimeSynch
  */
-static void create(float time)
+static void create(int time, float mtime)
 {
     ::create(PACKET_TIME_SYNCH);
 
     ::time = time;
+    ::mtime = mtime;
 }
 
 /*
  * fields
  */
-float time()	{ return time; }
+int time()	{ return time; }
+float mtime()	{ return mtime; }
