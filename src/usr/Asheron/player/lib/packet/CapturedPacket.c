@@ -1,11 +1,8 @@
 # include "Packet.h"
 # include "RandSeq.h"
 
-inherit Packet;
+inherit ClientPacket;
 
-
-# define HEADER_SIZE	20
-# define BADTODD	0xBADD70DD
 
 /*
  * process packet options
@@ -13,14 +10,31 @@ inherit Packet;
 static string processOptions(int flags, string body)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
-		  PACKET_BLOB_FRAGMENTS | PACKET_REQUEST_RETRANSMIT |
+		  PACKET_BLOB_FRAGMENTS | PACKET_SERVER_SWITCH |
+		  PACKET_REFERRAL | PACKET_REQUEST_RETRANSMIT |
 		  PACKET_REJECT_RETRANSMIT | PACKET_ACK_SEQUENCE |
 		  PACKET_DISCONNECT | PACKET_LOGIN_REQUEST |
+		  PACKET_WORLD_LOGIN_REQUEST | PACKET_CONNECT_REQUEST |
 		  PACKET_CONNECT_RESPONSE | PACKET_CICMD_COMMAND |
-		  PACKET_TIME_SYNCH | PACKET_ECHO_REQUEST | PACKET_FLOW)) {
+		  PACKET_TIME_SYNCH | PACKET_ECHO_REQUEST |
+		  PACKET_ECHO_RESPONSE | PACKET_FLOW)) {
 	error("Bad packet flags: " + flags);
     }
 
+    if (flags & PACKET_SERVER_SWITCH) {
+	ServerSwitch serverSwitch;
+
+	serverSwitch = new ClientServerSwitch(body);
+	addData(serverSwitch);
+	body = body[serverSwitch->size() ..];
+    }
+    if (flags & PACKET_REFERRAL) {
+	Referral referral;
+
+	referral = new ClientReferral(body);
+	addData(referral);
+	body = body[referral->size() ..];
+    }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
 
@@ -48,6 +62,20 @@ static string processOptions(int flags, string body)
 	loginRequest = new ClientLoginRequest(body);
 	addData(loginRequest);
 	body = body[loginRequest->size() ..];
+    }
+    if (flags & PACKET_WORLD_LOGIN_REQUEST) {
+	WorldLoginRequest worldLoginRequest;
+
+	worldLoginRequest = new ClientWorldLoginRequest(body);
+	addData(worldLoginRequest);
+	body = body[worldLoginRequest->size() ..];
+    }
+    if (flags & PACKET_CONNECT_REQUEST) {
+	ConnectRequest connectRequest;
+
+	connectRequest = new ClientConnectRequest(body);
+	addData(connectRequest);
+	body = body[connectRequest->size() ..];
     }
     if (flags & PACKET_CONNECT_RESPONSE) {
 	ConnectResponse connectResponse;
@@ -77,6 +105,13 @@ static string processOptions(int flags, string body)
 	addData(echoRequest);
 	body = body[echoRequest->size() ..];
     }
+    if (flags & PACKET_ECHO_RESPONSE) {
+	EchoResponse echoResponse;
+
+	echoResponse = new ClientEchoResponse(body);
+	addData(echoResponse);
+	body = body[echoResponse->size() ..];
+    }
     if (flags & PACKET_FLOW) {
 	Flow flow;
 
@@ -86,72 +121,4 @@ static string processOptions(int flags, string body)
     }
 
     return body;
-}
-
-/*
- * create a packet from a blob
- */
-static void create(string blob, RandSeq randGen)
-{
-    string body;
-    int sequence, flags, checksum, id, time, size, table, verify, bodyVerify,
-	xorValue;
-
-    /*
-     * process packet header
-     */
-    ({
-	body,
-	sequence,
-	flags,
-	checksum,
-	id,
-	time,
-	size,
-	table
-    }) = deSerialize(blob, headerLayout());
-    if (size != strlen(body)) {
-	error("Bad packet size");
-    }
-    if (randGen && (flags & PACKET_ENCRYPTED_CHECKSUM)) {
-	xorValue = randGen->rand(sequence - 2);
-    }
-    ::create(sequence, flags, checksum, xorValue, id, time, table);
-    verify = badTodd(blob[.. HEADER_SIZE - 1]) + BADTODD;
-
-    body = processOptions(flags, body);
-    if (size != strlen(body)) {
-	bodyVerify = badTodd(blob[HEADER_SIZE ..
-				  strlen(blob) - strlen(body) - 1]);
-    }
-
-    /*
-     * handle fragments
-     */
-    if (flags & PACKET_BLOB_FRAGMENTS) {
-	Fragment fragment;
-	int size;
-
-	do {
-	    fragment = new ClientFragment(body);
-	    addFragment(fragment);
-	    size = fragment->size();
-	    bodyVerify += badTodd(body[.. size - 1]);
-	    body = body[size ..];
-	} while (strlen(body) != 0);
-    }
-
-    if (body != "") {
-	error("Garbage in packet");
-    }
-
-    if (!(flags & PACKET_ENCRYPTED_CHECKSUM) || randGen) {
-	/*
-	 * verify checksum
-	 */
-	verify += bodyVerify ^ xorValue;
-	if (checksum != ((verify - checksum) & 0xffffffff)) {
-	    error("Bad checksum");
-	}
-    }
 }

@@ -1,0 +1,110 @@
+# include "pcap.h"
+# include "Serialized.h"
+# include <Iterator.h>
+
+inherit Serialized;
+inherit Iterable;
+
+
+# define PCAP_HEADER_SIZE	24
+# define PCAP_MAGIC		0xa1b2c3d4
+# define PACKET_HEADER_SIZE	16
+
+# define ETHER_HEADER_SIZE	14
+# define IP_HEADER_SIZE		20
+# define IP_MAX_OPTIONS_SIZE	40
+# define UDP_HEADER_SIZE	8
+# define AC_MAX_PACKET_SIZE	484
+
+private string file;		/* pcap file to read from */
+private int fileSize;		/* size of pcap file */
+private int versionMajor;	/* major version number */
+private int versionMinor;	/* minor version number */
+private int timezone;		/* always 0 */
+private int snapLength;		/* should be large enough */
+private int network;		/* data link type */
+
+/*
+ * initialize a PCAP capture object, which can be used to iterate over packets
+ */
+static void create(string pcap)
+{
+    string header;
+    int magic, sigfigs;
+
+    file = pcap;
+    header = read_file(pcap, 0, PCAP_HEADER_SIZE);
+    ({
+	header,
+	magic,
+	versionMajor,
+	versionMinor,
+	timezone,
+	sigfigs,
+	snapLength,
+	network
+    }) = deSerialize(header, "issiiii");
+    if (magic != PCAP_MAGIC) {
+	error("Not a PCAP file");
+    }
+    if (snapLength < ETHER_HEADER_SIZE + IP_HEADER_SIZE + IP_MAX_OPTIONS_SIZE +
+		     UDP_HEADER_SIZE + AC_MAX_PACKET_SIZE) {
+	error("PCAP snap length too small for AC packets");
+    }
+    fileSize = file_info(pcap)[0];
+}
+
+/*
+ * initial iterator state
+ */
+mixed iteratorStart(mixed state)
+{
+    return PCAP_HEADER_SIZE;
+}
+
+/*
+ * obtain the next network packet from the packet capture
+ */
+mixed *iteratorNext(mixed offset)
+{
+    string header;
+    int time, utime, length, origLength;
+
+    if (offset == fileSize) {
+	return ({ offset, nil });	/* end of file */
+    }
+
+    header = read_file(file, offset, PACKET_HEADER_SIZE);
+    offset += PACKET_HEADER_SIZE;
+    ({
+	header,
+	time,
+	utime,
+	length,
+	origLength
+    }) = deSerialize(header, "iiii");
+    if (length > snapLength || offset + length > fileSize) {
+	error("Invalid PCAP record");
+    }
+
+    return ({
+		offset + length,
+	      	new PacketEther(time, (float) utime / 1000000.0, origLength,
+				read_file(file, offset, length))
+	   });
+}
+
+/*
+ * check if another packet can be retrieved
+ */
+int iteratorEnd(mixed offset)
+{
+    return (offset == fileSize);
+}
+
+
+string file()		{ return file; }
+int versionMajor()	{ return versionMajor; }
+int versionMinor()	{ return versionMinor; }
+int snapLength()	{ return snapLength; }
+int network()		{ return network; }

@@ -29,7 +29,7 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), time);
+    return serialize(headerLayout(), time, mtime);
 }
 
 /*

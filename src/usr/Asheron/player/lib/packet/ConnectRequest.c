@@ -12,7 +12,7 @@ private int sessionCookie;	/* random session cookie */
 private int clientId;		/* ID the client must use */
 private int serverSeed;		/* ISAAC server seed */
 private int clientSeed;		/* ISAAC client seed */
-private int something;		/* flags?  PhatAC uses 0x2 here */
+private int something;		/* not flags, 0 in first ConnectRequest */
 
 static string headerLayout()
 {
