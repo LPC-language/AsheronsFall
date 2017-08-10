@@ -22,6 +22,8 @@
 # define ClientConnectRequest	object "~/player/lib/packet/ClientConnectRequest"
 # define ConnectResponse	object "~/player/lib/packet/ConnectResponse"
 # define ClientConnectResponse	object "~/player/lib/packet/ClientConnectResponse"
+# define ConnectClose		object "~/player/lib/packet/ConnectClose"
+# define ClientConnectClose	object "~/player/lib/packet/ClientConnectClose"
 # define CICMDCommand		object "~/player/lib/packet/CICMDCommand"
 # define ClientCICMDCommand	object "~/player/lib/packet/ClientCICMDCommand"
 # define TimeSynch		object "~/player/lib/packet/TimeSynch"
@@ -47,6 +49,7 @@
 # define PACKET_WORLD_LOGIN_REQUEST	0x00020000
 # define PACKET_CONNECT_REQUEST		0x00040000
 # define PACKET_CONNECT_RESPONSE	0x00080000
+# define PACKET_CONNECT_CLOSE		0x00200000
 # define PACKET_CICMD_COMMAND		0x00400000
 # define PACKET_TIME_SYNCH		0x01000000
 # define PACKET_ECHO_REQUEST		0x02000000

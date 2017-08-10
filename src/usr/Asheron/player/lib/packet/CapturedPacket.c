@@ -15,9 +15,9 @@ static string processOptions(int flags, string body)
 		  PACKET_REJECT_RETRANSMIT | PACKET_ACK_SEQUENCE |
 		  PACKET_DISCONNECT | PACKET_LOGIN_REQUEST |
 		  PACKET_WORLD_LOGIN_REQUEST | PACKET_CONNECT_REQUEST |
-		  PACKET_CONNECT_RESPONSE | PACKET_CICMD_COMMAND |
-		  PACKET_TIME_SYNCH | PACKET_ECHO_REQUEST |
-		  PACKET_ECHO_RESPONSE | PACKET_FLOW)) {
+		  PACKET_CONNECT_RESPONSE | PACKET_CONNECT_CLOSE |
+		  PACKET_CICMD_COMMAND | PACKET_TIME_SYNCH |
+		  PACKET_ECHO_REQUEST | PACKET_ECHO_RESPONSE | PACKET_FLOW)) {
 	error("Bad packet flags: " + flags);
     }
 
@@ -83,6 +83,13 @@ static string processOptions(int flags, string body)
 	connectResponse = new ClientConnectResponse(body);
 	addData(connectResponse);
 	body = body[connectResponse->size() ..];
+    }
+    if (flags & PACKET_CONNECT_CLOSE) {
+	ConnectClose connectClose;
+
+	connectClose = new ClientConnectClose(body);
+	addData(connectClose);
+	body = body[connectClose->size() ..];
     }
     if (flags & PACKET_CICMD_COMMAND) {
 	CICMDCommand command;

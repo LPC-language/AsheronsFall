@@ -1,5 +1,6 @@
 # include "pcap.h"
 # include "Serialized.h"
+# include "File.h"
 # include <Iterator.h>
 
 inherit Serialized;
@@ -16,8 +17,9 @@ inherit Iterable;
 # define UDP_HEADER_SIZE	8
 # define AC_MAX_PACKET_SIZE	484
 
-private string file;		/* pcap file to read from */
+private string fileName;	/* pcap filename */
 private int fileSize;		/* size of pcap file */
+private File file;		/* file to read from */
 private int versionMajor;	/* major version number */
 private int versionMinor;	/* minor version number */
 private int timezone;		/* always 0 */
@@ -32,8 +34,10 @@ static void create(string pcap)
     string header;
     int magic, sigfigs;
 
-    file = pcap;
-    header = read_file(pcap, 0, PCAP_HEADER_SIZE);
+    fileName = pcap;
+    fileSize = file_info(pcap)[0];
+    file = new File(pcap);
+    header = file->read(0, PCAP_HEADER_SIZE);
     ({
 	header,
 	magic,
@@ -51,7 +55,6 @@ static void create(string pcap)
 		     UDP_HEADER_SIZE + AC_MAX_PACKET_SIZE) {
 	error("PCAP snap length too small for AC packets");
     }
-    fileSize = file_info(pcap)[0];
 }
 
 /*
@@ -74,7 +77,7 @@ mixed *iteratorNext(mixed offset)
 	return ({ offset, nil });	/* end of file */
     }
 
-    header = read_file(file, offset, PACKET_HEADER_SIZE);
+    header = file->read(offset, PACKET_HEADER_SIZE);
     offset += PACKET_HEADER_SIZE;
     ({
 	header,
@@ -88,10 +91,10 @@ mixed *iteratorNext(mixed offset)
     }
 
     return ({
-		offset + length,
-	      	new PacketEther(time, (float) utime / 1000000.0, origLength,
-				read_file(file, offset, length))
-	   });
+	offset + length,
+	new PacketEther(time, (float) utime / 1000000.0, origLength,
+			file->read(offset, length))
+   });
 }
 
 /*
@@ -103,7 +106,7 @@ int iteratorEnd(mixed offset)
 }
 
 
-string file()		{ return file; }
+string fileName()	{ return fileName; }
 int versionMajor()	{ return versionMajor; }
 int versionMinor()	{ return versionMinor; }
 int snapLength()	{ return snapLength; }
