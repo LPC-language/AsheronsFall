@@ -40,7 +40,7 @@ static void create(int time, float mtime, int origLength, string blob)
  */
 PacketAC packetAC()
 {
-    int ihl;
+    int ihl, length;
     int srcAddr, srcPort;
     int destAddr, destPort;
 
@@ -77,8 +77,13 @@ PacketAC packetAC()
     /*
      * UDP layer
      */
-    if ((blob[ihl + UDP_LENGTH] << 8) + blob[ihl + UDP_LENGTH + 1] !=
-				    strlen(blob) - ETHER_HEADER_SIZE - ihl) {
+    length = (blob[ihl + UDP_LENGTH] << 8) + blob[ihl + UDP_LENGTH + 1];
+    if (length < UDP_HEADER_SIZE ||
+	length > strlen(blob) - ihl - ETHER_HEADER_SIZE) {
+	/*
+	 * permit the occasional captured packet that's too long, but not the
+	 * short ones
+	 */
 	error("UDP packet has invalid length");
     }
     srcPort = (blob[ihl + UDP_SRC_PORT] << 8) +
@@ -90,7 +95,8 @@ PacketAC packetAC()
      * AC layer
      */
     return new PacketAC(time, mtime, srcAddr, srcPort, destAddr, destPort,
-			blob[ihl + ETHER_HEADER_SIZE + UDP_HEADER_SIZE ..]);
+			blob[ihl + ETHER_HEADER_SIZE + UDP_HEADER_SIZE ..
+					 ihl + length + ETHER_HEADER_SIZE - 1]);
 }
 
 

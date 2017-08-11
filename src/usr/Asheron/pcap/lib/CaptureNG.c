@@ -71,7 +71,7 @@ mixed *iteratorNext(mixed offset)
 {
     string header;
     int type, length, origLength, snapLength, timeHigh, timeLow;
-    int time, part, low;
+    int time, low;
     float mtime, high;
 
     while (offset < fileSize) {
@@ -122,13 +122,11 @@ mixed *iteratorNext(mixed offset)
 
 	    /* carefully add the bits without losing precision */
 	    time = timeHigh * 4294;
-	    part = timeHigh * 967;
-	    time += part / 1000;
-	    low = part % 1000 * 1000;
-	    part = timeHigh * 296;
-	    time += part / 1000000;
-	    low += part % 1000000;
-	    mtime = (float) low + (float) (timeLow >> 1) * 2.0 +
+	    low = timeHigh * 967;
+	    time += low / 1000;
+	    low = low % 1000 * 1000 + timeHigh * 296;
+	    time += low / 1000000;
+	    mtime = (float) (low % 1000000) + (float) (timeLow >> 1) * 2.0 +
 		    (float) (timeLow & 1);
 	    ({ mtime, high }) = modf(mtime / 1000000.0);
 	    time += (int) high;
