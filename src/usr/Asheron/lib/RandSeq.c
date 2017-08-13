@@ -4,7 +4,8 @@
  */
 
 private int *mem;			/* internal state */
-private int *rand0, *rand1, offset;	/* pseudorandom results */
+private int *rand0, *rand1, *rand2;	/* pseudorandom results */
+private int offset;			/* offset in result arrays */
 private int seedA, seedB, seedC;	/* seed, initially all the same */
 
 /*
@@ -101,21 +102,23 @@ static void create(int seed)
 }
 
 /*
- * Maintain a sequence of up to 512 indexed pseudo-random numbers.  As the
+ * Maintain a sequence of up to 768 indexed pseudo-random numbers.  As the
  * index increases, update the pseudo-random number table.
  */
 int rand(int index)
 {
     if (index < offset) {
-	if (index < offset - 256) {
+	if (index < offset - 512) {
 	    error("Out of range");	/* too far back */
 	}
-	return rand1[offset - 1 - index];
+	return (index < offset - 256) ?
+		rand2[offset - 257 - index] : rand1[offset - 1 - index];
     } else {
 	if (index >= offset + 256) {
 	    if (index >= offset + 512) {
 		error("Out of range");	/* too far ahead */
 	    }
+	    rand2 = rand1;
 	    rand1 = rand0[..];
 	    isaac();
 	    offset += 256;
