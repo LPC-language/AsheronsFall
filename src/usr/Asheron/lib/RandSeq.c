@@ -116,7 +116,7 @@ int rand(int index)
 	    if (index >= offset + 512) {
 		error("Out of range");	/* too far ahead */
 	    }
-	    rand1 = rand0;
+	    rand1 = rand0[..];
 	    isaac();
 	    offset += 256;
 	}
