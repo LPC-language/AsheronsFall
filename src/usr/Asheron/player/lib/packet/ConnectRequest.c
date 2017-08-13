@@ -14,16 +14,25 @@ private int serverSeed;		/* ISAAC server seed */
 private int clientSeed;		/* ISAAC client seed */
 private int something;		/* not flags, 0 in first ConnectRequest */
 
+/*
+ * layout of ConnectRequest
+ */
 static string headerLayout()
 {
     return "DDiiiiii";
 }
 
+/*
+ * size of entire blob
+ */
 int size()
 {
     return 32;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     return serialize(headerLayout(), time, mtime, interfaceCookie,
@@ -31,6 +40,9 @@ string transport()
 		     something);
 }
 
+/*
+ * create a ConnectRequest
+ */
 static void create(int time, float mtime, int interfaceCookie,
 		   int sessionCookie, int clientId, int serverSeed,
 		   int clientSeed, int something)

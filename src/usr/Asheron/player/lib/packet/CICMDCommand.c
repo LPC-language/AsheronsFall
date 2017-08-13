@@ -5,8 +5,8 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int something1;		/* unknown */
-private int something2;		/* unknown */
+private int command;		/* unknown */
+private int param;		/* unknown */
 
 /*
  * assumed layout of CICMDCommand
@@ -29,22 +29,22 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), something1, something2);
+    return serialize(headerLayout(), command, param);
 }
 
 /*
  * create a CICMDCommand
  */
-static void create(int something1, int something2)
+static void create(int command, int param)
 {
     ::create(PACKET_CICMD_COMMAND);
 
-    ::something1 = something1;
-    ::something2 = something2;
+    ::command = command;
+    ::param = param;
 }
 
 /*
  * fields
  */
-int something1()	{ return something1; }
-int something2()	{ return something2; }
+int command()	{ return command; }
+int param()	{ return param; }
