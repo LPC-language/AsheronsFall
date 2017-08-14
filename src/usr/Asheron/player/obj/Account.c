@@ -28,14 +28,14 @@ static void create(string name, string password)
 /*
  * login: connect an interface to this account
  */
-int login(Interface interface, string str)
+string login(Interface interface, string str)
 {
     if (previous_program() == ACCOUNT_SERVER && !::interface &&
 	hash_string("MD5", password[ .. 3] + str) == password[4 ..]) {
 	::interface = interface;
-	return TRUE;
+	return nil;
     }
-    return FALSE;
+    return "";	/* XXX CharacterError message blob */
 }
 
 /*

@@ -51,8 +51,10 @@ static mixed *gameTime()
 static Packet login(string name, string password, int serverId, int clientId,
 		    int serverSeed, int clientSeed)
 {
+    string message;
+
     catch {
-	account = ::login(name, password);
+	({ account, message }) = ::login(name, password);
 	if (!account) {
 	    return nil;	/* XXX  bad password */
 	}

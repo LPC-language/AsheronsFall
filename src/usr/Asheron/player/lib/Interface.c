@@ -6,17 +6,19 @@ inherit "~System/lib/user";
 /*
  * login through the account server
  */
-static Account login(string name, string password)
+static mixed *login(string name, string password)
 {
     Account account;
+    string message;
 
     if (query_conn()) {
-	account = ACCOUNT_SERVER->login(this_object(), name, password);
+	({ account, message }) =
+			ACCOUNT_SERVER->login(this_object(), name, password);
 	if (account) {
 	    ::login("Connection: " + name + " from " + address() + "\n");
 	}
     }
-    return account;
+    return ({ account, message });
 }
 
 /*

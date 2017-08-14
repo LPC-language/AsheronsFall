@@ -16,11 +16,12 @@ static void create()
 /*
  * login
  */
-Account login(Interface interface, string name, string password)
+mixed *login(Interface interface, string name, string password)
 {
     if (previous_program() == OBJECT_PATH(Interface)) {
 	mapping map;
 	Account account;
+	string message;
 
 	/* XXX check blacklist */
 	/* XXX check user limit */
@@ -33,11 +34,12 @@ Account login(Interface interface, string name, string password)
 		/*
 		 * login to known account
 		 */
-		if (!account->login(interface, password)) {
-		    return nil;	/* bad password */
+		message = account->login(interface, password);
+		if (message) {
+		    return ({ nil, message });
+		} else {
+		    return ({ account, nil });
 		}
-
-		return account;
 	    }
 	} else {
 	    accounts[name[.. 1]] = map = ([ ]);
@@ -46,7 +48,9 @@ Account login(Interface interface, string name, string password)
 	/*
 	 * create new account with given name and password
 	 */
-	return map[name] = clone_object(OBJECT_PATH(Account), name, password);
+	account = map[name] =
+		  clone_object(OBJECT_PATH(Account), name, password);
+	return ({ account, nil });
     }
 }
 
