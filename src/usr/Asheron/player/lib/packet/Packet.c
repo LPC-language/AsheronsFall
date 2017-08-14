@@ -118,15 +118,12 @@ string transport()
 /*
  * create a packet with a given header
  */
-static void create(int sequence, int flags, int checksum, int xorValue, int id,
-		   int time, int table)
+static void create(int sequence, int checksum, int id, int time, int table)
 {
     ::create(0);
 
     ::sequence = sequence;
-    ::flags = flags;
     ::checksum = checksum;
-    ::xorValue = xorValue;
     ::id = id;
     ::time = time;
     ::size = 0;
@@ -136,9 +133,35 @@ static void create(int sequence, int flags, int checksum, int xorValue, int id,
 }
 
 /*
+ * Prepare to retransmit packet.  All that changes in retransmitted packets
+ * is the checksum and 1 bit in the flags; i.e. flow is not updated.
+ */
+void addRetransmission()
+{
+    flags |= PACKET_RETRANSMISSION;
+}
+
+/*
+ * add Disconnect flag
+ */
+void addDisconnect()
+{
+    flags |= PACKET_DISCONNECT;
+}
+
+/*
+ * add value to "encrypt" checksum with
+ */
+void addXorValue(int xorValue)
+{
+    flags |= PACKET_ENCRYPTED_CHECKSUM;
+    ::xorValue = xorValue;
+}
+
+/*
  * add NetworkData to a packet
  */
-int addData(NetworkData item)
+void addData(NetworkData item)
 {
     int type;
 
@@ -151,20 +174,11 @@ int addData(NetworkData item)
 /*
  * add a fragment to a packet
  */
-int addFragment(Fragment fragment)
+void addFragment(Fragment fragment)
 {
     flags |= PACKET_BLOB_FRAGMENTS;
     fragments += ({ fragment });
     size += fragment->size();
-}
-
-/*
- * Prepare to retransmit packet.  All that changes in retransmitted packets
- * is the checksum and 1 bit in the flags; i.e. flow is not updated.
- */
-void retransmit()
-{
-    flags |= PACKET_RETRANSMISSION;
 }
 
 /*

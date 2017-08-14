@@ -10,7 +10,7 @@ inherit Packet;
 /*
  * process packet options
  */
-static string processOptions(int flags, string body)
+static string processOptions(int flags, int xorValue, string body)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_REQUEST_RETRANSMIT |
@@ -22,6 +22,12 @@ static string processOptions(int flags, string body)
 	error("Bad packet flags: " + flags);
     }
 
+    if (flags & PACKET_RETRANSMISSION) {
+	addRetransmission();
+    }
+    if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+	addXorValue(xorValue);
+    }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
 
@@ -42,6 +48,9 @@ static string processOptions(int flags, string body)
 	ackSequence = new ClientAckSequence(body);
 	addData(ackSequence);
 	body = body[ackSequence->size() ..];
+    }
+    if (flags & PACKET_DISCONNECT) {
+	addDisconnect();
     }
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
@@ -124,10 +133,10 @@ static void create(string blob, RandSeq randGen)
     if (randGen && (flags & PACKET_ENCRYPTED_CHECKSUM)) {
 	xorValue = randGen->rand(sequence - 2);
     }
-    ::create(sequence, flags, checksum, xorValue, id, time, table);
+    ::create(sequence, checksum, id, time, table);
     verify = badTodd(blob[.. HEADER_SIZE - 1]) + BADTODD;
 
-    body = processOptions(flags, body);
+    body = processOptions(flags, xorValue, body);
     if (size != strlen(body)) {
 	bodyVerify = badTodd(blob[HEADER_SIZE ..
 				  strlen(blob) - strlen(body) - 1]);

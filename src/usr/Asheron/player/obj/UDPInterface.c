@@ -76,7 +76,7 @@ static int _login(string str, object connObj)
     }
 
     ({ time, mtime }) = gameTime();
-    packet = new Packet(0, 0, 0, 0, SERVER_ID, 0, 0);
+    packet = new Packet(0, 0, SERVER_ID, 0, 0);
     packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
 				       sessionCookie, clientId, serverSeed,
 				       clientSeed, 0));

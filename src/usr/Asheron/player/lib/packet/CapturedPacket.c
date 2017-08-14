@@ -7,7 +7,7 @@ inherit ClientPacket;
 /*
  * process packet options
  */
-static string processOptions(int flags, string body)
+static string processOptions(int flags, int xorValue, string body)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_SERVER_SWITCH |
@@ -22,6 +22,12 @@ static string processOptions(int flags, string body)
 	error("Bad packet flags: " + flags);
     }
 
+    if (flags & PACKET_RETRANSMISSION) {
+	addRetransmission();
+    }
+    if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+	addXorValue(xorValue);
+    }
     if (flags & PACKET_SERVER_SWITCH) {
 	ServerSwitch serverSwitch;
 
@@ -56,6 +62,9 @@ static string processOptions(int flags, string body)
 	ackSequence = new ClientAckSequence(body);
 	addData(ackSequence);
 	body = body[ackSequence->size() ..];
+    }
+    if (flags & PACKET_DISCONNECT) {
+	addDisconnect();
     }
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
