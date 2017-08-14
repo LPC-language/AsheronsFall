@@ -15,6 +15,7 @@ private void isaac()
 {
     int i, x, y;
 
+    rand0 = allocate_int(256);
     seedB += ++seedC;
     for (i = 0; i < 256; i++) {
 	x = mem[i];
@@ -96,7 +97,6 @@ static void create(int seed)
 	0x034377b6, 0xf0dc724f, 0xff290056, 0xd3b7f2ff, 0x72df023b, 0x3021aca2,
 	0x352ee316, 0xe046b5ca, 0xe94e08bc, 0x41bffb5a
     });
-    rand0 = allocate_int(256);
     seedA = seedB = seedC = seed;
     offset = -256;
 }
@@ -119,7 +119,7 @@ int rand(int index)
 		error("Out of range");	/* too far ahead */
 	    }
 	    rand2 = rand1;
-	    rand1 = rand0[..];
+	    rand1 = rand0;
 	    isaac();
 	    offset += 256;
 	}
