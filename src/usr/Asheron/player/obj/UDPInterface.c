@@ -70,11 +70,8 @@ static int _login(string str, object connObj)
     sessionCookie = random(0) & 0xffffffff;
     serverSeed = random(0) & 0xffffffff;
     clientSeed = random(0) & 0xffffffff;
-    packet = ::login(name, password, SERVER_ID, clientId, serverSeed,
-		     clientSeed);
-    if (packet) {
+    if (!::login(name, password, SERVER_ID, clientId, serverSeed, clientSeed)) {
 	/* login failed */
-	::message(packet->transport());
 	return MODE_DISCONNECT;
     }
 

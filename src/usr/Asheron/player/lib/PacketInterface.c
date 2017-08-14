@@ -48,18 +48,18 @@ static mixed *gameTime()
 /*
  * login during 3-way handshake, in case of an error return a packet to send
  */
-static Packet login(string name, string password, int serverId, int clientId,
-		    int serverSeed, int clientSeed)
+static int login(string name, string password, int serverId, int clientId,
+		 int serverSeed, int clientSeed)
 {
     string message;
 
     catch {
 	({ account, message }) = ::login(name, password);
 	if (!account) {
-	    return nil;	/* XXX  bad password */
+	    return FALSE;	/* XXX  bad password */
 	}
     } : {
-	return nil;	/* XXX login failed */
+	return FALSE;		/* XXX login failed */
     }
 
     ::serverId = serverId;
@@ -67,7 +67,7 @@ static Packet login(string name, string password, int serverId, int clientId,
     serverRand = new RandSeq(serverSeed);
     clientRand = new RandSeq(clientSeed);
     startTime = time();
-    return nil;
+    return TRUE;
 }
 
 /*
