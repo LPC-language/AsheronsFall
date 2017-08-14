@@ -21,6 +21,7 @@ static void create()
     compile_object(OBJECT_PATH(ClientAckSequence));
     compile_object(OBJECT_PATH(ClientLoginRequest));
     compile_object(OBJECT_PATH(ConnectRequest));
+    compile_object(OBJECT_PATH(ClientConnectError));
     compile_object(OBJECT_PATH(ClientCICMDCommand));
     compile_object(OBJECT_PATH(ClientTimeSynch));
     compile_object(OBJECT_PATH(ClientEchoRequest));
