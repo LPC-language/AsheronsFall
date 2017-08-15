@@ -7,7 +7,7 @@ inherit ClientPacket;
 /*
  * process packet options
  */
-static string processOptions(int flags, int xorValue, string body)
+static string processOptions(int flags, string body)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_SERVER_SWITCH |
@@ -26,7 +26,7 @@ static string processOptions(int flags, int xorValue, string body)
 	addRetransmission();
     }
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-	addXorValue(xorValue);
+	addEncryptedChecksum();
     }
     if (flags & PACKET_SERVER_SWITCH) {
 	ServerSwitch serverSwitch;

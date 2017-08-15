@@ -1,16 +1,12 @@
 # include "Packet.h"
-# include "RandSeq.h"
 
 inherit Packet;
 
 
-# define HEADER_SIZE	20
-# define BADTODD	0xBADD70DD
-
 /*
  * process packet options
  */
-static string processOptions(int flags, int xorValue, string body)
+static string processOptions(int flags, string body)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_REQUEST_RETRANSMIT |
@@ -26,7 +22,7 @@ static string processOptions(int flags, int xorValue, string body)
 	addRetransmission();
     }
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-	addXorValue(xorValue);
+	addEncryptedChecksum();
     }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
@@ -108,11 +104,10 @@ static string processOptions(int flags, int xorValue, string body)
 /*
  * create a packet from a blob
  */
-static void create(string blob, RandSeq randGen)
+static void create(string blob)
 {
     string body;
-    int sequence, flags, checksum, id, time, size, table, verify, bodyVerify,
-	xorValue;
+    int sequence, flags, checksum, id, time, size, table;
 
     /*
      * process packet header
@@ -130,16 +125,13 @@ static void create(string blob, RandSeq randGen)
     if (size != strlen(body)) {
 	error("Bad packet size");
     }
-    if (randGen && (flags & PACKET_ENCRYPTED_CHECKSUM)) {
-	xorValue = randGen->rand(sequence - 2);
-    }
     ::create(sequence, checksum, id, time, table);
-    verify = badTodd(blob[.. HEADER_SIZE - 1]) + BADTODD;
+    addHeaderChecksum(blob[.. PACKET_HEADER_SIZE - 1]);
 
-    body = processOptions(flags, xorValue, body);
+    body = processOptions(flags, body);
     if (size != strlen(body)) {
-	bodyVerify = badTodd(blob[HEADER_SIZE ..
-				  strlen(blob) - strlen(body) - 1]);
+	addBodyChecksum(blob[PACKET_HEADER_SIZE ..
+			     strlen(blob) - strlen(body) - 1]);
     }
 
     /*
@@ -153,22 +145,12 @@ static void create(string blob, RandSeq randGen)
 	    fragment = new ClientFragment(body);
 	    addFragment(fragment);
 	    size = fragment->size();
-	    bodyVerify += badTodd(body[.. size - 1]);
+	    addBodyChecksum(body[.. size - 1]);
 	    body = body[size ..];
 	} while (strlen(body) != 0);
     }
 
     if (body != "") {
 	error("Garbage in packet");
-    }
-
-    if (!(flags & PACKET_ENCRYPTED_CHECKSUM) || randGen) {
-	/*
-	 * verify checksum
-	 */
-	verify += bodyVerify ^ xorValue;
-	if (checksum != ((verify - checksum) & 0xffffffff)) {
-	    error("Bad checksum");
-	}
     }
 }

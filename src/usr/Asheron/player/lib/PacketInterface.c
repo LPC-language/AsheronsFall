@@ -96,15 +96,21 @@ static int receivePacket(string str)
     int sequence, flags;
 
     catch {
-	packet = new ClientPacket(str, clientRand);
+	packet = new ClientPacket(str);
+	sequence = packet->sequence();
+	flags = packet->flags();
+	if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+	    packet->addXorValue(clientRand->rand(sequence - 2));
+	}
+	if (packet->checksum() != packet->computeChecksum()) {
+	    error("Bad checksum");
+	}
     } : {
 	/* merely ignore bad packets, for now */
 	return MODE_NOCHANGE;
     }
 
     /* handle incoming packet */
-    sequence = packet->sequence();
-    flags = packet->flags();
     /* XXX */
 }
 

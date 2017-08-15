@@ -5,12 +5,11 @@ inherit NetworkData;
 inherit Serialized;
 
 
-# define HEADER_SIZE	20
-# define BADTODD	0xBADD70DD
-
 private int sequence;		/* packet sequence number */
 private int flags;		/* bitflags */
-private int checksum;		/* badTodd checksum */
+private int headerChecksum;	/* header checksum */
+private int bodyChecksum;	/* body checksum */
+private int checksum;		/* packet checksum */
 private int xorValue;		/* value to xor with body checksum */
 private int id;			/* packet ID */
 private int time;		/* time */
@@ -22,7 +21,7 @@ private Fragment *fragments;	/* fragments in this packet */
 /*
  * Bad Todd checksum calculation
  */
-static int badTodd(string blob)
+private int badTodd(string blob)
 {
     int len, tail, checksum, c0, c1, c2, c3, i;
 
@@ -65,6 +64,32 @@ static int badTodd(string blob)
 }
 
 /*
+ * compute header checksum
+ */
+static void addHeaderChecksum(string header)
+{
+    headerChecksum = badTodd(header) - checksum + 0xBADD70DD;
+    bodyChecksum = 0;
+}
+
+/*
+ * accumulate body checksum
+ */
+static void addBodyChecksum(string body)
+{
+    bodyChecksum += badTodd(body);
+}
+
+/*
+ * compute checksum for entire packet
+ */
+int computeChecksum()
+{
+    return (headerChecksum + (bodyChecksum ^ xorValue)) & 0xffffffff;
+}
+
+
+/*
  * packet header layout string
  */
 static string headerLayout()
@@ -77,7 +102,7 @@ static string headerLayout()
  */
 int size()
 {
-    return HEADER_SIZE + size;
+    return PACKET_HEADER_SIZE + size;
 }
 
 /*
@@ -90,28 +115,31 @@ string transport()
     NetworkData *packetData;
 
     packet = allocate(1 + map_sizeof(data) + sizeof(fragments));
-    packet[0] = serialize(headerLayout(), sequence, flags, 0, id, time, size,
-			  table);
-    checksum = badTodd(packet[0]) + BADTODD;
+    packet[0] = serialize(headerLayout(), sequence, flags, checksum, id, time,
+			  size, table);
+    addHeaderChecksum(packet[0]);
     n = 1;
     packetData = map_values(data);
     for (sz = sizeof(packetData), i = 0; i < sz; i++) {
 	packet[n++] = packetData[i]->transport();
     }
-    bodyChecksum = (sz != 0) ? badTodd(implode(packet[1 .. sz], "")) : 0;
+    if (sz != 0) {
+	addBodyChecksum(implode(packet[1 .. sz], ""));
+    }
     for (sz = sizeof(fragments), i = 0; i < sz; i++) {
 	packet[n] = fragments[i]->transport();
-	bodyChecksum += badTodd(packet[n++]);
+	addBodyChecksum(packet[n++]);
     }
 
-    blob = implode(packet, "");
-    checksum = (checksum + (bodyChecksum ^ xorValue)) & 0xffffffff;
+    blob = packet[0];
+    checksum = computeChecksum();
     blob[8] = checksum;
     blob[9] = checksum >> 8;
     blob[10] = checksum >> 16;
     blob[11] = checksum >> 24;
+    packet[0] = blob;
 
-    return blob;
+    return implode(packet, "");
 }
 
 
@@ -142,6 +170,14 @@ void addRetransmission()
 }
 
 /*
+ * add EncryptedChecksum flag
+ */
+void addEncryptedChecksum()
+{
+    flags |= PACKET_ENCRYPTED_CHECKSUM;
+}
+
+/*
  * add Disconnect flag
  */
 void addDisconnect()
@@ -154,7 +190,6 @@ void addDisconnect()
  */
 void addXorValue(int xorValue)
 {
-    flags |= PACKET_ENCRYPTED_CHECKSUM;
     ::xorValue = xorValue;
 }
 

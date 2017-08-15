@@ -26,9 +26,9 @@ static void create(int time, float mtime, int srcAddr, int srcPort,
 /*
  * create an AC packet from the captured data
  */
-Packet packet(RandSeq rand)
+Packet packet()
 {
-    return new CapturedPacket(blob, rand);
+    return new CapturedPacket(blob);
 }
 
 

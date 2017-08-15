@@ -23,7 +23,7 @@ static int _login(string str, object connObj)
     int clientId, interfaceCookie, sessionCookie;
 
     catch {
-	packet = new ClientPacket(str, nil);
+	packet = new ClientPacket(str);
     } : {
 	/* drop connection without sending anything back */
 	return MODE_DISCONNECT;

@@ -37,6 +37,8 @@
 # define Flow			object "~/player/lib/packet/Flow"
 # define ClientFlow		object "~/player/lib/packet/ClientFlow"
 
+# define PACKET_HEADER_SIZE		20
+
 /* packet flags */
 # define PACKET_RETRANSMISSION		0x00000001
 # define PACKET_ENCRYPTED_CHECKSUM	0x00000002
@@ -61,8 +63,6 @@
 
 /* message type */
 # define PACKET_MESSAGE			0x10000000
-
-# define SERVER_ID			0xAC
 
 /* authentication modes */
 # define AUTH_ACCOUNT			1
