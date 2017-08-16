@@ -114,10 +114,7 @@ int rand(int index)
 	return (index < offset - 256) ?
 		rand2[offset - 257 - index] : rand1[offset - 1 - index];
     } else {
-	if (index >= offset + 256) {
-	    if (index >= offset + 512) {
-		error("Out of range");	/* too far ahead */
-	    }
+	while (index >= offset + 256) {
 	    rand2 = rand1;
 	    rand1 = rand0;
 	    isaac();
