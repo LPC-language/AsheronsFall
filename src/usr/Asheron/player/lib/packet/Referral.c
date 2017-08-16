@@ -10,9 +10,10 @@ private int sessionCookie;
 private int flags;		/* 2 */
 private int port;		/* port to connect to */
 private int address;		/* address to connect to */
+private int something1;		/* not always 0 */
 private int serverId;		/* serverId */
-private int something1;		/* 2002 */
 private int something2;		/* something? */
+private int something3;		/* something? */
 
 /*
  * layout of Referral
@@ -36,14 +37,16 @@ int size()
 string transport()
 {
     return serialize(headerLayout(), interfaceCookie, sessionCookie, flags,
-		     port, address, 0, 0, serverId, something1, something2);
+		     port, address, something1, 0, serverId, something2,
+		     something3);
 }
 
 /*
  * create a Referral
  */
 static void create(int interfaceCookie, int sessionCookie, int flags, int port,
-		   int address, int serverId, int something1, int something2)
+		   int address, int something1, int serverId, int something2,
+		   int something3)
 {
     ::create(PACKET_REFERRAL);
 
@@ -52,9 +55,10 @@ static void create(int interfaceCookie, int sessionCookie, int flags, int port,
     ::flags = flags;
     ::port = port;
     ::address = address;
-    ::serverId = serverId;
     ::something1 = something1;
+    ::serverId = serverId;
     ::something2 = something2;
+    ::something3 = something3;
 }
 
 /*
@@ -65,6 +69,7 @@ int sessionCookie()	{ return sessionCookie; }
 int flags()		{ return flags; }
 int port()		{ return port; }
 int address()		{ return address; }
-int serverId()		{ return serverId; }
 int something1()	{ return something1; }
+int serverId()		{ return serverId; }
 int something2()	{ return something2; }
+int something3()	{ return something3; }

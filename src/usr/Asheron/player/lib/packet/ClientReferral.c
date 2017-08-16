@@ -8,8 +8,8 @@ inherit Referral;
  */
 static create(string blob)
 {
-    int interfaceCookie, sessionCookie, flags, port, address, zero1, zero2,
-	serverId, something, seed;
+    int interfaceCookie, sessionCookie, flags, port, address, something1, zero,
+	serverId, something2, something3;
 
     ({
 	blob,
@@ -18,15 +18,15 @@ static create(string blob)
 	flags,
 	port,
 	address,
-	zero1,
-	zero2,
+	something1,
+	zero,
 	serverId,
-	something,
-	seed
+	something2,
+	something3
     }) = deSerialize(blob, headerLayout());
-    if ((zero1 | zero2) != 0) {
-	error("Zero fields not 0");
+    if (zero != 0) {
+	error("Zero field not 0");
     }
-    ::create(interfaceCookie, sessionCookie, flags, port, address, serverId,
-	     something, seed);
+    ::create(interfaceCookie, sessionCookie, flags, port, address, something1,
+	     serverId, something2, something3);
 }
