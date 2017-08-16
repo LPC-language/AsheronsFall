@@ -50,17 +50,17 @@ PacketAC packetAC()
      * IP layer
      */
     if (strlen(blob) < ETHER_HEADER_SIZE + IP_HEADER_SIZE) {
-	error("Short packet");
+	return nil;	/* short packet */
     }
     if ((blob[IP_VERSION_IHL] >> 4) != 4) {
-	error("Not IPv4");
+	return nil;	/* not IPv4 */
     }
     ihl = (blob[IP_VERSION_IHL] & 0x0f) << 2;
     if (ihl < IP_HEADER_SIZE) {
-	error("Invalid IHL");
+	return nil;	/* invalid IHL */
     }
     if (blob[IP_PROTO] != IP_PROTO_UDP) {
-	error("Not UDP protocol");
+	return nil;	/* not UDP protocol */
     }
     if (((blob[IP_FLAGS_FRAG] & IP_FRAGMENTS) | blob[IP_FLAGS_FRAG + 1]) != 0) {
 	error("IP packet is fragmented");
