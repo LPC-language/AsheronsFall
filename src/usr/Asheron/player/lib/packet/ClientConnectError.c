@@ -8,13 +8,13 @@ inherit ConnectError;
  */
 static void create(string blob)
 {
-    int unknown1, unknown2;
+    int something1, something2;
 
     ({
 	blob,
-	unknown1,
-	unknown2,
+	something1,
+	something2,
     }) = deSerialize(blob, headerLayout());
 
-    ::create(unknown1, unknown2);
+    ::create(something1, something2);
 }

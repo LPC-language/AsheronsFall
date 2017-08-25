@@ -5,6 +5,7 @@
 inherit PacketInterface;
 
 
+# define CLIENT_VERSION	"1802"
 # define SERVER_ID	0xAC
 
 string loginBlob;	/* first packet blob received */
@@ -51,6 +52,10 @@ static int _login(string str, object connObj)
 
     loginBlob = str;
     loginRequest = packet->data(PACKET_LOGIN_REQUEST);
+    if (loginRequest->version() != CLIENT_VERSION) {
+	/* ignore login attempts from older clients */
+	return MODE_DISCONNECT;
+    }
     name = loginRequest->account();
     ticket = loginRequest->ticket();
     if (ticket) {

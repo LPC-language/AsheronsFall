@@ -8,13 +8,13 @@ inherit CICMDCommand;
  */
 static void create(string blob)
 {
-    int something1;
-    int something2;
+    int command;
+    int parameter;
 
     ({
 	blob,
-	something1,
-	something2
+	command,
+	parameter
     }) = deSerialize(blob, headerLayout());
-    ::create(something1, something2);
+    ::create(command, parameter);
 }

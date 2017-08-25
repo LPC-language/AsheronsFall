@@ -6,7 +6,7 @@ inherit Serialized;
 
 
 private int command;		/* unknown */
-private int param;		/* unknown */
+private int parameter;		/* unknown */
 
 /*
  * assumed layout of CICMDCommand
@@ -29,22 +29,22 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), command, param);
+    return serialize(headerLayout(), command, parameter);
 }
 
 /*
  * create a CICMDCommand
  */
-static void create(int command, int param)
+static void create(int command, int parameter)
 {
     ::create(PACKET_CICMD_COMMAND);
 
     ::command = command;
-    ::param = param;
+    ::parameter = parameter;
 }
 
 /*
  * fields
  */
 int command()	{ return command; }
-int param()	{ return param; }
+int parameter()	{ return parameter; }

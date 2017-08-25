@@ -75,6 +75,7 @@ static void create(string version, int flags, int time, string account,
  * fields
  */
 string version()	{ return version; }
+int flags()		{ return flags; }
 int time()		{ return time; }
 string account()	{ return account; }
 string ticket()		{ return ticket; }

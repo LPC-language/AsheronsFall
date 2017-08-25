@@ -5,8 +5,8 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int unknown1;		/* ??? */
-private int unknown2;		/* ??? */
+private int something1;		/* ??? */
+private int something2;		/* ??? */
 
 /*
  * layout of ConnectClose
@@ -29,7 +29,7 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), unknown1, unknown2);
+    return serialize(headerLayout(), something1, something2);
 }
 
 /*
@@ -39,12 +39,12 @@ static void create(int unknown1, int unknown2)
 {
     ::create(PACKET_CONNECT_CLOSE);
 
-    ::unknown1 = unknown1;
-    ::unknown2 = unknown2;
+    ::something1 = something1;
+    ::something2 = something2;
 }
 
 /*
  * fields
  */
-int unknown1()	{ return unknown1; }
-int unknown2()	{ return unknown2; }
+int something1()	{ return something1; }
+int something2()	{ return something2; }
