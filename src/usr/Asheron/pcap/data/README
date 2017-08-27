@@ -1,0 +1,2 @@
+The scanner expects the pcap datamining files to be in this directory,
+extracted to subdirectories pcap1, pcap2 and pcap3.
