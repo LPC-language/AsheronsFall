@@ -34,7 +34,7 @@ static int _login(string str, object connObj)
 {
     Packet packet;
     LoginRequest loginRequest;
-    string name, ticket, password;
+    string name, password;
     int interfaceCookie, clientId, serverSeed, clientSeed, time;
     float mtime;
 
@@ -57,9 +57,9 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
     name = loginRequest->account();
-    ticket = loginRequest->ticket();
-    if (ticket) {
-	sscanf(ticket, "\n%s", password);
+    password = loginRequest->ticket();
+    if (password) {
+	sscanf(password, "\n%s", password);
     } else {
 	/* PhatAC method */
 	sscanf(name, "%s:%s", name, password);
