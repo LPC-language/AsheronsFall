@@ -5,8 +5,8 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int prevSize;		/* sum of sizes of packets with prevTime */
-private int prevTime;		/* time of prev+1 packet received */
+private int flowSize;		/* sum of sizes of packets with flowTime */
+private int flowTime;		/* time of prev+1 packet received */
 
 /*
  * layout of flow
@@ -29,22 +29,22 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), prevSize, prevTime);
+    return serialize(headerLayout(), flowSize, flowTime);
 }
 
 /*
  * create a Flow
  */
-static void create(int prevSize, int prevTime)
+static void create(int flowSize, int flowTime)
 {
     ::create(PACKET_FLOW);
 
-    ::prevSize = prevSize;
-    ::prevTime = prevTime;
+    ::flowSize = flowSize;
+    ::flowTime = flowTime;
 }
 
 /*
  * fields
  */
-int prevSize()	{ return prevSize; }
-int prevTime()	{ return prevTime; }
+int flowSize()	{ return flowSize; }
+int flowTime()	{ return flowTime; }

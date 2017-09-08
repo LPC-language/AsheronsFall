@@ -28,6 +28,10 @@ static int _login(string str, object connObj)
 	/* drop connection without sending anything back */
 	return MODE_DISCONNECT;
     }
+    if (packet->checksum() != packet->computeChecksum()) {
+	/* corrupted packet */
+	return MODE_DISCONNECT;
+    }
 
     if (packet->flags() != PACKET_CONNECT_RESPONSE) {
 	/* don't bother responding to anything but a ConnectResponse */

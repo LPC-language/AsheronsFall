@@ -5,7 +5,7 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int *sequence;	/* sequence numbers of packets to retransmit */
+private int *sequences;	/* sequence numbers of packets to retransmit */
 
 /*
  * layout of RequestRetransmit header
@@ -20,7 +20,7 @@ static string headerLayout()
  */
 int size()
 {
-    return 4 * (sizeof(sequence) + 1);
+    return 4 * (sizeof(sequences) + 1);
 }
 
 /*
@@ -31,10 +31,10 @@ string transport()
     string *serialized;
     int sz, i;
 
-    sz = sizeof(sequence);
+    sz = sizeof(sequences);
     serialized = allocate(sz);
     for (i = 0; i < sz; i++) {
-	serialized[i] = serialize("i", sequence[i]);
+	serialized[i] = serialize("i", sequences[i]);
     }
     return serialize(headerLayout(), sz) + implode(serialized, "");
 }
@@ -42,14 +42,14 @@ string transport()
 /*
  * create a RequestRetransmit
  */
-static void create(int *sequence)
+static void create(int *sequences)
 {
     ::create(PACKET_REQUEST_RETRANSMIT);
 
-    ::sequence = sequence;
+    ::sequences = sequences;
 }
 
 /*
  * fields
  */
-int *sequence()		{ return sequence[..]; }
+int *sequences()	{ return sequences[..]; }

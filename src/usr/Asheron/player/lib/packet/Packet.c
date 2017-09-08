@@ -11,7 +11,7 @@ private int headerChecksum;	/* header checksum */
 private int bodyChecksum;	/* body checksum */
 private int checksum;		/* packet checksum */
 private int xorValue;		/* value to xor with body checksum */
-private int id;			/* packet ID */
+private int id;			/* server/client ID */
 private int time;		/* time */
 private int size;		/* size of data */
 private int table;		/* packet table */

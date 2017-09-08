@@ -8,13 +8,13 @@ inherit Flow;
  */
 static void create(string blob)
 {
-    int prevSize, prevTime;
+    int flowSize, flowTime;
 
     ({
 	blob,
-	prevSize,
-	prevTime,
+	flowSize,
+	flowTime,
     }) = deSerialize(blob, headerLayout());
 
-    ::create(prevSize, prevTime);
+    ::create(flowSize, flowTime);
 }
