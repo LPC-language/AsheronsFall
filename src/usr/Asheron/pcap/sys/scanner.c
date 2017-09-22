@@ -189,73 +189,78 @@ private void markChecksum(Packet packet, object rand, mapping pcap,
 static void scan(object iter, mapping pcap, mapping rand, object walker)
 {
     object packet;
-    int addrPort;
+    int i, addrPort;
 
-    catch {
-	packet = iter->next();
-    } : {
-	pcap["errorCapture"] = 1;
-    }
-    if (packet) {
+    for (i = 0; i < 64; i++) {
+	packet = nil;
 	catch {
-	    packet = packet->packetAC();
-	    if (packet) {
-		if (pcap["packets"] == 0) {
-		    pcap["startTime"] = packet->time();
-		}
-		pcap["endTime"] = packet->time();
+	    packet = iter->next();
+	} : {
+	    pcap["errorCapture"] = 1;
+	}
+	if (packet) {
+	    catch {
+		packet = packet->packetAC();
+		if (packet) {
+		    if (pcap["packets"] == 0) {
+			pcap["startTime"] = packet->time();
+		    }
+		    pcap["endTime"] = packet->time();
 
-		if ((packet->srcPort() >= 9000 && packet->srcPort() <= 9099) ||
-		    (packet->destPort() >= 9000 && packet->destPort() <= 9099))
-		{
-		    /*
-		     * AC-like
-		     */
-		    if ((packet->srcAddr() >> 8) == IP_NET_TURBINE) {
+		    if ((packet->srcPort() >= 9000 && packet->srcPort() <= 9099) ||
+			(packet->destPort() >= 9000 && packet->destPort() <= 9099))
+		    {
 			/*
-			 * server
+			 * AC-like
 			 */
-			pcap["servers"] |= ({ packet->srcAddr() & 0xff });
-			addrPort = ((packet->srcAddr() & 0xff) << 16) +
-				   packet->srcPort();
-			packet = packet->packet();
-			markFlags(packet, pcap, pcap["server"]);
-			markChecksum(packet, rand[addrPort], pcap,
-				     pcap["server"]);
+			if ((packet->srcAddr() >> 8) == IP_NET_TURBINE) {
+			    /*
+			     * server
+			     */
+			    pcap["servers"] |= ({ packet->srcAddr() & 0xff });
+			    addrPort = ((packet->srcAddr() & 0xff) << 16) +
+				       packet->srcPort();
+			    packet = packet->packet();
+			    markFlags(packet, pcap, pcap["server"]);
+			    markChecksum(packet, rand[addrPort], pcap,
+					 pcap["server"]);
 
-			if (packet->flags() & PACKET_CONNECT_REQUEST) {
-			    packet = packet->data(PACKET_CONNECT_REQUEST);
-			    rand[addrPort] = new RandSeq(packet->clientSeed());
-			    rand[addrPort + 1] = new RandSeq(packet->serverSeed());
+			    if (packet->flags() & PACKET_CONNECT_REQUEST) {
+				packet = packet->data(PACKET_CONNECT_REQUEST);
+				rand[addrPort] = new RandSeq(packet->clientSeed());
+				rand[addrPort + 1] = new RandSeq(packet->serverSeed());
+			    }
+			} else if ((packet->destAddr() >> 8) == IP_NET_TURBINE) {
+			    /*
+			     * client
+			     */
+			    pcap["servers"] |= ({ packet->destAddr() & 0xff });
+			    addrPort = ((packet->destAddr() & 0xff) << 16) +
+				       packet->destPort();
+			    packet = packet->packet();
+			    markFlags(packet, pcap, pcap["client"]);
+			    markChecksum(packet, rand[addrPort], pcap,
+					 pcap["client"]);
+			} else {
+			    /*
+			     * not an AC packet after all
+			     */
+			    pcap["nonACPackets"]++;
 			}
-		    } else if ((packet->destAddr() >> 8) == IP_NET_TURBINE) {
-			/*
-			 * client
-			 */
-			pcap["servers"] |= ({ packet->destAddr() & 0xff });
-			addrPort = ((packet->destAddr() & 0xff) << 16) +
-				   packet->destPort();
-			packet = packet->packet();
-			markFlags(packet, pcap, pcap["client"]);
-			markChecksum(packet, rand[addrPort], pcap,
-				     pcap["client"]);
 		    } else {
-			/*
-			 * not an AC packet after all
-			 */
 			pcap["nonACPackets"]++;
 		    }
-		} else {
-		    pcap["nonACPackets"]++;
 		}
+	    } : {
+		mark("errorPackets", pcap, pcap);
 	    }
-	} : {
-	    mark("errorPackets", pcap, pcap);
+	    pcap["packets"]++;
+	} else {
+	    save_object("~/pcap/sys/scanner.dat");
+	    walk(walker);
+	    return;
 	}
-	pcap["packets"]++;
-	call_out("scan", 0, iter, pcap, rand, walker);
-    } else {
-	save_object("~/pcap/sys/scanner.dat");
-	walk(walker);
     }
+
+    call_out("scan", 0, iter, pcap, rand, walker);
 }
