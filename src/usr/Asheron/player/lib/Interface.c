@@ -1,4 +1,4 @@
-# include "Account.h"
+# include "User.h"
 
 inherit "~System/lib/user";
 
@@ -8,25 +8,25 @@ inherit "~System/lib/user";
  */
 static mixed *login(string name, string password)
 {
-    Account account;
+    User user;
     string message;
 
     if (query_conn()) {
-	({ account, message }) =
+	({ user, message }) =
 			ACCOUNT_SERVER->login(this_object(), name, password);
-	if (account) {
+	if (user) {
 	    ::login("Connection: " + name + " from " + address() + "\n");
 	}
     }
-    return ({ account, message });
+    return ({ user, message });
 }
 
 /*
- * logout through the account server
+ * logout the user
  */
-static void logout(Account account)
+static void logout(User user)
 {
     if (query_conn()) {
-	ACCOUNT_SERVER->logout(account);
+	user->logout();
     }
 }

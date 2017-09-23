@@ -1,10 +1,10 @@
+# include "User.h"
 # include "Interface.h"
-# include "Account.h"
 
 
 string name;		/* account name */
 string password;	/* account password */
-Interface interface;	/* interface, if logged in */
+User user;		/* user, if logged in */
 
 /*
  * Create an account.  Store the password MD5-hashed with a 4-byte random
@@ -26,31 +26,21 @@ static void create(string name, string password)
 }
 
 /*
- * login: connect an interface to this account
+ * login on this account
  */
-string login(Interface interface, string str)
+mixed *login(Interface interface, string str)
 {
-    if (previous_program() == ACCOUNT_SERVER && !::interface &&
+    if (previous_program() == ACCOUNT_SERVER && !user &&
 	hash_string("MD5", password[ .. 3] + str) == password[4 ..]) {
-	::interface = interface;
-	return nil;
+	user = clone_object(OBJECT_PATH(User), this_object(), interface);
+	return ({ user, nil });
     }
-    return "";	/* XXX CharacterError message blob */
-}
-
-/*
- * logout: disconnect the interface
- */
-void logout()
-{
-    if (previous_program() == ACCOUNT_SERVER) {
-	interface = nil;
-    }
+    return ({ nil, "\x59\xf6\x00\x00\x09\x00\x00\x00" }); /* invalid account */
 }
 
 
 /*
  * fields
  */
-string name()		{ return name; }
-Interface interface()	{ return interface; }
+string name()	{ return name; }
+User user()	{ return user; }

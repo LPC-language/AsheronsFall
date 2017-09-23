@@ -133,6 +133,30 @@ int establish(Interface relay, int clientId, int cookie)
 }
 
 /*
+ * transmit a packet through the relay
+ */
+static void transmit(Packet packet, int required)
+{
+    relay->transmit(packet, required);
+}
+
+/*
+ * ask the relay to retransmit a packet
+ */
+static int retransmit(int sequence)
+{
+    return relay->retransmit(sequence);
+}
+
+/*
+ * tell the relay that the client acknowledged packets
+ */
+static void acknowledged(int sequence)
+{
+    relay->acknowledged(sequence);
+}
+
+/*
  * pass on an incoming packet to the lower level
  */
 int receive_message(string str)
@@ -141,14 +165,6 @@ int receive_message(string str)
 	return call_limited("receivePacket", str);
     }
     return MODE_NOCHANGE;
-}
-
-/*
- * send out a packet through the relay
- */
-static int message(string str)
-{
-    return relay->message(str);
 }
 
 

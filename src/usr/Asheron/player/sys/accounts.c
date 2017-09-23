@@ -1,4 +1,4 @@
-# include "Account.h"
+# include "User.h"
 # include "Interface.h"
 
 
@@ -11,6 +11,7 @@ static void create()
 {
     accounts = ([ ]);
     compile_object(OBJECT_PATH(Account));
+    compile_object(OBJECT_PATH(User));
 }
 
 /*
@@ -34,12 +35,7 @@ mixed *login(Interface interface, string name, string password)
 		/*
 		 * login to known account
 		 */
-		message = account->login(interface, password);
-		if (message) {
-		    return ({ nil, message });
-		} else {
-		    return ({ account, nil });
-		}
+		return account->login(interface, password);
 	    }
 	} else {
 	    accounts[name[.. 1]] = map = ([ ]);
@@ -50,17 +46,7 @@ mixed *login(Interface interface, string name, string password)
 	 */
 	account = map[name] =
 		  clone_object(OBJECT_PATH(Account), name, password);
-	return ({ account, nil });
-    }
-}
-
-/*
- * logout
- */
-void logout(Account account)
-{
-    if (previous_program() == OBJECT_PATH(Interface)) {
-	account->logout();
+	return account->login(interface, password);
     }
 }
 
