@@ -51,7 +51,8 @@ private string getDescFile(string file)
 	desc = read_file(file[ .. len - 5] + "_desc.txt");
     }
 
-    if (desc && strlen(desc) >= 10 && desc[3] == 0x58 && desc[7] == 0x00) {
+    if (desc && strlen(desc) >= 10 && desc[3] == 0x58 &&
+	(desc[7] == 0x00 || desc[7] == ' ')) {
 	/* skip 10 byte header */
 	desc = desc[10 ..];
     }
@@ -109,6 +110,7 @@ static void walk(object walker)
 	/*
 	 * start processing a capture
 	 */
+	sscanf(file, "/usr/Asheron/pcap/data/%s", file);
 	captures[file] = pcap = ([ ]);
 	pcap["description"] = getDescPath(base);
 	pcap["server"] = ([ ]);
@@ -256,7 +258,7 @@ static void scan(object iter, mapping pcap, mapping rand, object walker)
 	    }
 	    pcap["packets"]++;
 	} else {
-	    save_object("~/pcap/sys/scanner.dat");
+	    save_object("~/pcap/data/captures.dat");
 	    walk(walker);
 	    return;
 	}
