@@ -27,9 +27,9 @@ auto_object	= "/kernel/lib/auto";	/* automatically inherited object */
 driver_object	= "/kernel/sys/driver";	/* driver object */
 create		= "_F_create";		/* low-level create function */
 
-users		= 130;			/* max # of users */
-datagram_users	= 125;			/* max # of datagram users */
+users		= 55;			/* max # of users */
+datagram_users	= 200;			/* max # of datagram users */
 editors		= 5;			/* max # of editor sessions */
 objects		= 65535;		/* max # of objects */
-call_outs	= 65535;		/* max # of call_outs */
+call_outs	= 65534;		/* max # of call_outs */
 array_size	= 32767;		/* max array size */
