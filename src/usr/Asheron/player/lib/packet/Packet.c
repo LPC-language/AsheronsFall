@@ -66,7 +66,7 @@ private int badTodd(string blob)
 /*
  * compute header checksum
  */
-static void addHeaderChecksum(string header)
+static void setHeaderChecksum(string header)
 {
     headerChecksum = badTodd(header) - checksum + 0xBADD70DD;
     bodyChecksum = 0;
@@ -117,7 +117,7 @@ string transport()
     packet = allocate(1 + map_sizeof(data) + sizeof(fragments));
     packet[0] = serialize(headerLayout(), sequence, flags, checksum, id, time,
 			  size, table);
-    addHeaderChecksum(packet[0]);
+    setHeaderChecksum(packet[0]);
     n = 1;
     packetData = map_values(data);
     for (sz = sizeof(packetData), i = 0; i < sz; i++) {
@@ -146,14 +146,14 @@ string transport()
 /*
  * create a packet with a given header
  */
-static void create(int sequence, int checksum, int id, int time, int table)
+static void create(int sequence, int checksum, int id, int table)
 {
     ::create(0);
 
     ::sequence = sequence;
     ::checksum = checksum;
     ::id = id;
-    ::time = time;
+    ::time = 0;
     ::size = 0;
     ::table = table;
     data = ([ ]);
@@ -164,33 +164,41 @@ static void create(int sequence, int checksum, int id, int time, int table)
  * Prepare to retransmit packet.  All that changes in retransmitted packets
  * is the checksum and 1 bit in the flags; i.e. flow is not updated.
  */
-void addRetransmission()
+void setRetransmission()
 {
     flags |= PACKET_RETRANSMISSION;
 }
 
 /*
- * add EncryptedChecksum flag
+ * set EncryptedChecksum flag
  */
-void addEncryptedChecksum()
+void setEncryptedChecksum()
 {
     flags |= PACKET_ENCRYPTED_CHECKSUM;
 }
 
 /*
- * add Disconnect flag
+ * set Disconnect flag
  */
-void addDisconnect()
+void setDisconnect()
 {
     flags |= PACKET_DISCONNECT;
 }
 
 /*
- * add value to "encrypt" checksum with
+ * set value to "encrypt" checksum with
  */
-void addXorValue(int xorValue)
+void setXorValue(int xorValue)
 {
     ::xorValue = xorValue;
+}
+
+/*
+ * set time field
+ */
+void setTime(int time)
+{
+    ::time = time;
 }
 
 /*

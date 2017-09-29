@@ -32,10 +32,52 @@ inherit Interface;
  * them, and packets are discarded.
  */
 
-
-static void transmit(Packet packet, int required);
-static int retransmit(int sequence);
+static void transmit(Packet packet, int time, int required);
+static int retransmit(int sequence, int time);
 static void acknowledged(int sequence);
+
+
+/*
+ * timing
+ */
+
+private int startTime;		/* start of this session */
+private int time;		/* saved time */
+private float mtime;		/* saved mtime */
+
+/*
+ * initialize time handling
+ */
+private void timeCreate()
+{
+    ({ time, mtime }) = millitime();
+    startTime = time;
+}
+
+/*
+ * save the current time
+ */
+private void timeSave()
+{
+    ({ time, mtime }) = millitime();
+}
+
+/*
+ * time since the server first booted
+ */
+static mixed *timeServer()
+{
+    return ({ time - status(ST_STARTTIME), mtime });
+}
+
+/*
+ * the packet time field
+ */
+private int timePacket()
+{
+    return (time - startTime) * 2 + (int) ((mtime + 0.05) * 2.0);
+}
+
 
 /*
  * packet output buffer
@@ -48,7 +90,6 @@ static void acknowledged(int sequence);
 
 private int serverId;		/* ID of the server */
 private RandSeq serverRand;	/* for checksum encryption */
-private int startTime;		/* start of this session */
 private Packet bufPacket;	/* buffered partial packet */
 private int bufSize;		/* packet buffer space used */
 private int bufRequired;	/* is current buffered packet required? */
@@ -56,8 +97,6 @@ private int drain;		/* buffer drain callout active? */
 private int serverSeq;		/* seq of last packet sent */
 private int serverFrag;		/* seq of last fragment sent */
 private int timeSync;		/* timeSync needed? */
-private int time;		/* buffered time */
-private float mtime;		/* buffered mtime */
 
 /*
  * create packet output buffer
@@ -66,17 +105,7 @@ private void bufCreate(int serverId, RandSeq serverRand)
 {
     ::serverId = serverId;
     ::serverRand = serverRand;
-    startTime = time();
     serverSeq = 1;
-}
-
-/*
- * update the time used for buffered packets
- */
-private void bufTime(int time, float mtime)
-{
-    ::time = time;
-    ::mtime = mtime;
 }
 
 /*
@@ -84,10 +113,7 @@ private void bufTime(int time, float mtime)
  */
 private void bufStart()
 {
-    bufPacket =
-	    new Packet(serverSeq + 1, 0, serverId,
-		       (time - startTime) * 2 + (int) ((mtime + 0.05) * 2.0),
-		       0);
+    bufPacket = new Packet(serverSeq + 1, 0, serverId, 0);
     bufRequired = timeSync = FALSE;
     if (!drain) {
 	drain = TRUE;
@@ -102,11 +128,11 @@ private void bufFlush()
 {
     if (bufPacket) {
 	if (timeSync) {
-	    bufPacket->addData(new TimeSynch(time, mtime));
+	    bufPacket->addData(new TimeSynch(timeServer()...));
 	}
-	bufPacket->addEncryptedChecksum();
-	bufPacket->addXorValue(serverRand->rand(serverSeq - 1));
-	transmit(bufPacket, bufRequired);
+	bufPacket->setEncryptedChecksum();
+	bufPacket->setXorValue(serverRand->rand(serverSeq - 1));
+	transmit(bufPacket, timePacket(), bufRequired);
 	++serverSeq;
 	bufPacket = nil;
 	bufSize = 0;
@@ -156,7 +182,7 @@ private void bufData(NetworkData data, int required)
 	    bufFlush();
 	}
     } else {
-	size = 0;
+	size = 0;	/* replace existing header */
     }
     if (!bufPacket) {
 	bufStart();
@@ -233,7 +259,7 @@ private void bufTimeSync()
 	bufStart();
     }
     timeSync = TRUE;
-    /* XXX is timesync required? */
+    bufRequired = TRUE;
 
     bufSize += 8;
     if (bufSize == MAX_BUF_SIZE) {
@@ -254,7 +280,7 @@ private void bufFlow(int flowSize, int flowTime)
 	bufStart();
     }
     bufPacket->addData(new Flow(flowSize, flowTime));
-    /* XXX is flow required? */
+    bufRequired = TRUE;
 
     bufSize += 6;
     if (bufSize == MAX_BUF_SIZE) {
@@ -267,7 +293,7 @@ private void bufFlow(int flowSize, int flowTime)
  */
 void sendMessage(string message, int group, int required)
 {
-    bufTime(millitime()...);
+    timeSave();
     bufMessage(message, group, required);
 }
 
@@ -281,12 +307,12 @@ private void requestRetransmit(int *sequences)
 
     while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0, 0);
+	packet = new Packet(serverSeq, 0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
 	packet->addData(new RequestRetransmit(sequences[.. size - 1]));
-	transmit(packet, FALSE);
+	transmit(packet, timePacket(), FALSE);
 	sequences = sequences[size ..];
     }
 
@@ -309,12 +335,12 @@ private void rejectRetransmit(int *sequences)
 
     while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0, 0);
+	packet = new Packet(serverSeq, 0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
 	packet->addData(new RejectRetransmit(sequences[.. size - 1]));
-	transmit(packet, FALSE);
+	transmit(packet, timePacket(), FALSE);
 	sequences = sequences[size ..];
     }
 
@@ -336,9 +362,9 @@ private void ackSequence(int sequence)
 
     if (bufSize > MAX_BUF_SIZE - 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0, 0);
+	packet = new Packet(serverSeq, 0, serverId, 0);
 	packet->addData(new AckSequence(sequence));
-	transmit(packet, FALSE);
+	transmit(packet, timePacket(), FALSE);
     } else {
 	if (!bufPacket) {
 	    bufStart();
@@ -400,18 +426,6 @@ private User user;		/* connected account */
 private string loginError;
 
 /*
- * time since the server first booted
- */
-static mixed *gameTime()
-{
-    mixed *times;
-
-    times = millitime();
-    times[0] -= status(ST_STARTTIME);
-    return times;
-}
-
-/*
  * login during 3-way handshake
  */
 static int login(string name, string password, int serverId, int clientId,
@@ -419,6 +433,7 @@ static int login(string name, string password, int serverId, int clientId,
 {
     string message;
 
+    timeCreate();
     catch {
 	({ user, message }) = ::login(name, password);
 	if (!user) {
@@ -444,7 +459,7 @@ static int login(string name, string password, int serverId, int clientId,
 static void establish()
 {
     if (loginError) {
-	bufTime(millitime()...);
+	timeSave();
 	bufMessage(loginError, 9, TRUE);
 	bufFlush();
     } else {
@@ -481,7 +496,10 @@ static int receivePacket(string str)
      * sanity check
      */
     if (packet->id() != clientId) {
-	return MODE_NOCHANGE;		/* stray packet */
+	/*
+	 * stray packet, or CICMD_COMMAND which has clientId 0
+	 */
+	return MODE_NOCHANGE;
     }
 
     /*
@@ -496,37 +514,44 @@ static int receivePacket(string str)
 	if (sequence <= clientSeq) {
 	    return MODE_NOCHANGE;	/* duplicate */
 	}
-	packet->addXorValue(clientRand->rand(sequence - 2));
+	packet->setXorValue(clientRand->rand(sequence - 2));
     } else if (flags & ~(PACKET_REQUEST_RETRANSMIT | PACKET_REJECT_RETRANSMIT |
 			 PACKET_ACK_SEQUENCE | PACKET_DISCONNECT |
-			 PACKET_CICMD_COMMAND)) {
+			 PACKET_CONNECT_ERROR | PACKET_CICMD_COMMAND)) {
 	return MODE_NOCHANGE;		/* missing encrypted checksum */
-    } else if (sequence != 0 ||
-	       (flags & ~(PACKET_DISCONNECT | PACKET_CICMD_COMMAND))) {
-	if (sequence < receiveSeq - 512) {
-	    return MODE_NOCHANGE;		/* too far back */
+    } else if (sequence == 0) {
+	if (flags & ~(PACKET_DISCONNECT | PACKET_CICMD_COMMAND)) {
+	    return MODE_NOCHANGE;
 	}
+    } else if (sequence <= clientSeq - 10) {
+	return MODE_NOCHANGE;		/* too far back */
     }
     if (packet->checksum() != packet->computeChecksum()) {
 	return MODE_NOCHANGE;		/* corrupted or different session */
     }
 
+    switch (flags) {
+    case PACKET_DISCONNECT:
+	return MODE_DISCONNECT;
+
+    case 0:
+    case PACKET_ENCRYPTED_CHECKSUM:
+    case PACKET_CONNECT_ERROR:
+    case PACKET_CICMD_COMMAND:
+	return MODE_NOCHANGE;
+    }
+
+    timeSave();
 
     /*
      * handle urgent requests out of order
      */
-    if (flags == PACKET_DISCONNECT) {
-	return MODE_DISCONNECT;
-    }
-    if (flags == PACKET_CICMD_COMMAND) {
-	return MODE_NOCHANGE;
-    }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	int sz, i, *sequences;
 
 	sequences = packet->requestRetransmit()->sequences();
 	for (sz = sizeof(sequences), i = 0; i < sz; i++) {
-	    if (retransmit(sequences[i])) {
+	    if (retransmit(sequences[i], timePacket())) {
 		sequences[i] = 0;
 	    }
 	}
@@ -545,7 +570,7 @@ static int receivePacket(string str)
 		!clientQueue[clientSequence]) {
 		/* inject fake packet to fill the gap */
 		clientQueue[clientSequence] =
-				new Packet(clientSequence, 0, clientId, -1, 0);
+				    new Packet(clientSequence, 0, clientId, 0);
 	    }
 	}
     }

@@ -51,9 +51,10 @@ static void transmitPacket()
 /*
  * add a packet to the transmit queue
  */
-void transmit(Packet packet, int required)
+void transmit(Packet packet, int time, int required)
 {
     if (previous_object() == interface) {
+	packet->setTime(time);
 	if (sizeof(transmitQueue) == 0) {
 	    transmitQueue = ({ nil, packet });
 	    transmitPacket();
@@ -69,15 +70,15 @@ void transmit(Packet packet, int required)
 /*
  * retransmit a packet that was requested by the client
  */
-int retransmit(int sequence)
+int retransmit(int sequence, int time)
 {
     if (previous_object() == interface && sequence <= transmitSeq) {
 	Packet packet;
 
 	packet = transmitBuffer[sequence];
 	if (packet) {
-	    packet->addRetransmission();
-	    transmit(packet, FALSE);
+	    packet->setRetransmission();
+	    transmit(packet, time, FALSE);
 	    return TRUE;
 	}
     }
@@ -122,6 +123,8 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
+    connection(connObj);
+
     /* verify that all parameters are correct */
     clientId = packet->id();
     connectResponse = packet->data(PACKET_CONNECT_RESPONSE);
@@ -133,7 +136,6 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
-    connection(connObj);
     return MODE_NOCHANGE;
 }
 

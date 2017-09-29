@@ -23,10 +23,10 @@ static string processOptions(int flags, string body)
     }
 
     if (flags & PACKET_RETRANSMISSION) {
-	addRetransmission();
+	setRetransmission();
     }
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-	addEncryptedChecksum();
+	setEncryptedChecksum();
     }
     if (flags & PACKET_SERVER_SWITCH) {
 	ServerSwitch serverSwitch;
@@ -64,7 +64,7 @@ static string processOptions(int flags, string body)
 	body = body[ackSequence->size() ..];
     }
     if (flags & PACKET_DISCONNECT) {
-	addDisconnect();
+	setDisconnect();
     }
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;

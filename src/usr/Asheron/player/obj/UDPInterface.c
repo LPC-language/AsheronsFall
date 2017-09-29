@@ -84,8 +84,8 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
-    ({ time, mtime }) = gameTime();
-    packet = new Packet(0, 0, SERVER_ID, 0, 0);
+    ({ time, mtime }) = timeServer();
+    packet = new Packet(0, 0, SERVER_ID, 0);
     packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
 				       sessionCookie, clientId, serverSeed,
 				       clientSeed, 0));
@@ -135,17 +135,17 @@ int establish(Interface relay, int clientId, int cookie)
 /*
  * transmit a packet through the relay
  */
-static void transmit(Packet packet, int required)
+static void transmit(Packet packet, int time, int required)
 {
-    relay->transmit(packet, required);
+    relay->transmit(packet, time, required);
 }
 
 /*
  * ask the relay to retransmit a packet
  */
-static int retransmit(int sequence)
+static int retransmit(int sequence, int time)
 {
-    return relay->retransmit(sequence);
+    return relay->retransmit(sequence, time);
 }
 
 /*

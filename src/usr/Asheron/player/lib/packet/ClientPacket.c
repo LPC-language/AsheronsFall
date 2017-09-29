@@ -19,10 +19,10 @@ static string processOptions(int flags, string body)
     }
 
     if (flags & PACKET_RETRANSMISSION) {
-	addRetransmission();
+	setRetransmission();
     }
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-	addEncryptedChecksum();
+	setEncryptedChecksum();
     }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
@@ -46,7 +46,7 @@ static string processOptions(int flags, string body)
 	body = body[ackSequence->size() ..];
     }
     if (flags & PACKET_DISCONNECT) {
-	addDisconnect();
+	setDisconnect();
     }
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
@@ -132,8 +132,9 @@ static void create(string blob)
     if (size != strlen(body)) {
 	error("Bad packet size");
     }
-    ::create(sequence, checksum, id, time, table);
-    addHeaderChecksum(blob[.. PACKET_HEADER_SIZE - 1]);
+    ::create(sequence, checksum, id, table);
+    setTime(time);
+    setHeaderChecksum(blob[.. PACKET_HEADER_SIZE - 1]);
 
     body = processOptions(flags, body);
     if (size != strlen(body)) {
