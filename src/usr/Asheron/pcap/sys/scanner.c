@@ -6,7 +6,7 @@
 
 /*
  * Scanner for the collection of pcaps gathered in January 2017.  Scan
- * through all captures, save info in scanner.dat.
+ * through all captures, save info in captures.dat.
  */
 
 # define IP_NET_TURBINE		((198 << 16) + (252 << 8) + 160)
@@ -26,12 +26,11 @@ static void create()
     compile_object(OBJECT_PATH(FileTree));
 
     compile_object(OBJECT_PATH(CapturedPacket));
-    compile_object(OBJECT_PATH(ClientServerSwitch));
-    compile_object(OBJECT_PATH(ClientReferral));
-    compile_object(OBJECT_PATH(ClientWorldLoginRequest));
-    compile_object(OBJECT_PATH(ClientConnectRequest));
-    compile_object(OBJECT_PATH(ClientConnectClose));
-    compile_object(OBJECT_PATH(ClientEchoResponse));
+    compile_object(OBJECT_PATH(CapturedServerSwitch));
+    compile_object(OBJECT_PATH(CapturedReferral));
+    compile_object(OBJECT_PATH(CapturedWorldLoginRequest));
+    compile_object(OBJECT_PATH(CapturedConnectRequest));
+    compile_object(OBJECT_PATH(CapturedEchoResponse));
 
     captures = ([ ]);
     call_out("walk", 0, new FileTree("/usr/Asheron/pcap/data")->iterator());

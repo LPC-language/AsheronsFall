@@ -31,14 +31,14 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_SERVER_SWITCH) {
 	ServerSwitch serverSwitch;
 
-	serverSwitch = new ClientServerSwitch(body);
+	serverSwitch = new CapturedServerSwitch(body);
 	addData(serverSwitch);
 	body = body[serverSwitch->size() ..];
     }
     if (flags & PACKET_REFERRAL) {
 	Referral referral;
 
-	referral = new ClientReferral(body);
+	referral = new CapturedReferral(body);
 	addData(referral);
 	body = body[referral->size() ..];
     }
@@ -76,14 +76,14 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_WORLD_LOGIN_REQUEST) {
 	WorldLoginRequest worldLoginRequest;
 
-	worldLoginRequest = new ClientWorldLoginRequest(body);
+	worldLoginRequest = new CapturedWorldLoginRequest(body);
 	addData(worldLoginRequest);
 	body = body[worldLoginRequest->size() ..];
     }
     if (flags & PACKET_CONNECT_REQUEST) {
 	ConnectRequest connectRequest;
 
-	connectRequest = new ClientConnectRequest(body);
+	connectRequest = new CapturedConnectRequest(body);
 	addData(connectRequest);
 	body = body[connectRequest->size() ..];
     }
@@ -132,7 +132,7 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_ECHO_RESPONSE) {
 	EchoResponse echoResponse;
 
-	echoResponse = new ClientEchoResponse(body);
+	echoResponse = new CapturedEchoResponse(body);
 	addData(echoResponse);
 	body = body[echoResponse->size() ..];
     }
