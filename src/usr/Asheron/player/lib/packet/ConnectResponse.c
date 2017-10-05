@@ -6,7 +6,7 @@ inherit Serialized;
 
 
 private int interfaceCookie;	/* interface cookie (clone index) */
-private int sessionCookie;	/* random session cookie */
+private int sessionSeed;	/* random session seed */
 
 /*
  * layout of ConnectResponse
@@ -29,22 +29,22 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), interfaceCookie, sessionCookie);
+    return serialize(headerLayout(), interfaceCookie, sessionSeed);
 }
 
 /*
  * create a ConnectResponse
  */
-static void create(int interfaceCookie, int sessionCookie)
+static void create(int interfaceCookie, int sessionSeed)
 {
     ::create(PACKET_CONNECT_RESPONSE);
 
     ::interfaceCookie = interfaceCookie;
-    ::sessionCookie = sessionCookie;
+    ::sessionSeed = sessionSeed;
 }
 
 /*
  * fields
  */
 int interfaceCookie()	{ return interfaceCookie; }
-int sessionCookie()	{ return sessionCookie; }
+int sessionSeed()	{ return sessionSeed; }

@@ -9,7 +9,7 @@ inherit PacketInterface;
 # define SERVER_ID	0xAC
 
 string loginBlob;	/* first packet blob received */
-int sessionCookie;	/* random cookie which the client has to echo */
+int serverSeed;		/* server seed which the client has to echo */
 Interface relay;	/* outgoing packet relay */
 
 /*
@@ -35,7 +35,7 @@ static int _login(string str, object connObj)
     Packet packet;
     LoginRequest loginRequest;
     string name, password;
-    int interfaceCookie, clientId, serverSeed, clientSeed, time;
+    int interfaceCookie, clientId, clientSeed, time;
     float mtime;
 
     catch {
@@ -76,18 +76,17 @@ static int _login(string str, object connObj)
     connection(connObj);
     sscanf(object_name(this_object()), "%*s#%d", interfaceCookie);
     clientId = interfaceCookie & 0xffff;
-    sessionCookie = random(0) & 0xffffffff;
     serverSeed = random(0) & 0xffffffff;
     clientSeed = random(0) & 0xffffffff;
-    if (!::login(name, password, SERVER_ID, clientId, serverSeed, clientSeed)) {
+    if (!::login(name, password, SERVER_ID, clientId, clientSeed)) {
 	/* login failed */
 	return MODE_DISCONNECT;
     }
 
     ({ time, mtime }) = timeServer();
-    packet = new Packet(0, 0, SERVER_ID, 0);
+    packet = new Packet(0, SERVER_ID, 0);
     packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
-				       sessionCookie, clientId, serverSeed,
+				       serverSeed, clientId, serverSeed,
 				       clientSeed, 0));
     sendConnectRequest(packet->transport(), 5);
     return MODE_NOCHANGE;
@@ -121,10 +120,10 @@ void logout(int quit)
 /*
  * establish a relay for this interface
  */
-int establish(Interface relay, int clientId, int cookie)
+int establish(Interface relay, int clientId, int seed)
 {
     if (previous_program() == OBJECT_PATH(UDPRelay) && !::relay &&
-	clientId == clientId() && cookie == sessionCookie) {
+	clientId == clientId() && seed == serverSeed) {
 	::relay = relay;
 	::establish();
 	return TRUE;

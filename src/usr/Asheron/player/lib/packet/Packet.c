@@ -146,23 +146,31 @@ string transport()
 /*
  * create a packet with a given header
  */
-static void create(int sequence, int checksum, int id, int table)
+static void create(int checksum, int id, int table)
 {
     ::create(0);
 
-    ::sequence = sequence;
+    sequence = 0;
     ::checksum = checksum;
     ::id = id;
-    ::time = 0;
-    ::size = 0;
+    time = 0;
+    size = 0;
     ::table = table;
     data = ([ ]);
     fragments = ({ });
 }
 
 /*
+ * set the sequence field
+ */
+void setSequence(int sequence)
+{
+    ::sequence = sequence;
+}
+
+/*
  * Prepare to retransmit packet.  All that changes in retransmitted packets
- * is the checksum and 1 bit in the flags; i.e. flow is not updated.
+ * is the time, the checksum and 1 bit in the flags; i.e. flow is not updated.
  */
 void setRetransmission()
 {

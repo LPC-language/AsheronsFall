@@ -132,7 +132,8 @@ static void create(string blob)
     if (size != strlen(body)) {
 	error("Bad packet size");
     }
-    ::create(sequence, checksum, id, table);
+    ::create(checksum, id, table);
+    setSequence(sequence);
     setTime(time);
     setHeaderChecksum(blob[.. PACKET_HEADER_SIZE - 1]);
 

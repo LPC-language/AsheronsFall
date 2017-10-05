@@ -8,12 +8,12 @@ inherit ConnectResponse;
  */
 static void create(string blob)
 {
-    int interfaceCookie, sessionCookie;
+    int interfaceCookie, sessionSeed;
 
     ({
 	blob,
 	interfaceCookie,
-	sessionCookie
+	sessionSeed
     }) = deSerialize(blob, headerLayout());
-    ::create(interfaceCookie, sessionCookie);
+    ::create(interfaceCookie, sessionSeed);
 }

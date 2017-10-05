@@ -1,6 +1,7 @@
 # include <kernel/user.h>
 # include "Interface.h"
 # include "Packet.h"
+# include "RandSeq.h"
 
 inherit Interface;
 
@@ -12,9 +13,11 @@ inherit Interface;
  */
 
 Interface interface;		/* the interface to relay for */
+RandSeq serverRand;		/* for checksum encryption */
 Packet *transmitQueue;		/* packets to be transmitted */
 mapping transmitBuffer;		/* packets that may have to be retransmitted */
-int transmitSeq;		/* highest transmitted seq */
+int serverSeq;			/* highest assigned seq */
+int transmitSeq;		/* last transmitted seq */
 int acknowledgedSeq;		/* highest seq acknowledged by the client */
 
 /*
@@ -24,6 +27,7 @@ static void create()
 {
     transmitQueue = ({ });
     transmitBuffer = ([ ]);
+    serverSeq = transmitSeq = 1;
 }
 
 /*
@@ -38,10 +42,7 @@ static void transmitPacket()
 	int sequence;
 
 	packet = transmitQueue[0];
-	sequence = packet->sequence();
-	if (sequence > transmitSeq) {
-	    transmitSeq = sequence;
-	}
+	transmitSeq = packet->sequence();
 	message(packet->transport());
 
 	call_out("transmitPacket", 0.005);	/* XXX flow-based timing */
@@ -54,6 +55,17 @@ static void transmitPacket()
 void transmit(Packet packet, int time, int required)
 {
     if (previous_object() == interface) {
+	int flags;
+
+	flags = packet->flags();
+	if (!(flags & PACKET_RETRANSMISSION)) {
+	    if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+		packet->setSequence(++serverSeq);
+		packet->setXorValue(serverRand->rand(serverSeq - 2));
+	    } else {
+		packet->setSequence(serverSeq);
+	    }
+	}
 	packet->setTime(time);
 	if (sizeof(transmitQueue) == 0) {
 	    transmitQueue = ({ nil, packet });
@@ -62,7 +74,7 @@ void transmit(Packet packet, int time, int required)
 	    transmitQueue += ({ packet });
 	}
 	if (required) {
-	    transmitBuffer[packet->sequence()] = packet;
+	    transmitBuffer[serverSeq] = packet;
 	}
     }
 }
@@ -105,7 +117,7 @@ static int _login(string str, object connObj)
 {
     Packet packet;
     ConnectResponse connectResponse;
-    int clientId, interfaceCookie, sessionCookie;
+    int clientId, interfaceCookie, serverSeed;
 
     catch {
 	packet = new ClientPacket(str);
@@ -129,10 +141,11 @@ static int _login(string str, object connObj)
     clientId = packet->id();
     connectResponse = packet->data(PACKET_CONNECT_RESPONSE);
     interfaceCookie = connectResponse->interfaceCookie();
-    sessionCookie = connectResponse->sessionCookie();
+    serverSeed = connectResponse->sessionSeed();
+    serverRand = new RandSeq(serverSeed);
     interface = find_object(OBJECT_PATH(UDPInterface) + "#" + interfaceCookie);
     if (!interface ||
-	!interface->establish(this_object(), clientId, sessionCookie)) {
+	!interface->establish(this_object(), clientId, serverSeed)) {
 	return MODE_DISCONNECT;
     }
 

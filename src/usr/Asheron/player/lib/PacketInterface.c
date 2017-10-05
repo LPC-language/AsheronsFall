@@ -89,23 +89,19 @@ private int timePacket()
 # define FRAG_ID		0x03000000
 
 private int serverId;		/* ID of the server */
-private RandSeq serverRand;	/* for checksum encryption */
 private Packet bufPacket;	/* buffered partial packet */
 private int bufSize;		/* packet buffer space used */
 private int bufRequired;	/* is current buffered packet required? */
 private int drain;		/* buffer drain callout active? */
-private int serverSeq;		/* seq of last packet sent */
 private int serverFrag;		/* seq of last fragment sent */
 private int timeSync;		/* timeSync needed? */
 
 /*
  * create packet output buffer
  */
-private void bufCreate(int serverId, RandSeq serverRand)
+private void bufCreate(int serverId)
 {
     ::serverId = serverId;
-    ::serverRand = serverRand;
-    serverSeq = 1;
 }
 
 /*
@@ -113,7 +109,7 @@ private void bufCreate(int serverId, RandSeq serverRand)
  */
 private void bufStart()
 {
-    bufPacket = new Packet(serverSeq + 1, 0, serverId, 0);
+    bufPacket = new Packet(0, serverId, 0);
     bufRequired = timeSync = FALSE;
     if (!drain) {
 	drain = TRUE;
@@ -131,9 +127,7 @@ private void bufFlush()
 	    bufPacket->addData(new TimeSynch(timeServer()...));
 	}
 	bufPacket->setEncryptedChecksum();
-	bufPacket->setXorValue(serverRand->rand(serverSeq - 1));
 	transmit(bufPacket, timePacket(), bufRequired);
-	++serverSeq;
 	bufPacket = nil;
 	bufSize = 0;
     }
@@ -307,7 +301,7 @@ private void requestRetransmit(int *sequences)
 
     while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0);
+	packet = new Packet(0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
@@ -335,7 +329,7 @@ private void rejectRetransmit(int *sequences)
 
     while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0);
+	packet = new Packet(0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
@@ -362,7 +356,7 @@ private void ackSequence(int sequence)
 
     if (bufSize > MAX_BUF_SIZE - 4) {
 	/* bypass the packet buffer */
-	packet = new Packet(serverSeq, 0, serverId, 0);
+	packet = new Packet(0, serverId, 0);
 	packet->addData(new AckSequence(sequence));
 	transmit(packet, timePacket(), FALSE);
     } else {
@@ -429,7 +423,7 @@ private string loginError;
  * login during 3-way handshake
  */
 static int login(string name, string password, int serverId, int clientId,
-		 int serverSeed, int clientSeed)
+		 int clientSeed)
 {
     string message;
 
@@ -447,7 +441,7 @@ static int login(string name, string password, int serverId, int clientId,
 	return FALSE;		/* error during login: disconnect immediately */
     }
 
-    bufCreate(serverId, new RandSeq(serverSeed));
+    bufCreate(serverId);
     clientCreate(clientId, new RandSeq(clientSeed));
 
     return TRUE;
@@ -569,8 +563,7 @@ static int receivePacket(string str)
 	    if (clientSequence > clientSeq && clientSequence <= receiveSeq &&
 		!clientQueue[clientSequence]) {
 		/* inject fake packet to fill the gap */
-		clientQueue[clientSequence] =
-				    new Packet(clientSequence, 0, clientId, 0);
+		clientQueue[clientSequence] = new Packet(0, clientId, 0);
 	    }
 	}
     }
