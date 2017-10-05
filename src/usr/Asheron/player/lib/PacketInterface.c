@@ -37,11 +37,12 @@ static int retransmit(int sequence, int time);
 static void acknowledged(int sequence);
 
 
-/*
- * timing
- */
+/* ========================================================================= *
+ *				timing					     *
+ * ========================================================================= */
 
 private int startTime;		/* start of this session */
+private float startMTime;	/* start of this session, millisec */
 private int time;		/* saved time */
 private float mtime;		/* saved mtime */
 
@@ -52,6 +53,7 @@ private void timeCreate()
 {
     ({ time, mtime }) = millitime();
     startTime = time;
+    startMTime = mtime;
 }
 
 /*
@@ -71,17 +73,25 @@ static mixed *timeServer()
 }
 
 /*
+ * time difference
+ */
+private float timeDiff(int timeA, float mtimeA, int timeB, float mtimeB)
+{
+    return mtimeB - mtimeA + (float) (timeB - timeA);
+}
+
+/*
  * the packet time field
  */
 private int timePacket()
 {
-    return (time - startTime) * 2 + (int) ((mtime + 0.05) * 2.0);
+    return (int) floor(ldexp(timeDiff(startTime, startMTime, time, mtime), 1));
 }
 
 
-/*
- * packet output buffer
- */
+/* ========================================================================= *
+ *			packet output buffer				     *
+ * ========================================================================= */
 
 # define MAX_BUF_SIZE		464
 # define FRAG_HEADER_SIZE	16
@@ -111,9 +121,8 @@ private void bufStart()
 {
     bufPacket = new Packet(0, serverId, 0);
     bufRequired = timeSync = FALSE;
-    if (!drain) {
-	drain = TRUE;
-	call_out("bufDrain", 0.005, bufPacket);
+    if (drain == 0) {
+	drain = call_out("bufDrain", 0.005, bufPacket);
     }
 }
 
@@ -138,29 +147,21 @@ private void bufFlush()
  */
 static void bufDrain(Packet packet)
 {
-    int drainTime;
-    float drainMtime;
-
     if (packet == bufPacket) {
 	bufFlush();
     } else if (bufPacket) {
-	({ drainTime, drainMtime }) = millitime();
-	drainMtime -= mtime;
-	if (drainMtime < 0.0) {
-	    drainMtime++;
-	    --drainTime;
-	}
-	drainTime -= time;
-	if (drainTime > 0 || drainMtime >= 0.005) {
+	float timePassed;
+
+	timePassed = timeDiff(time, mtime, millitime()...);
+	if (timePassed >= 0.005) {
 	    bufFlush();
 	} else {
-	    drain = TRUE;
-	    call_out("bufDrain", 0.005 - drainMtime, bufPacket);
+	    drain = call_out("bufDrain", 0.005 - timePassed, bufPacket);
 	    return;
 	}
     }
 
-    drain = FALSE;
+    drain = 0;
 }
 
 /*
@@ -170,7 +171,7 @@ private void bufData(NetworkData data, int required)
 {
     int size;
 
-    if (bufSize != 0 && !(bufPacket->flags() & data->networkDataType())) {
+    if (bufPacket && !(bufPacket->flags() & data->networkDataType())) {
 	size = data->size();
 	if (bufSize + size > MAX_BUF_SIZE) {
 	    bufFlush();
@@ -249,9 +250,18 @@ private void bufMessage(string message, int group, int required)
  */
 private void bufTimeSync()
 {
+    if (bufPacket) {
+	if (timeSync) {
+	    return;
+	}
+	if (bufSize > MAX_BUF_SIZE - 8) {
+	    bufFlush();
+	}
+    }
     if (!bufPacket) {
 	bufStart();
     }
+
     timeSync = TRUE;
     bufRequired = TRUE;
 
@@ -285,11 +295,29 @@ private void bufFlow(int flowSize, int flowTime)
 /*
  * send a message to the client
  */
-void sendMessage(string message, int group, int required)
+static void bufSend(string message, int group, int required)
 {
     timeSave();
     bufMessage(message, group, required);
 }
+
+
+/* ========================================================================= *
+ *			client message handling				     *
+ * ========================================================================= */
+
+private int clientId;		/* session ID */
+private RandSeq clientRand;	/* for checksum encryption */
+private mapping clientQueue;	/* packet queue */
+private mapping fragmentQueue;	/* fragment queue */
+private int clientSeq;		/* seq last processed */
+private int ackSeq;		/* acknowledged client packet seq */
+private int pendingAck;		/* scheduled ack */
+private User user;		/* connected account */
+private string loginError;	/* error during login */
+private int receiveSeq;		/* highest seq received */
+private int flowSize;		/* client packet bytes during flowTime */
+private int flowTime;		/* current client packet time */
 
 /*
  * request the client to retransmit some packets
@@ -299,7 +327,7 @@ private void requestRetransmit(int *sequences)
     int size;
     Packet packet;
 
-    while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
+    while (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
 	/* bypass the packet buffer */
 	packet = new Packet(0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
@@ -311,12 +339,12 @@ private void requestRetransmit(int *sequences)
     }
 
     if (size != 0) {
-	if (!bufPacket) {
-	    bufStart();
-	}
 	bufData(new RequestRetransmit(sequences), FALSE);
 	bufFlush();
     }
+
+    remove_call_out(pendingAck);
+    pendingAck = call_out("ack", 2.0);
 }
 
 /*
@@ -327,7 +355,7 @@ private void rejectRetransmit(int *sequences)
     int size;
     Packet packet;
 
-    while (bufSize > MAX_BUF_SIZE - 4 - (size=sizeof(sequences)) * 4) {
+    while (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
 	/* bypass the packet buffer */
 	packet = new Packet(0, serverId, 0);
 	if (size > MAX_BUF_SIZE / 4 - 1) {
@@ -348,76 +376,105 @@ private void rejectRetransmit(int *sequences)
 }
 
 /*
- * acknowledge packets received from the client
+ * send a new AckSequence every 2 seconds
  */
-private void ackSequence(int sequence)
+static void ack()
 {
     Packet packet;
 
-    if (bufSize > MAX_BUF_SIZE - 4) {
+    pendingAck = call_out("ack", 2.0);
+    ackSeq = clientSeq;
+    if (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
 	/* bypass the packet buffer */
 	packet = new Packet(0, serverId, 0);
-	packet->addData(new AckSequence(sequence));
+	packet->addData(new AckSequence(ackSeq));
 	transmit(packet, timePacket(), FALSE);
     } else {
-	if (!bufPacket) {
-	    bufStart();
-	}
-	bufData(new AckSequence(sequence), FALSE);
-	/* XXX bufFlush() needed? */
+	bufData(new AckSequence(ackSeq), FALSE);
+	bufFlush();
     }
 }
-
 
 /*
- * input message handling
+ * send a new TimeSynch every 20 seconds
  */
-
-private int clientId;		/* session ID */
-private RandSeq clientRand;	/* for checksum encryption */
-private int receiveSeq;		/* highest seq received */
-private int clientSeq;		/* seq last processed */
-private int clientAck;		/* seq acked by server */
-private mapping clientQueue;
-private mapping fragmentQueue;
-
-private void clientCreate(int clientId, RandSeq clientRand)
+static void sync()
 {
-    ::clientId = clientId;
-    ::clientRand = clientRand;
-    clientSeq = 1;
-    clientQueue = ([ ]);
-    fragmentQueue = ([ ]);
+    call_out("sync", 20);
+
+    timeSave();
+    bufTimeSync();
 }
 
-static void clientPacket(Packet packet, int sequence)
+/*
+ * respond to an EchoRequest
+ */
+private void echo(float clientTime)
 {
-    Packet nextPacket;
+    float serverTime;
+
+    serverTime = timeDiff(startTime, startMTime, time, mtime);
+    bufData(new EchoResponse(clientTime, serverTime), TRUE);
+}
+
+/*
+ * receive packet from client in sequence
+ */
+private void clientPacket(Packet packet, int sequence)
+{
     int flags;
 
-    clientSeq = sequence;
+    for (;;) {
+	clientSeq = sequence;
 
-    if ((nextPacket=clientQueue[++sequence])) {
+	/*
+	 * process options
+	 */
+	flags = packet->flags();
+	/* XXX timeSynch */
+	/* XXX flow */
+	if (flags & PACKET_ECHO_REQUEST) {
+	    echo(packet->data(PACKET_ECHO_REQUEST)->clientTime());
+	}
+
+	/*
+	 * process fragments
+	 */
+	if (flags & PACKET_BLOB_FRAGMENTS) {
+	    int n, i, count;
+	    Fragment fragment;
+	    mapping blobs;
+
+	    n = packet->numFragments();
+	    for (i = 0; i < n; i++) {
+		fragment = packet->fragment(i);
+		count = fragment->count();
+		if (count == 1) {
+		    user->receiveMessage(fragment->blob(), fragment->group());
+		} else {
+		    sequence = fragment->sequence();
+		    blobs = fragmentQueue[sequence];
+		    if (!blobs) {
+			blobs = fragmentQueue[sequence] = ([ ]);
+		    }
+		    blobs[fragment->index()] = fragment->blob();
+		    if (map_sizeof(blobs) == count) {
+			fragmentQueue[sequence] = nil;
+			user->receiveMessage(implode(map_values(blobs), ""),
+					     fragment->group());
+		    }
+		}
+	    }
+	}
+
+	sequence = clientSeq + 1;
+	packet = clientQueue[sequence];
+	if (!packet) {
+	    return;
+	}
 	clientQueue[sequence] = nil;
-	call_out("clientPacket", 0, nextPacket, sequence);
     }
-
-    /* XXX process options */
-    flags = packet->flags();
-    /* timeSynch */
-    /* flow */
-    /* echo request */
-
-    /* XXX process fragments */
-
-    /*
-    account->receiveMessage(message, group);
-    */
 }
-
-
-private User user;		/* connected account */
-private string loginError;
 
 /*
  * login during 3-way handshake
@@ -442,7 +499,11 @@ static int login(string name, string password, int serverId, int clientId,
     }
 
     bufCreate(serverId);
-    clientCreate(clientId, new RandSeq(clientSeed));
+    ::clientId = clientId;
+    clientRand = new RandSeq(clientSeed);
+    ackSeq = clientSeq = 1;
+    clientQueue = ([ ]);
+    fragmentQueue = ([ ]);
 
     return TRUE;
 }
@@ -457,6 +518,8 @@ static void establish()
 	bufMessage(loginError, 9, TRUE);
 	bufFlush();
     } else {
+	sync();
+	pendingAck = call_out("ack", 2.0);
 	user->establishConnection();
     }
 }
@@ -471,14 +534,13 @@ static void logout()
     }
 }
 
-
 /*
  * packet received from the client
  */
 static int receivePacket(string str)
 {
     Packet packet;
-    int sequence, flags;
+    int sequence, flags, time;
 
     catch {
 	packet = new ClientPacket(str);
@@ -506,7 +568,7 @@ static int receivePacket(string str)
     flags = packet->flags();
     if (flags & PACKET_ENCRYPTED_CHECKSUM) {
 	if (sequence <= clientSeq) {
-	    return MODE_NOCHANGE;	/* duplicate */
+	    return MODE_NOCHANGE;	/* duplicate with encrypted checksum */
 	}
 	packet->setXorValue(clientRand->rand(sequence - 2));
     } else if (flags & ~(PACKET_REQUEST_RETRANSMIT | PACKET_REJECT_RETRANSMIT |
@@ -515,7 +577,7 @@ static int receivePacket(string str)
 	return MODE_NOCHANGE;		/* missing encrypted checksum */
     } else if (sequence == 0) {
 	if (flags & ~(PACKET_DISCONNECT | PACKET_CICMD_COMMAND)) {
-	    return MODE_NOCHANGE;
+	    return MODE_NOCHANGE;	/* missing sequence */
 	}
     } else if (sequence <= clientSeq - 10) {
 	return MODE_NOCHANGE;		/* too far back */
@@ -526,10 +588,9 @@ static int receivePacket(string str)
 
     switch (flags) {
     case PACKET_DISCONNECT:
+    case PACKET_CONNECT_CLOSE:
 	return MODE_DISCONNECT;
 
-    case 0:
-    case PACKET_ENCRYPTED_CHECKSUM:
     case PACKET_CONNECT_ERROR:
     case PACKET_CICMD_COMMAND:
 	return MODE_NOCHANGE;
@@ -543,7 +604,7 @@ static int receivePacket(string str)
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	int sz, i, *sequences;
 
-	sequences = packet->requestRetransmit()->sequences();
+	sequences = packet->data(PACKET_REQUEST_RETRANSMIT)->sequences();
 	for (sz = sizeof(sequences), i = 0; i < sz; i++) {
 	    if (retransmit(sequences[i], timePacket())) {
 		sequences[i] = 0;
@@ -557,7 +618,7 @@ static int receivePacket(string str)
     if (flags & PACKET_REJECT_RETRANSMIT) {
 	int clientSequence, sz, i, *sequences;
 
-	sequences = packet->rejectRetransmit()->sequences();
+	sequences = packet->data(PACKET_REJECT_RETRANSMIT)->sequences();
 	for (sz = sizeof(sequences), i = 0; i < sz; i++) {
 	    clientSequence = sequences[i];
 	    if (clientSequence > clientSeq && clientSequence <= receiveSeq &&
@@ -571,17 +632,48 @@ static int receivePacket(string str)
 	acknowledged(packet->data(PACKET_ACK_SEQUENCE)->sequence());
     }
 
+    /*
+     * generate flow
+     */
+    time = packet->time();
+    if (time == flowTime) {
+	flowSize += packet->size();
+    } else if (((time - flowTime) & 0xffff) <= 0x7fff) {
+	if (flowSize != 0) {
+	    bufFlow(flowSize, flowTime);
+	}
+	flowSize = packet->size();
+	flowTime = time;
+    }
+
+    /*
+     * process packets in sequence
+     */
     if (receiveSeq < sequence) {
 	receiveSeq = sequence;
     }
     if (sequence == clientSeq + 1) {
 	clientPacket(packet, sequence);
     } else {
-	clientQueue[sequence] = packet;
-	/* XXX request retransmission, after a while */
+	if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+	    clientQueue[sequence] = packet;
+	    /* XXX request up to sequence - 1 */
+	} else {
+	    /* XXX request up to sequence */
+	}
     }
 
     return MODE_NOCHANGE;
+}
+
+/*
+ * send a message from the user
+ */
+void sendMessage(string message, int group, int required)
+{
+    if (previous_object() == user) {
+	call_out("bufSend", 0, message, group, required);
+    }
 }
 
 
