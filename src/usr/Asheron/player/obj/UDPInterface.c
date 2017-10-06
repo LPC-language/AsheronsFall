@@ -134,25 +134,33 @@ int establish(Interface relay, int clientId, int seed)
 /*
  * transmit a packet through the relay
  */
-static void transmit(Packet packet, int required)
+static void transmitPacket(Packet packet)
 {
-    relay->transmit(packet, required);
+    relay->transmitPacket(packet);
+}
+
+/*
+ * transmit priority data through the relay
+ */
+static void transmitPrioData(NetworkData data)
+{
+    relay->transmitPrioData(data);
 }
 
 /*
  * ask the relay to retransmit a packet
  */
-static int retransmit(int sequence)
+static int retransmitPacket(int sequence)
 {
-    return relay->retransmit(sequence);
+    return relay->retransmitPacket(sequence);
 }
 
 /*
  * tell the relay that the client acknowledged packets
  */
-static void acknowledged(int sequence)
+static void acknowledgedSeq(int sequence)
 {
-    relay->acknowledged(sequence);
+    relay->acknowledgedSeq(sequence);
 }
 
 /*
@@ -167,4 +175,5 @@ int receive_message(string str)
 }
 
 
-object relay() { return relay; }
+int serverId()	{ return SERVER_ID; }
+object relay()	{ return relay; }

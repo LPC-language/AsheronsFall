@@ -40,6 +40,7 @@
 # define PACKET_HEADER_SIZE		20
 
 /* packet flags */
+# define PACKET_TRANSPORT_FLAGS		0x0fffffff
 # define PACKET_RETRANSMISSION		0x00000001
 # define PACKET_ENCRYPTED_CHECKSUM	0x00000002
 # define PACKET_BLOB_FRAGMENTS		0x00000004
@@ -60,9 +61,11 @@
 # define PACKET_ECHO_REQUEST		0x02000000
 # define PACKET_ECHO_RESPONSE		0x04000000
 # define PACKET_FLOW			0x08000000
+# define PACKET_REQUIRED		0x10000000
 
-/* message type */
-# define PACKET_MESSAGE			0x10000000
+/* other NetworkData types */
+# define ND_PACKET			0x20000000
+# define ND_MESSAGE			0x40000000
 
 /* authentication modes */
 # define AUTH_ACCOUNT			1

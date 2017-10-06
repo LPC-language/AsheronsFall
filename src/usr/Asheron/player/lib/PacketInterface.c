@@ -31,9 +31,10 @@ inherit Interface;
  * them, and packets are discarded.
  */
 
-static void transmit(Packet packet, int required);
-static int retransmit(int sequence);
-static void acknowledged(int sequence);
+static void transmitPacket(Packet packet);
+static void transmitPrioData(NetworkData data);
+static int retransmitPacket(int sequence);
+static void acknowledgedSeq(int sequence);
 
 
 /* ========================================================================= *
@@ -50,7 +51,6 @@ private Packet bufPacket;	/* buffered partial packet */
 private int bufTime;		/* buf start time */
 private float bufMTime;		/* buf start millitime */
 private int bufSize;		/* packet buffer space used */
-private int bufRequired;	/* is current buffered packet required? */
 private int pendingDrain;	/* buffer drain callout active? */
 private int serverFrag;		/* seq of last fragment sent */
 
@@ -69,7 +69,6 @@ private void bufStart()
 {
     bufPacket = new Packet(0, serverId, 0);
     ({ bufTime, bufMTime }) = millitime();
-    bufRequired = FALSE;
     if (pendingDrain == 0) {
 	pendingDrain = call_out("bufDrain", 0.005, bufPacket);
     }
@@ -81,8 +80,7 @@ private void bufStart()
 private void bufFlush()
 {
     if (bufPacket) {
-	bufPacket->setEncryptedChecksum();
-	transmit(bufPacket, bufRequired);
+	transmitPacket(bufPacket);
 	bufPacket = nil;
 	bufSize = 0;
     }
@@ -129,7 +127,9 @@ private void bufData(NetworkData data, int required)
 	bufStart();
     }
     bufPacket->addData(data);
-    bufRequired |= required;
+    if (required) {
+	bufPacket->setRequired();
+    }
 
     bufSize += size;
     if (bufSize == MAX_BUF_SIZE) {
@@ -140,7 +140,7 @@ private void bufData(NetworkData data, int required)
 /*
  * fragment message across output packets
  */
-private void bufMessage(string message, int group, int required)
+static void bufMessage(string message, int group, int required)
 {
     int count, i, len;
     Fragment fragment;
@@ -163,7 +163,9 @@ private void bufMessage(string message, int group, int required)
 	fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
 				group, message[.. len - 1]);
 	bufPacket->addFragment(fragment);
-	bufRequired |= required;
+	if (required) {
+	    bufPacket->setRequired();
+	}
 	bufFlush();
 	message = message[len ..];
 
@@ -172,7 +174,9 @@ private void bufMessage(string message, int group, int required)
 	    fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
 				    group, message[.. MAX_FRAG_SIZE - 1]);
 	    bufPacket->addFragment(fragment);
-	    bufRequired = required;
+	    if (required) {
+		bufPacket->setRequired();
+	    }
 	    bufFlush();
 	    message = message[MAX_FRAG_SIZE ..];
 	}
@@ -183,20 +187,14 @@ private void bufMessage(string message, int group, int required)
     fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i, group,
 			    message);
     bufPacket->addFragment(fragment);
-    bufRequired |= required;
+    if (required) {
+	bufPacket->setRequired();
+    }
 
     bufSize += FRAG_HEADER_SIZE + strlen(message);
     if (bufSize == MAX_BUF_SIZE) {
 	bufFlush();
     }
-}
-
-/*
- * send a message to the client
- */
-static void bufSend(string message, int group, int required)
-{
-    bufMessage(message, group, required);
 }
 
 
@@ -211,7 +209,7 @@ private mapping fragmentQueue;	/* fragment queue */
 private int clientSeq;		/* seq last processed */
 private int ackSeq;		/* acknowledged client packet seq */
 private int pendingAck;		/* scheduled ack */
-private User user;		/* connected account */
+private User user;		/* connected user */
 private string loginError;	/* error during login */
 private int receiveSeq;		/* highest seq received */
 private int flowSize;		/* client packet bytes during flowTime */
@@ -223,22 +221,15 @@ private int flowTime;		/* current client packet time */
 private void requestRetransmit(int *sequences)
 {
     int size;
-    Packet packet;
 
-    while (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
-	/* bypass the packet buffer */
-	packet = new Packet(0, serverId, 0);
-	if (size > MAX_BUF_SIZE / 4 - 1) {
-	    size = MAX_BUF_SIZE / 4 - 1;
-	}
-	packet->addData(new RequestRetransmit(sequences[.. size - 1]));
-	transmit(packet, FALSE);
+    while ((size=sizeof(sequences)) > MAX_BUF_SIZE / 4 - 1) {
+	size = MAX_BUF_SIZE / 4 - 1;
+	transmitPrioData(new RequestRetransmit(sequences[.. size - 1]));
 	sequences = sequences[size ..];
     }
 
     if (size != 0) {
-	bufData(new RequestRetransmit(sequences), FALSE);
-	bufFlush();
+	transmitPrioData(new RequestRetransmit(sequences));
     }
 
     remove_call_out(pendingAck);
@@ -251,25 +242,15 @@ private void requestRetransmit(int *sequences)
 private void rejectRetransmit(int *sequences)
 {
     int size;
-    Packet packet;
 
-    while (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
-	/* bypass the packet buffer */
-	packet = new Packet(0, serverId, 0);
-	if (size > MAX_BUF_SIZE / 4 - 1) {
-	    size = MAX_BUF_SIZE / 4 - 1;
-	}
-	packet->addData(new RejectRetransmit(sequences[.. size - 1]));
-	transmit(packet, FALSE);
+    while ((size=sizeof(sequences)) > MAX_BUF_SIZE / 4 - 1) {
+	size = MAX_BUF_SIZE / 4 - 1;
+	transmitPrioData(new RejectRetransmit(sequences[.. size - 1]));
 	sequences = sequences[size ..];
     }
 
     if (size != 0) {
-	if (!bufPacket) {
-	    bufStart();
-	}
-	bufData(new RejectRetransmit(sequences), FALSE);
-	bufFlush();
+	transmitPrioData(new RejectRetransmit(sequences));
     }
 }
 
@@ -282,15 +263,7 @@ static void ack()
 
     pendingAck = call_out("ack", 2.0);
     ackSeq = clientSeq;
-    if (!bufPacket || bufSize > MAX_BUF_SIZE - 4) {
-	/* bypass the packet buffer */
-	packet = new Packet(0, serverId, 0);
-	packet->addData(new AckSequence(ackSeq));
-	transmit(packet, FALSE);
-    } else {
-	bufData(new AckSequence(ackSeq), FALSE);
-	bufFlush();
-    }
+    transmitPrioData(new AckSequence(ackSeq));
 }
 
 /*
@@ -490,7 +463,7 @@ static int receivePacket(string str)
 
 	sequences = packet->data(PACKET_REQUEST_RETRANSMIT)->sequences();
 	for (sz = sizeof(sequences), i = 0; i < sz; i++) {
-	    if (retransmit(sequences[i])) {
+	    if (retransmitPacket(sequences[i])) {
 		sequences[i] = 0;
 	    }
 	}
@@ -513,7 +486,7 @@ static int receivePacket(string str)
 	}
     }
     if (flags & PACKET_ACK_SEQUENCE) {
-	acknowledged(packet->data(PACKET_ACK_SEQUENCE)->sequence());
+	acknowledgedSeq(packet->data(PACKET_ACK_SEQUENCE)->sequence());
     }
 
     /*
@@ -554,12 +527,12 @@ static int receivePacket(string str)
 }
 
 /*
- * send a message from the user
+ * send a message
  */
 void sendMessage(string message, int group, int required)
 {
-    if (previous_object() == user) {
-	call_out("bufSend", 0, message, group, required);
+    if (previous_program() == OBJECT_PATH(User)) {
+	call_out("bufMessage", 0, message, group, required);
     }
 }
 

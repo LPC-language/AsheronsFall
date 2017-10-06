@@ -12,101 +12,159 @@ inherit Interface;
  * not block the input socket.
  */
 
+# define MAX_PACKET_SIZE	484
+
+
 Interface interface;		/* the interface to relay for */
 int sessionTime;		/* session start time */
 float sessionMTime;		/* session start millitime */
+int serverId;			/* server ID */
 RandSeq serverRand;		/* for checksum encryption */
-Packet *transmitQueue;		/* packets to be transmitted */
+int pendingTransmit;		/* transmit callout active? */
+NetworkData *priorityQueue;	/* priority data */
+mixed *transmitQueue;		/* packets to be transmitted */
 mapping transmitBuffer;		/* packets that may have to be retransmitted */
 int serverSeq;			/* highest assigned seq */
-int transmitSeq;		/* last transmitted seq */
-int acknowledgedSeq;		/* highest seq acknowledged by the client */
+int ackSeq;			/* highest seq acknowledged by the client */
 
 /*
  * initialize
  */
 static void create()
 {
+    priorityQueue = ({ });
     transmitQueue = ({ });
     transmitBuffer = ([ ]);
-    serverSeq = transmitSeq = 1;
+    serverSeq = ackSeq = 1;
 }
 
 /*
  * transmit one packet per task to the client
  */
-static void transmitPacket()
+static void transmit()
 {
-    transmitQueue = transmitQueue[1 ..];
+    NetworkData data;
+    Packet packet;
+    int time, flags;
+    float mtime, session;
 
-    if (sizeof(transmitQueue) != 0) {
-	int time, sequence, flags;
-	float mtime, session;
-	Packet packet;
+    if (sizeof(priorityQueue) != 0) {
+	data = priorityQueue[0];
+	priorityQueue = priorityQueue[1 ..];
 
-	({ time, mtime }) = millitime();
-	session = timeDiff(sessionTime, sessionMTime, time, mtime);
-
+	if (data <- Packet) {
+	    /* retransmission */
+	    packet = data;
+	    data = nil;
+	} else if (sizeof(transmitQueue) != 0) {
+	    packet = transmitQueue[0];
+	    if (packet->size() + data->size() <= MAX_PACKET_SIZE) {
+		transmitQueue = transmitQueue[1 ..];
+	    } else {
+		packet = new Packet(0, serverId, 0);
+	    }
+	} else {
+	    packet = new Packet(0, serverId, 0);
+	}
+    } else if (sizeof(transmitQueue) != 0) {
 	packet = transmitQueue[0];
-	transmitSeq = packet->sequence();
-	packet->setTime((int) floor(ldexp(session, 1)));
-	flags = packet->flags();
-	if (flags & PACKET_TIME_SYNCH) {
-	    packet->addData(new TimeSynch(timeServer(time, mtime)...));
-	}
-	if (flags & PACKET_ECHO_RESPONSE) {
-	    float clientTime;
-
-	    clientTime = packet->data(PACKET_ECHO_RESPONSE)->clientTime();
-	    packet->addData(new EchoResponse(session - clientTime, clientTime));
-	}
-	message(packet->transport());
-
-	call_out("transmitPacket", 0.005);	/* XXX flow-based timing */
+	transmitQueue = transmitQueue[1 ..];
+    } else {
+	pendingTransmit = 0;
+	return;
     }
+
+    ({ time, mtime }) = millitime();
+    session = timeDiff(sessionTime, sessionMTime, time, mtime);
+
+    flags = packet->flags();
+    if (!(flags & PACKET_RETRANSMISSION)) {
+	if (flags & PACKET_ENCRYPTED_CHECKSUM) {
+	    packet->setSequence(++serverSeq);
+	    packet->setXorValue(serverRand->rand(serverSeq - 2));
+	} else {
+	    packet->setSequence(serverSeq);
+	}
+	if (flags & PACKET_REQUIRED) {
+	    transmitBuffer[serverSeq] = packet;
+	}
+    }
+    if (flags & PACKET_TIME_SYNCH) {
+	packet->addData(new TimeSynch(timeServer(time, mtime)...));
+    }
+    if (flags & PACKET_ECHO_RESPONSE) {
+	float clientTime;
+
+	clientTime = packet->data(PACKET_ECHO_RESPONSE)->clientTime();
+	packet->addData(new EchoResponse(session - clientTime, clientTime));
+    }
+    if (data) {
+	if (flags & PACKET_REQUIRED) {
+	    packet = packet->duplicate();
+	}
+	packet->addData(data);
+    }
+    packet->setTime((int) floor(ldexp(session, 1)));
+    message(packet->transport());
+
+    pendingTransmit = call_out("transmit", 0.005); /* XXX flow-based timing */
 }
 
 /*
  * add a packet to the transmit queue
  */
-void transmit(Packet packet, int required)
+static void _transmitPacket(Packet packet)
 {
-    if (previous_object() == interface) {
-	int flags;
+    packet->setEncryptedChecksum();
+    transmitQueue += ({ packet });
+    if (pendingTransmit == 0) {
+	transmit();
+    }
+}
 
-	flags = packet->flags();
-	if (!(flags & PACKET_RETRANSMISSION)) {
-	    if (flags & PACKET_ENCRYPTED_CHECKSUM) {
-		packet->setSequence(++serverSeq);
-		packet->setXorValue(serverRand->rand(serverSeq - 2));
-	    } else {
-		packet->setSequence(serverSeq);
-	    }
-	}
-	if (sizeof(transmitQueue) == 0) {
-	    transmitQueue = ({ nil, packet });
-	    transmitPacket();
-	} else {
-	    transmitQueue += ({ packet });
-	}
-	if (required) {
-	    transmitBuffer[serverSeq] = packet;
-	}
+/*
+ * callout wrapper for _transmitPacket
+ */
+void transmitPacket(Packet packet)
+{
+    if (previous_program() == OBJECT_PATH(UDPInterface)) {
+	call_out("_transmitPacket", 0, packet);
+    }
+}
+
+/*
+ * add data to the priority queue
+ */
+static void _transmitPrioData(NetworkData data)
+{
+    priorityQueue += ({ data });
+    if (pendingTransmit == 0) {
+	transmit();
+    }
+}
+
+/*
+ * callout wrapper for _transmitPrioData
+ */
+void transmitPrioData(NetworkData data)
+{
+    if (previous_program() == OBJECT_PATH(UDPInterface)) {
+	call_out("_transmitPrioData", 0, data);
     }
 }
 
 /*
  * retransmit a packet that was requested by the client
  */
-int retransmit(int sequence)
+int retransmitPacket(int sequence)
 {
-    if (previous_object() == interface && sequence <= transmitSeq) {
+    if (previous_object() == interface && sequence <= serverSeq) {
 	Packet packet;
 
 	packet = transmitBuffer[sequence];
 	if (packet) {
 	    packet->setRetransmission();
-	    transmit(packet, FALSE);
+	    _transmitPrioData(packet);
 	    return TRUE;
 	}
     }
@@ -116,12 +174,22 @@ int retransmit(int sequence)
 /*
  * a sequence was acknowledged by the client
  */
-void acknowledged(int sequence)
+static void _acknowledgedSeq(int sequence)
 {
-    if (previous_object() == interface && sequence <= transmitSeq) {
-	while (acknowledgedSeq < sequence) {
-	    transmitBuffer[++acknowledgedSeq] = nil;
+    if (sequence <= serverSeq) {
+	while (ackSeq < sequence) {
+	    transmitBuffer[++ackSeq] = nil;
 	}
+    }
+}
+
+/*
+ * callout wrapper for _acknowledgedSeq
+ */
+void acknowledgedSeq(int sequence)
+{
+    if (previous_program() == OBJECT_PATH(UDPInterface)) {
+	call_out("_acknowledgedSeq", 0, sequence);
     }
 }
 
@@ -161,8 +229,11 @@ static int _login(string str, object connObj)
     serverSeed = connectResponse->sessionSeed();
     serverRand = new RandSeq(serverSeed);
     interface = find_object(OBJECT_PATH(UDPInterface) + "#" + interfaceCookie);
-    if (!interface ||
-	!interface->establish(this_object(), clientId, serverSeed)) {
+    if (!interface) {
+	return MODE_DISCONNECT;
+    }
+    serverId = interface->serverId();
+    if (!interface->establish(this_object(), clientId, serverSeed)) {
 	return MODE_DISCONNECT;
     }
 

@@ -115,7 +115,8 @@ string transport()
     NetworkData *packetData;
 
     packet = allocate(1 + map_sizeof(data) + sizeof(fragments));
-    packet[0] = serialize(headerLayout(), sequence, flags, checksum, id, time,
+    packet[0] = serialize(headerLayout(), sequence,
+			  flags & PACKET_TRANSPORT_FLAGS, checksum, id, time,
 			  size, table);
     setHeaderChecksum(packet[0]);
     n = 1;
@@ -148,7 +149,7 @@ string transport()
  */
 static void create(int checksum, int id, int table)
 {
-    ::create(0);
+    ::create(ND_PACKET);
 
     sequence = 0;
     ::checksum = checksum;
@@ -158,6 +159,23 @@ static void create(int checksum, int id, int table)
     ::table = table;
     data = ([ ]);
     fragments = ({ });
+}
+
+/*
+ * make top-level datastructures in this packet unique
+ */
+static void copy()
+{
+    data = data[..];
+    fragments = fragments[..];
+}
+
+/*
+ * create a duplicate of this packet
+ */
+Packet duplicate()
+{
+    return copy_object();
 }
 
 /*
@@ -191,6 +209,14 @@ void setEncryptedChecksum()
 void setDisconnect()
 {
     flags |= PACKET_DISCONNECT;
+}
+
+/*
+ * set Required flag
+ */
+void setRequired()
+{
+    flags |= PACKET_REQUIRED;
 }
 
 /*
