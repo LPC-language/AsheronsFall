@@ -1,5 +1,4 @@
 # include <kernel/user.h>
-# include <status.h>
 # include "Interface.h"
 # include "User.h"
 # include "Packet.h"
@@ -32,61 +31,9 @@ inherit Interface;
  * them, and packets are discarded.
  */
 
-static void transmit(Packet packet, int time, int required);
-static int retransmit(int sequence, int time);
+static void transmit(Packet packet, int required);
+static int retransmit(int sequence);
 static void acknowledged(int sequence);
-
-
-/* ========================================================================= *
- *				timing					     *
- * ========================================================================= */
-
-private int startTime;		/* start of this session */
-private float startMTime;	/* start of this session, millisec */
-private int time;		/* saved time */
-private float mtime;		/* saved mtime */
-
-/*
- * initialize time handling
- */
-private void timeCreate()
-{
-    ({ time, mtime }) = millitime();
-    startTime = time;
-    startMTime = mtime;
-}
-
-/*
- * save the current time
- */
-private void timeSave()
-{
-    ({ time, mtime }) = millitime();
-}
-
-/*
- * time since the server first booted
- */
-static mixed *timeServer()
-{
-    return ({ time - status(ST_STARTTIME), mtime });
-}
-
-/*
- * time difference
- */
-private float timeDiff(int timeA, float mtimeA, int timeB, float mtimeB)
-{
-    return mtimeB - mtimeA + (float) (timeB - timeA);
-}
-
-/*
- * the packet time field
- */
-private int timePacket()
-{
-    return (int) floor(ldexp(timeDiff(startTime, startMTime, time, mtime), 1));
-}
 
 
 /* ========================================================================= *
@@ -100,11 +47,12 @@ private int timePacket()
 
 private int serverId;		/* ID of the server */
 private Packet bufPacket;	/* buffered partial packet */
+private int bufTime;		/* buf start time */
+private float bufMTime;		/* buf start millitime */
 private int bufSize;		/* packet buffer space used */
 private int bufRequired;	/* is current buffered packet required? */
-private int drain;		/* buffer drain callout active? */
+private int pendingDrain;	/* buffer drain callout active? */
 private int serverFrag;		/* seq of last fragment sent */
-private int timeSync;		/* timeSync needed? */
 
 /*
  * create packet output buffer
@@ -120,9 +68,10 @@ private void bufCreate(int serverId)
 private void bufStart()
 {
     bufPacket = new Packet(0, serverId, 0);
-    bufRequired = timeSync = FALSE;
-    if (drain == 0) {
-	drain = call_out("bufDrain", 0.005, bufPacket);
+    ({ bufTime, bufMTime }) = millitime();
+    bufRequired = FALSE;
+    if (pendingDrain == 0) {
+	pendingDrain = call_out("bufDrain", 0.005, bufPacket);
     }
 }
 
@@ -132,11 +81,8 @@ private void bufStart()
 private void bufFlush()
 {
     if (bufPacket) {
-	if (timeSync) {
-	    bufPacket->addData(new TimeSynch(timeServer()...));
-	}
 	bufPacket->setEncryptedChecksum();
-	transmit(bufPacket, timePacket(), bufRequired);
+	transmit(bufPacket, bufRequired);
 	bufPacket = nil;
 	bufSize = 0;
     }
@@ -152,16 +98,16 @@ static void bufDrain(Packet packet)
     } else if (bufPacket) {
 	float timePassed;
 
-	timePassed = timeDiff(time, mtime, millitime()...);
+	timePassed = timeDiff(bufTime, bufMTime, millitime()...);
 	if (timePassed >= 0.005) {
 	    bufFlush();
 	} else {
-	    drain = call_out("bufDrain", 0.005 - timePassed, bufPacket);
+	    pendingDrain = call_out("bufDrain", 0.005 - timePassed, bufPacket);
 	    return;
 	}
     }
 
-    drain = 0;
+    pendingDrain = 0;
 }
 
 /*
@@ -171,7 +117,7 @@ private void bufData(NetworkData data, int required)
 {
     int size;
 
-    if (bufPacket && !(bufPacket->flags() & data->networkDataType())) {
+    if (!bufPacket || !(bufPacket->flags() & data->networkDataType())) {
 	size = data->size();
 	if (bufSize + size > MAX_BUF_SIZE) {
 	    bufFlush();
@@ -246,58 +192,10 @@ private void bufMessage(string message, int group, int required)
 }
 
 /*
- * add TimeSync to output packet
- */
-private void bufTimeSync()
-{
-    if (bufPacket) {
-	if (timeSync) {
-	    return;
-	}
-	if (bufSize > MAX_BUF_SIZE - 8) {
-	    bufFlush();
-	}
-    }
-    if (!bufPacket) {
-	bufStart();
-    }
-
-    timeSync = TRUE;
-    bufRequired = TRUE;
-
-    bufSize += 8;
-    if (bufSize == MAX_BUF_SIZE) {
-	bufFlush();
-    }
-}
-
-/*
- * add flow to output packet
- */
-private void bufFlow(int flowSize, int flowTime)
-{
-    if (bufPacket &&
-	(bufSize > MAX_BUF_SIZE - 6 || (bufPacket->flags() & PACKET_FLOW))) {
-	bufFlush();
-    }
-    if (!bufPacket) {
-	bufStart();
-    }
-    bufPacket->addData(new Flow(flowSize, flowTime));
-    bufRequired = TRUE;
-
-    bufSize += 6;
-    if (bufSize == MAX_BUF_SIZE) {
-	bufFlush();
-    }
-}
-
-/*
  * send a message to the client
  */
 static void bufSend(string message, int group, int required)
 {
-    timeSave();
     bufMessage(message, group, required);
 }
 
@@ -334,7 +232,7 @@ private void requestRetransmit(int *sequences)
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
 	packet->addData(new RequestRetransmit(sequences[.. size - 1]));
-	transmit(packet, timePacket(), FALSE);
+	transmit(packet, FALSE);
 	sequences = sequences[size ..];
     }
 
@@ -362,7 +260,7 @@ private void rejectRetransmit(int *sequences)
 	    size = MAX_BUF_SIZE / 4 - 1;
 	}
 	packet->addData(new RejectRetransmit(sequences[.. size - 1]));
-	transmit(packet, timePacket(), FALSE);
+	transmit(packet, FALSE);
 	sequences = sequences[size ..];
     }
 
@@ -388,7 +286,7 @@ static void ack()
 	/* bypass the packet buffer */
 	packet = new Packet(0, serverId, 0);
 	packet->addData(new AckSequence(ackSeq));
-	transmit(packet, timePacket(), FALSE);
+	transmit(packet, FALSE);
     } else {
 	bufData(new AckSequence(ackSeq), FALSE);
 	bufFlush();
@@ -401,20 +299,7 @@ static void ack()
 static void sync()
 {
     call_out("sync", 20);
-
-    timeSave();
-    bufTimeSync();
-}
-
-/*
- * respond to an EchoRequest
- */
-private void echo(float clientTime)
-{
-    float serverTime;
-
-    serverTime = timeDiff(startTime, startMTime, time, mtime);
-    bufData(new EchoResponse(clientTime, serverTime), TRUE);
+    bufData(new TimeSynch(0, 0.0), TRUE);
 }
 
 /*
@@ -434,7 +319,10 @@ private void clientPacket(Packet packet, int sequence)
 	/* XXX timeSynch */
 	/* XXX flow */
 	if (flags & PACKET_ECHO_REQUEST) {
-	    echo(packet->data(PACKET_ECHO_REQUEST)->clientTime());
+	    float clientTime;
+
+	    clientTime = packet->data(PACKET_ECHO_REQUEST)->clientTime();
+	    bufData(new EchoResponse(0.0, clientTime), TRUE);
 	}
 
 	/*
@@ -484,7 +372,6 @@ static int login(string name, string password, int serverId, int clientId,
 {
     string message;
 
-    timeCreate();
     catch {
 	({ user, message }) = ::login(name, password);
 	if (!user) {
@@ -514,7 +401,6 @@ static int login(string name, string password, int serverId, int clientId,
 static void establish()
 {
     if (loginError) {
-	timeSave();
 	bufMessage(loginError, 9, TRUE);
 	bufFlush();
     } else {
@@ -596,8 +482,6 @@ static int receivePacket(string str)
 	return MODE_NOCHANGE;
     }
 
-    timeSave();
-
     /*
      * handle urgent requests out of order
      */
@@ -606,7 +490,7 @@ static int receivePacket(string str)
 
 	sequences = packet->data(PACKET_REQUEST_RETRANSMIT)->sequences();
 	for (sz = sizeof(sequences), i = 0; i < sz; i++) {
-	    if (retransmit(sequences[i], timePacket())) {
+	    if (retransmit(sequences[i])) {
 		sequences[i] = 0;
 	    }
 	}
@@ -640,7 +524,10 @@ static int receivePacket(string str)
 	flowSize += packet->size();
     } else if (((time - flowTime) & 0xffff) <= 0x7fff) {
 	if (flowSize != 0) {
-	    bufFlow(flowSize, flowTime);
+	    if (bufPacket && (bufPacket->flags() & PACKET_FLOW)) {
+		bufFlush();
+	    }
+	    bufData(new Flow(flowSize, flowTime), TRUE);
 	}
 	flowSize = packet->size();
 	flowTime = time;

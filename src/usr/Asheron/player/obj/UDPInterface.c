@@ -83,7 +83,7 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
-    ({ time, mtime }) = timeServer();
+    ({ time, mtime }) = timeServer(millitime()...);
     packet = new Packet(0, SERVER_ID, 0);
     packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
 				       serverSeed, clientId, serverSeed,
@@ -134,17 +134,17 @@ int establish(Interface relay, int clientId, int seed)
 /*
  * transmit a packet through the relay
  */
-static void transmit(Packet packet, int time, int required)
+static void transmit(Packet packet, int required)
 {
-    relay->transmit(packet, time, required);
+    relay->transmit(packet, required);
 }
 
 /*
  * ask the relay to retransmit a packet
  */
-static int retransmit(int sequence, int time)
+static int retransmit(int sequence)
 {
-    return relay->retransmit(sequence, time);
+    return relay->retransmit(sequence);
 }
 
 /*

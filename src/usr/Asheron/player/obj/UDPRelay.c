@@ -13,6 +13,8 @@ inherit Interface;
  */
 
 Interface interface;		/* the interface to relay for */
+int sessionTime;		/* session start time */
+float sessionMTime;		/* session start millitime */
 RandSeq serverRand;		/* for checksum encryption */
 Packet *transmitQueue;		/* packets to be transmitted */
 mapping transmitBuffer;		/* packets that may have to be retransmitted */
@@ -38,11 +40,26 @@ static void transmitPacket()
     transmitQueue = transmitQueue[1 ..];
 
     if (sizeof(transmitQueue) != 0) {
+	int time, sequence, flags;
+	float mtime, session;
 	Packet packet;
-	int sequence;
+
+	({ time, mtime }) = millitime();
+	session = timeDiff(sessionTime, sessionMTime, time, mtime);
 
 	packet = transmitQueue[0];
 	transmitSeq = packet->sequence();
+	packet->setTime((int) floor(ldexp(session, 1)));
+	flags = packet->flags();
+	if (flags & PACKET_TIME_SYNCH) {
+	    packet->addData(new TimeSynch(timeServer(time, mtime)...));
+	}
+	if (flags & PACKET_ECHO_RESPONSE) {
+	    float clientTime;
+
+	    clientTime = packet->data(PACKET_ECHO_RESPONSE)->clientTime();
+	    packet->addData(new EchoResponse(session - clientTime, clientTime));
+	}
 	message(packet->transport());
 
 	call_out("transmitPacket", 0.005);	/* XXX flow-based timing */
@@ -52,7 +69,7 @@ static void transmitPacket()
 /*
  * add a packet to the transmit queue
  */
-void transmit(Packet packet, int time, int required)
+void transmit(Packet packet, int required)
 {
     if (previous_object() == interface) {
 	int flags;
@@ -66,7 +83,6 @@ void transmit(Packet packet, int time, int required)
 		packet->setSequence(serverSeq);
 	    }
 	}
-	packet->setTime(time);
 	if (sizeof(transmitQueue) == 0) {
 	    transmitQueue = ({ nil, packet });
 	    transmitPacket();
@@ -82,7 +98,7 @@ void transmit(Packet packet, int time, int required)
 /*
  * retransmit a packet that was requested by the client
  */
-int retransmit(int sequence, int time)
+int retransmit(int sequence)
 {
     if (previous_object() == interface && sequence <= transmitSeq) {
 	Packet packet;
@@ -90,7 +106,7 @@ int retransmit(int sequence, int time)
 	packet = transmitBuffer[sequence];
 	if (packet) {
 	    packet->setRetransmission();
-	    transmit(packet, time, FALSE);
+	    transmit(packet, FALSE);
 	    return TRUE;
 	}
     }
@@ -136,6 +152,7 @@ static int _login(string str, object connObj)
     }
 
     connection(connObj);
+    ({ sessionTime, sessionMTime }) = millitime();
 
     /* verify that all parameters are correct */
     clientId = packet->id();
