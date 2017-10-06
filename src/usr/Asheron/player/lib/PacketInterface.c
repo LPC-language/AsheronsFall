@@ -6,31 +6,6 @@
 
 inherit Interface;
 
-/*
- * ACK is sent when new seq received, at most once per 2 secs.  Timer resets
- * when retransmit request is sent.  When no further data included, ACK
- * reuses last seqno, checksum not encrypted.  Same for ReqRetrans with no
- * further data.
- *
- * Retransmit request is sent solo ~50 millisecs after missing packet detected;
- * depending on detected round-trip speed? Echo req/resp timing is as low as
- * 10 millisecs, so retrans req has a timer?  It also tries to hike on next
- * packet, like ACK.  2nd retrans req is sent after ~750 millisecs.
- * After receiving retransmission request, answer is sent immediately.
- *
- * RejectRetransmit is used when a retransmit request is received for a
- * packet that was not retained.  RejectRetransmit can be observed in the pcaps,
- * so it could be used to skip retransmitting non-essential packets.
- *
- * Echo response can be delayed for a while, hikes on next packet?  Echo request
- * always does, echoResponse sometimes (rarely, overflow situation?) goes alone.
- * TimeSync is never alone.  Flow is often alone.
- *
- * In portal-storm situations, it is the server which is losing input packets,
- * meaning that the input queue fills up faster than the server can digest
- * them, and packets are discarded.
- */
-
 static void transmitPacket(Packet packet);
 static void transmitPrioData(NetworkData data);
 static int retransmitPacket(int sequence);
@@ -160,6 +135,7 @@ static void bufMessage(string message, int group, int required)
 	count += (bufSize + len - 1) / MAX_FRAG_SIZE;
 	len = MAX_FRAG_SIZE - bufSize;
 
+	/* first fragment */
 	fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
 				group, message[.. len - 1]);
 	bufPacket->addFragment(fragment);
@@ -169,6 +145,7 @@ static void bufMessage(string message, int group, int required)
 	bufFlush();
 	message = message[len ..];
 
+	/* fragments that fill a whole packet */
 	while (++i < count - 1) {
 	    bufStart();
 	    fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
@@ -184,6 +161,7 @@ static void bufMessage(string message, int group, int required)
 	bufStart();
     }
 
+    /* last fragment */
     fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i, group,
 			    message);
     bufPacket->addFragment(fragment);
@@ -311,6 +289,7 @@ private void clientPacket(Packet packet, int sequence)
 		fragment = packet->fragment(i);
 		count = fragment->count();
 		if (count == 1) {
+		    /* single fragment */
 		    user->receiveMessage(fragment->blob(), fragment->group());
 		} else {
 		    sequence = fragment->sequence();
@@ -320,6 +299,7 @@ private void clientPacket(Packet packet, int sequence)
 		    }
 		    blobs[fragment->index()] = fragment->blob();
 		    if (map_sizeof(blobs) == count) {
+			/* all fragments received */
 			fragmentQueue[sequence] = nil;
 			user->receiveMessage(implode(map_values(blobs), ""),
 					     fragment->group());

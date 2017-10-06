@@ -48,6 +48,9 @@ static void transmit()
     int time, flags;
     float mtime, session;
 
+    /*
+     * check for high-priority data first
+     */
     if (sizeof(priorityQueue) != 0) {
 	data = priorityQueue[0];
 	priorityQueue = priorityQueue[1 ..];
@@ -59,8 +62,10 @@ static void transmit()
 	} else if (sizeof(transmitQueue) != 0) {
 	    packet = transmitQueue[0];
 	    if (packet->size() + data->size() <= MAX_PACKET_SIZE) {
+		/* add to a packet from the ordinary queue */
 		transmitQueue = transmitQueue[1 ..];
 	    } else {
+		/* high-priority data in its own packet */
 		packet = new Packet(0, serverId, 0);
 	    }
 	} else {
@@ -70,6 +75,7 @@ static void transmit()
 	packet = transmitQueue[0];
 	transmitQueue = transmitQueue[1 ..];
     } else {
+	/* nothing to transmit */
 	pendingTransmit = 0;
 	return;
     }
@@ -77,12 +83,16 @@ static void transmit()
     ({ time, mtime }) = millitime();
     session = timeDiff(sessionTime, sessionMTime, time, mtime);
 
+    /*
+     * prepare packet for transmission
+     */
     flags = packet->flags();
     if (!(flags & PACKET_RETRANSMISSION)) {
 	if (flags & PACKET_ENCRYPTED_CHECKSUM) {
 	    packet->setSequence(++serverSeq);
 	    packet->setXorValue(serverRand->rand(serverSeq - 2));
 	} else {
+	    /* don't advance the sequence number */
 	    packet->setSequence(serverSeq);
 	}
 	if (flags & PACKET_REQUIRED) {
@@ -90,20 +100,26 @@ static void transmit()
 	}
     }
     if (flags & PACKET_TIME_SYNCH) {
+	/* replaced by up-to-date TimeSynch */
 	packet->addData(new TimeSynch(timeServer(time, mtime)...));
     }
     if (flags & PACKET_ECHO_RESPONSE) {
 	float clientTime;
 
+	/* replaced by up-to-date EchoResponse */
 	clientTime = packet->data(PACKET_ECHO_RESPONSE)->clientTime();
 	packet->addData(new EchoResponse(session - clientTime, clientTime));
     }
     if (data) {
+	/* add high-priority data to packet */
 	if (flags & PACKET_REQUIRED) {
+	    /* ensure the packet in the transmit buffer is not affected */
 	    packet = packet->duplicate();
 	}
 	packet->addData(data);
     }
+
+    /* transmit the packet */
     packet->setTime((int) floor(ldexp(session, 1)));
     message(packet->transport());
 
