@@ -1,7 +1,7 @@
 # include <kernel/user.h>
-# include "Interface.h"
-# include "Packet.h"
 # include "RandSeq.h"
+# include "Packet.h"
+# include "Interface.h"
 
 inherit Interface;
 

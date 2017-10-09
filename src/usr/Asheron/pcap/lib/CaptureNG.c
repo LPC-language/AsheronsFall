@@ -1,7 +1,7 @@
-# include "pcap.h"
+# include <Iterator.h>
 # include "Serialized.h"
 # include "File.h"
-# include <Iterator.h>
+# include "pcap.h"
 
 inherit Serialized;
 inherit Iterable;

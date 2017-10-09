@@ -1,5 +1,5 @@
-# include "Packet.h"
 # include "Serialized.h"
+# include "Packet.h"
 
 inherit NetworkData;
 inherit Serialized;

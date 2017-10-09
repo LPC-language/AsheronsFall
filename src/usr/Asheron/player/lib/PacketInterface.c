@@ -1,8 +1,8 @@
 # include <kernel/user.h>
+# include "RandSeq.h"
+# include "Packet.h"
 # include "Interface.h"
 # include "User.h"
-# include "Packet.h"
-# include "RandSeq.h"
 
 inherit Interface;
 
@@ -290,14 +290,14 @@ private void clientPacket(Packet packet, int sequence)
 		count = fragment->count();
 		if (count == 1) {
 		    /* single fragment */
-		    user->receiveMessage(fragment->blob(), fragment->group());
+		    user->receiveMessage(fragment->body(), fragment->group());
 		} else {
 		    sequence = fragment->sequence();
 		    blobs = fragmentQueue[sequence];
 		    if (!blobs) {
 			blobs = fragmentQueue[sequence] = ([ ]);
 		    }
-		    blobs[fragment->index()] = fragment->blob();
+		    blobs[fragment->index()] = fragment->body();
 		    if (map_sizeof(blobs) == count) {
 			/* all fragments received */
 			fragmentQueue[sequence] = nil;

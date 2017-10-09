@@ -1,5 +1,5 @@
-# include "Packet.h"
 # include "RandSeq.h"
+# include "Packet.h"
 
 inherit ClientPacket;
 
