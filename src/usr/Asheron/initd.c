@@ -44,6 +44,7 @@ static void create()
     compile_object(UDP_SERVER);
     compile_object(UDP_RELAY_SERVER);
     compile_object(ACCOUNT_SERVER);
+    compile_object(USER_SERVER);
 }
 
 object cell_1() { return cell_1; }

@@ -1,4 +1,3 @@
-# include "RandSeq.h"
 # include "File.h"
 # include "Packet.h"
 # include "pcap.h"
@@ -12,6 +11,7 @@
 # define IP_NET_TURBINE		((198 << 16) + (252 << 8) + 160)
 
 mapping captures;
+mapping messages;
 
 /*
  * initialize pcap scanner
@@ -23,7 +23,6 @@ static void create()
     compile_object(OBJECT_PATH(PacketEther));
     compile_object(OBJECT_PATH(PacketAC));
     compile_object(OBJECT_PATH(File));
-    compile_object(OBJECT_PATH(FileTree));
 
     compile_object(OBJECT_PATH(CapturedPacket));
     compile_object(OBJECT_PATH(CapturedServerSwitch));
@@ -32,93 +31,42 @@ static void create()
     compile_object(OBJECT_PATH(CapturedConnectRequest));
     compile_object(OBJECT_PATH(CapturedEchoResponse));
 
-    captures = ([ ]);
-    call_out("walk", 0, new FileTree("/usr/Asheron/pcap/data")->iterator());
+    restore_object("~/pcap/data/captures.dat");
+    call_out("walk", 0, map_indices(captures), 0);
+    captures = nil;
+    messages = ([ ]);
 }
 
 /*
- * find a description file in the same location
+ * capture walker
  */
-private string getDescFile(string file)
+static void walk(string *files, int index)
 {
-    int len;
-    string desc;
-
-    len = strlen(file);
-    desc = read_file(file + ".txt");
-    if (!desc && len >= 4 && file[len - 4 ..] == "_log") {
-	desc = read_file(file[ .. len - 5] + "_desc.txt");
-    }
-
-    if (desc && strlen(desc) >= 10 && desc[3] == 0x58 &&
-	(desc[7] == 0x00 || desc[7] == ' ')) {
-	/* skip 10 byte header */
-	desc = desc[10 ..];
-    }
-    return desc;
-}
-
-/*
- * find a description file in the same location, or one directory up
- */
-private string getDescPath(string file)
-{
-    string desc, *path;
-    int size;
-
-    desc = getDescFile(file);
-    if (!desc) {
-	/*
-	 * sometimes pcap logs are in their own subdirectory
-	 */
-	path = explode(file, "/");
-	size = sizeof(path);
-	desc = getDescFile("/" + implode(path[.. size - 3] + path[size - 1 ..],
-					 "/"));
-    }
-    return desc;
-}
-
-/*
- * file tree walker
- */
-static void walk(object walker)
-{
-    string file, base;
+    string file;
     int len;
     object capture;
     mapping pcap;
 
-    file = walker->next();
-    if (file != nil) {
+    if (index < sizeof(files)) {
+	file = files[index++];
 	len = strlen(file);
-	if (len >= 5 && file[len - 5 ..] == ".pcap") {
-	    /* pcap */
-	    base = file[.. len - 6];
-	    capture = new Capture(file);
-	} else if (len >= 7 && file[len - 7 ..] == ".pcapng") {
+	if (len >= 7 && file[len - 7 ..] == ".pcapng") {
 	    /* pcapng */
-	    base = file[.. len - 8];
-	    capture = new CaptureNG(file);
+	    capture = new CaptureNG("/usr/Asheron/pcap/data/" + file);
 	} else {
-	    /* not a capture */
-	    call_out("walk", 0, walker);
-	    return;
+	    /* pcap */
+	    capture = new Capture("/usr/Asheron/pcap/data/" + file);
 	}
 
 	/*
 	 * start processing a capture
 	 */
-	sscanf(file, "/usr/Asheron/pcap/data/%s", file);
-	captures[file] = pcap = ([ ]);
-	pcap["description"] = getDescPath(base);
+	messages[file] = pcap = ([ ]);
 	pcap["server"] = ([ ]);
 	pcap["client"] = ([ ]);
 	pcap["count"] = ([ ]);
 	pcap["packets"] = 0;
-	pcap["nonACPackets"] = 0;
-	pcap["servers"] = ({ });
-	call_out("scan", 0, capture->iterator(), pcap, ([ ]), walker);
+	call_out("scan", 0, capture->iterator(), pcap, files, index);
     }
 }
 
@@ -146,122 +94,74 @@ private void mark(mixed index, mapping pcap, mapping state)
 }
 
 /*
- * mark flags
+ * mark messages
  */
-private void markFlags(object packet, mapping pcap, mapping state)
+private void markMessages(object packet, mapping pcap, mapping state)
 {
-    int flags, i;
+    int sz, i, type;
+    object fragment;
+    string body;
 
-    flags = packet->flags();
-    for (i = 0; i < 28; i++) {
-	if (flags & (1 << i)) {
-	    mark(i, pcap, state);
+    for (sz = packet->numFragments(), i = 0; i < sz; i++) {
+	fragment = packet->fragment(i);
+	if (fragment->index() == 0 && fragment->size() >= 18) {
+	    body = fragment->body();
+	    mark(body[0] + (body[1] << 8) + (fragment->group() << 16), pcap,
+		 state);
 	}
-    }
-}
-
-/*
- * mark checksum
- */
-private void markChecksum(Packet packet, object rand, mapping pcap,
-			  mapping state)
-{
-    catch {
-	if (packet->flags() & PACKET_ENCRYPTED_CHECKSUM) {
-	    if (rand) {
-		packet->addXorValue(rand->rand(packet->sequence() - 2));
-		if (packet->checksum() != packet->computeChecksum()) {
-		    mark("badEncryptedChecksum", pcap, state);
-		}
-	    } else {
-		mark("noSeedChecksum", pcap, state);
-	    }
-	} else if (packet->checksum() != packet->computeChecksum()) {
-	    mark("badChecksum", pcap, state);
-	}
-    } : {
-	mark("errorChecksum", pcap, state);
     }
 }
 
 /*
  * scan packets from a capture
  */
-static void scan(object iter, mapping pcap, mapping rand, object walker)
+static void scan(object iter, mapping pcap, string *files, int index)
 {
     object packet;
-    int i, addrPort;
+    int i;
 
     for (i = 0; i < 64; i++) {
 	packet = nil;
 	catch {
 	    packet = iter->next();
-	} : {
-	    pcap["errorCapture"] = 1;
 	}
 	if (packet) {
 	    catch {
 		packet = packet->packetAC();
 		if (packet) {
-		    if (pcap["packets"] == 0) {
-			pcap["startTime"] = packet->time();
-		    }
-		    pcap["endTime"] = packet->time();
-
-		    if ((packet->srcPort() >= 9000 && packet->srcPort() <= 9099) ||
-			(packet->destPort() >= 9000 && packet->destPort() <= 9099))
-		    {
+		    /*
+		     * AC-like
+		     */
+		    if ((packet->srcAddr() >> 8) == IP_NET_TURBINE &&
+			packet->srcPort() >= 1024) {
 			/*
-			 * AC-like
+			 * server
 			 */
-			if ((packet->srcAddr() >> 8) == IP_NET_TURBINE) {
-			    /*
-			     * server
-			     */
-			    pcap["servers"] |= ({ packet->srcAddr() & 0xff });
-			    addrPort = ((packet->srcAddr() & 0xff) << 16) +
-				       packet->srcPort();
-			    packet = packet->packet();
-			    markFlags(packet, pcap, pcap["server"]);
-			    markChecksum(packet, rand[addrPort], pcap,
-					 pcap["server"]);
-
-			    if (packet->flags() & PACKET_CONNECT_REQUEST) {
-				packet = packet->data(PACKET_CONNECT_REQUEST);
-				rand[addrPort] = new RandSeq(packet->clientSeed());
-				rand[addrPort + 1] = new RandSeq(packet->serverSeed());
-			    }
-			} else if ((packet->destAddr() >> 8) == IP_NET_TURBINE) {
-			    /*
-			     * client
-			     */
-			    pcap["servers"] |= ({ packet->destAddr() & 0xff });
-			    addrPort = ((packet->destAddr() & 0xff) << 16) +
-				       packet->destPort();
-			    packet = packet->packet();
-			    markFlags(packet, pcap, pcap["client"]);
-			    markChecksum(packet, rand[addrPort], pcap,
-					 pcap["client"]);
-			} else {
-			    /*
-			     * not an AC packet after all
-			     */
-			    pcap["nonACPackets"]++;
+			packet = packet->packet();
+			if (packet->flags() & PACKET_BLOB_FRAGMENTS) {
+			    markMessages(packet, pcap, pcap["server"]);
 			}
-		    } else {
-			pcap["nonACPackets"]++;
+
+		    } else if ((packet->destAddr() >> 8) == IP_NET_TURBINE &&
+			       packet->destPort() >= 1024) {
+			/*
+			 * client
+			 */
+			packet = packet->packet();
+			if ((packet->flags() & PACKET_BLOB_FRAGMENTS) &&
+			    !(packet->flags() & PACKET_RETRANSMISSION)) {
+			    markMessages(packet, pcap, pcap["client"]);
+			}
 		    }
 		}
-	    } : {
-		mark("errorPackets", pcap, pcap);
 	    }
 	    pcap["packets"]++;
 	} else {
-	    save_object("~/pcap/data/captures.dat");
-	    walk(walker);
+	    save_object("~/pcap/data/messages.dat");
+	    walk(files, index);
 	    return;
 	}
     }
 
-    call_out("scan", 0, iter, pcap, rand, walker);
+    call_out("scan", 0, iter, pcap, files, index);
 }
