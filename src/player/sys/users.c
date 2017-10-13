@@ -10,6 +10,7 @@ static void create()
     compile_object(OBJECT_PATH(Character));
 
     compile_object(OBJECT_PATH(GenericMessage));
+    compile_object(OBJECT_PATH(ClientCharacterCreate));
     compile_object(OBJECT_PATH(CharacterList));
     compile_object(OBJECT_PATH(CharacterError));
     compile_object(OBJECT_PATH(ServerName));
