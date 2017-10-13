@@ -16,8 +16,11 @@ static void create(string path)
 /*
  * iterator initial state
  */
-mixed iteratorStart(mixed state)
+mixed iteratorStart(mixed from, mixed to)
 {
+    if (from != nil || to != nil) {
+	error("Subrange not implemented");
+    }
     return ({ dir, nil, ({ file_info(dir)[0] }), 0 });
 }
 

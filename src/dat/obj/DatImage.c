@@ -136,8 +136,11 @@ string fileName() { return fileName; }
 /*
  * reset iterator to initial state
  */
-mixed iteratorStart(mixed stack)
+mixed iteratorStart(mixed from, mixed to)
 {
+    if (from != nil || to != nil) {
+	error("Subrange not implemened");
+    }
     return ({ root, 0 });
 }
 

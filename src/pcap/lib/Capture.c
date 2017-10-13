@@ -60,8 +60,11 @@ static void create(string pcap)
 /*
  * initial iterator state
  */
-mixed iteratorStart(mixed state)
+mixed iteratorStart(mixed from, mixed to)
 {
+    if (from != nil || to != nil) {
+	error("Subrange not implemented");
+    }
     return PCAP_HEADER_SIZE;
 }
 
