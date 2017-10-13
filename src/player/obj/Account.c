@@ -40,10 +40,10 @@ mixed *login(Interface interface, string str)
 {
     if (previous_program() == ACCOUNT_SERVER) {
 	if (user) {
-	    return ({ nil, LOGGEDON_ALREADY });
+	    return ({ nil, CHARERR_LOGGEDON_ALREADY });
 	}
 	if (hash_string("MD5", password[ .. 3] + str) != password[4 ..]) {
-	    return ({ nil, INVALID_ACCOUNT });
+	    return ({ nil, CHARERR_INVALID_ACCOUNT });
 	}
 
 	user = clone_object(OBJECT_PATH(User), this_object(), interface);

@@ -24,15 +24,16 @@ private void send(Message message, int required)
 /*
  * receive a message from the client
  */
-static void receive(string message)
+static void receive(string blob)
 {
     int type;
     string body;
+    Message message;
 
     ({
 	body,
 	type
-    }) = deSerialize(message, "i");
+    }) = deSerialize(blob, "i");
 
     switch (type) {
     case MSG_DDD_INTERROGATION_RESPONSE:
@@ -53,6 +54,17 @@ static void receive(string message)
 
     case MSG_DDD_END:
 	/* no response */
+	break;
+
+    case MSG_CHARACTER_CREATE:
+	message = new ClientCharacterCreate(body);
+	send(new CharacterCreateResponse(CHARGEN_RESPONSE_OK, 123,
+					 message->name(), 0),
+	     TRUE);
+	break;
+
+    case MSG_CHARACTER_LOGIN_REQUEST:
+	send(new Message(MSG_CHARACTER_SERVER_READY, 9), TRUE);
 	break;
 
     default:

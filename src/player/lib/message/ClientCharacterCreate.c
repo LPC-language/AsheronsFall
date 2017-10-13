@@ -34,17 +34,6 @@ private int envoy;		/* wannabe envoy */
 private int points;		/* skill points? */
 
 /*
- * layout of CharacterCreate
- */
-static string headerLayout()
-{
-    return "tiiiiiiiiiiiiiiiiidddddd" +
-	   "iiiiiiiii" +
-	   "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii" +
-	   "tiiii";
-}
-
-/*
  * CharacterCreate message
  */
 static void create(string blob)
@@ -113,7 +102,11 @@ static void create(string blob)
 	admin,
 	envoy,
 	points
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob,
+		     "tiiiiiiiiiiiiiiiiidddddd" +
+		     "iiiiiiiii" +
+		     "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"+
+		     "tiiii");
     if (blob != "") {
 	error("Garbage in message " + strlen(blob));
     }
