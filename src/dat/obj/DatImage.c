@@ -138,10 +138,46 @@ string fileName() { return fileName; }
  */
 mixed iteratorStart(mixed from, mixed to)
 {
-    if (from != nil || to != nil) {
-	error("Subrange not implemened");
+    mixed *stack;
+    int index, low, high, mid, id;
+    BTree node;
+    DatItem *entries;
+    int *branches;
+
+    if (!from) {
+	return ({ to, root, 0 });
     }
-    return ({ root, 0 });
+
+    /*
+     * find the starting entry in the BTree
+     */
+    stack = ({ to });
+    index = from;
+    for (node = root; ; node = getBTree(branches[mid])) {
+	entries = node->entries();
+	high = sizeof(entries);
+	low = 0;
+	while (low < high) {
+	    mid = (low + high) >> 1;
+	    id = entries[mid]->id();
+	    if (index <= id) {
+		if (index == id) {
+		    /* found it */
+		    return stack + ({ node, mid * 2 + 1 });
+		}
+		high = mid;
+	    } else {
+		low = ++mid;
+	    }
+	}
+
+	/* mid points at first entry higher than wanted */
+	stack += ({ node, mid * 2 + 1 });
+	branches = node->branches();
+	if (sizeof(branches) <= mid || branches[mid] == 0) {
+	    return stack;
+	}
+    }
 }
 
 /*
@@ -157,8 +193,7 @@ mixed *iteratorNext(mixed stack)
     DatItem *entries;
 
     if (stack) {
-	size = sizeof(stack);
-	for (;;) {
+	for (size = sizeof(stack); ; stack = stack[.. size - 1]) {
 	    /*
 	     * get current node
 	     */
@@ -181,6 +216,10 @@ mixed *iteratorNext(mixed stack)
 	    }
 
 	    if (i < sizeof(entries)) {
+		if (stack[0] != nil && stack[0] < entries[i]->id()) {
+		    return ({ nil, nil });
+		}
+
 		/*
 		 * return DatItem entry
 		 */
@@ -192,18 +231,15 @@ mixed *iteratorNext(mixed stack)
 	     * pop current node from the stack
 	     */
 	    size -= 2;
-	    if (size == 0) {
-		break;
+	    if (size == 1) {
+		return ({ nil, nil });
 	    }
-	    stack = stack[.. size - 1];
 	}
     }
-
-    return ({ nil, nil });
 }
 
 /*
- * check whether the iterator is finished
+ * check whether the iterator has finished
  */
 int iteratorEnd(mixed stack)
 {
