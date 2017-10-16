@@ -18,7 +18,7 @@ static string body()
  */
 static void create(int error)
 {
-    ::create(MSG_CHARACTER_ERROR, 9);
+    ::create(MSG_CHARACTER_ERROR);
     ::error = error;
 }
 

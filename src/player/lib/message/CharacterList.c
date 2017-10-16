@@ -35,7 +35,7 @@ static string body()
  */
 static void create(Account account)
 {
-    ::create(MSG_CHARACTER_LIST, 9);
+    ::create(MSG_CHARACTER_LIST);
 
     characters = account->characters();
     slots = account->slots();

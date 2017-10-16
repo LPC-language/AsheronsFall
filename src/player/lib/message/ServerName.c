@@ -20,7 +20,7 @@ static string body()
  */
 static void create(string serverName, int users, int maxUsers)
 {
-    ::create(MSG_SERVER_NAME, 9);
+    ::create(MSG_SERVER_NAME);
 
     ::serverName = serverName;
     ::users = users;

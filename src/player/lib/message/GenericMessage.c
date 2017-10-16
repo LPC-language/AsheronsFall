@@ -16,8 +16,8 @@ static string body()
 /*
  * generic message
  */
-static void create(int type, int group, string body)
+static void create(int mesg, string body)
 {
-    ::create(type, group);
+    ::create(mesg);
     ::body = body;
 }

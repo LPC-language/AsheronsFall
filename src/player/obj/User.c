@@ -36,7 +36,7 @@ static void receive(string blob)
     }) = deSerialize(blob, "i");
 
     switch (type) {
-    case MSG_DDD_INTERROGATION_RESPONSE:
+    case MSG_TYPE(MSG_DDD_INTERROGATION_RESPONSE):
 	switch (hash_crc16(body)) {
 	case DAT_PLAIN:
 	    plain = TRUE;
@@ -49,22 +49,22 @@ static void receive(string blob)
 	    send(new CharacterError(4), TRUE);
 	    return;
 	}
-	send(new Message(MSG_DDD_END, 5), TRUE);
+	send(new Message(MSG_DDD_END), TRUE);
 	break;
 
-    case MSG_DDD_END:
+    case MSG_TYPE(MSG_DDD_END):
 	/* no response */
 	break;
 
-    case MSG_CHARACTER_CREATE:
+    case MSG_TYPE(MSG_CHARACTER_CREATE):
 	message = new ClientCharacterCreate(body);
 	send(new CharacterCreateResponse(CHARGEN_RESPONSE_OK, 123,
 					 message->name(), 0),
 	     TRUE);
 	break;
 
-    case MSG_CHARACTER_LOGIN_REQUEST:
-	send(new Message(MSG_CHARACTER_SERVER_READY, 9), TRUE);
+    case MSG_TYPE(MSG_CHARACTER_LOGIN_REQUEST):
+	send(new Message(MSG_CHARACTER_SERVER_READY), TRUE);
 	break;
 
     default:
@@ -84,7 +84,7 @@ static void establish()
     /* send server info and char list */
     send(new CharacterList(account), TRUE);
     send(new ServerName("Asheron's Fall", 0, -1), TRUE);
-    send(new GenericMessage(MSG_DDD_INTERROGATION, 5, 
+    send(new GenericMessage(MSG_DDD_INTERROGATION,
 			    "\1\0\0\0" +
 			    "\1\0\0\0" +
 			    "\1\0\0\0" +

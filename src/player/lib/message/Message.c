@@ -40,11 +40,11 @@ string transport()
 /*
  * initialize message
  */
-static void create(int type, int group)
+static void create(int mesg)
 {
     ::create(ND_MESSAGE);
-    ::type = type;
-    ::group = group;
+    ::type = MSG_TYPE(mesg);
+    ::group = MSG_GROUP(mesg);
 }
 
 

@@ -26,7 +26,7 @@ string body()
  */
 static void create(int response, varargs int id, string name, int delay)
 {
-    ::create(MSG_CHARACTER_CREATE_RESPONSE, 9);
+    ::create(MSG_CHARACTER_CREATE_RESPONSE);
     ::response = response;
     ::id = id;
     ::name = name;

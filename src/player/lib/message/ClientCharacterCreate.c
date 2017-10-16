@@ -40,7 +40,7 @@ static void create(string blob)
 {
     int one, numSkills;
 
-    ::create(MSG_CHARACTER_CREATE, 4);
+    ::create(MSG_CHARACTER_CREATE);
     body = allocate(3);
     hair = allocate(3);
     headgear = allocate(3);
