@@ -22,13 +22,25 @@ private void send(Message message, int required)
 }
 
 /*
+ * show login screen
+ */
+private void loginScreen()
+{
+    send(new CharacterList(account->characters(), account->slots(),
+			   account->name()),
+	 TRUE);
+    send(new ServerName("Asheron's Fall", 0, -1), TRUE);
+}
+
+/*
  * receive a message from the client
  */
 static void receive(string blob)
 {
-    int type;
+    int type, response, id;
     string body;
     Message message;
+    Character character;
 
     ({
 	body,
@@ -46,7 +58,7 @@ static void receive(string blob)
 	    break;
 
 	default:
-	    send(new CharacterError(4), TRUE);
+	    send(new CharacterError(CHARERR_SERVER_CRASH), TRUE);
 	    return;
 	}
 	send(new Message(MSG_DDD_END), TRUE);
@@ -58,12 +70,46 @@ static void receive(string blob)
 
     case MSG_TYPE(MSG_CHARACTER_CREATE):
 	message = new ClientCharacterCreate(body);
-	send(new CharacterCreateResponse(CHARGEN_RESPONSE_OK, 123,
-					 message->name(), 0),
-	     TRUE);
+	({ response, id }) = account->characterCreate(message->name());
+	if (response == CHARGEN_RESPONSE_OK) {
+	    send(new CharacterCreateResponse(response, id, message->name(), 0),
+		 TRUE);
+	} else {
+	    send(new CharacterCreateResponse(response), TRUE);
+	}
+	break;
+
+    case MSG_TYPE(MSG_CHARACTER_DELETE):
+	message = new ClientCharacterDelete(body);
+	if (message->accountName() == account->name()) {
+	    response = account->characterDelete(message->slot());
+	    if (response == CHARERR_OK) {
+		send(new Message(MSG_CHARACTER_DELETE_RESPONSE), TRUE);
+		loginScreen();
+	    } else {
+		send(new CharacterError(response), TRUE);
+	    }
+	} else {
+	    send(new CharacterError(CHARERR_DELETE), TRUE);
+	}
+	break;
+
+    case MSG_TYPE(MSG_CHARACTER_RESTORE):
+	message = new ClientCharacterRestore(body);
+	({ response, character }) = account->characterRestore(message->id());
+	if (response == CHARGEN_RESPONSE_OK) {
+	    send(new CharacterCreateResponse(response, message->id(),
+					     character->name(), 0),
+		 TRUE);
+	} else {
+	    send(new CharacterCreateResponse(response), TRUE);
+	}
 	break;
 
     case MSG_TYPE(MSG_CHARACTER_LOGIN_REQUEST):
+	/*
+	 * provides the opportinity to limit the number of simultaneous logins
+	 */
 	send(new Message(MSG_CHARACTER_SERVER_READY), TRUE);
 	break;
 
@@ -73,34 +119,36 @@ static void receive(string blob)
 }
 
 
+/*
+ * initialize user
+ */
 static void create(Account account, Interface interface)
 {
     ::account = account;
     ::interface = interface;
 }
 
-static void establish()
-{
-    /* send server info and char list */
-    send(new CharacterList(account), TRUE);
-    send(new ServerName("Asheron's Fall", 0, -1), TRUE);
-    send(new GenericMessage(MSG_DDD_INTERROGATION,
-			    "\1\0\0\0" +
-			    "\1\0\0\0" +
-			    "\1\0\0\0" +
-			    "\2\0\0\0" +
-			    "\0\0\0\0" +
-			    "\1\0\0\0"),
-	 TRUE);
-}
-
+/*
+ * establish a connection
+ */
 void establishConnection()
 {
-    if (previous_program() == OBJECT_PATH(PacketInterface)) {
-	call_out("establish", 0);
+    if (previous_object() == interface) {
+	loginScreen();
+	send(new GenericMessage(MSG_DDD_INTERROGATION,
+				"\1\0\0\0" +
+				"\1\0\0\0" +
+				"\1\0\0\0" +
+				"\2\0\0\0" +
+				"\0\0\0\0" +
+				"\1\0\0\0"),
+	     TRUE);
     }
 }
 
+/*
+ * receive a message via callout
+ */
 void receiveMessage(string message, int group)
 {
     if (previous_program() == OBJECT_PATH(PacketInterface)) {
@@ -108,6 +156,9 @@ void receiveMessage(string message, int group)
     }
 }
 
+/*
+ * clean up when connection closes
+ */
 void logout()
 {
     if (previous_object() == interface) {

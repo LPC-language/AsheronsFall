@@ -1,18 +1,17 @@
 # include <Iterator.h>
 # include "RandSeq.h"
+# include "Object.h"
 # include "BTree.h"
 # include "Dat.h"
 # include "landblock.h"
 # include "dungeon.h"
 # include "Interface.h"
+# include "Creature.h"
 # include "User.h"
 
 
 object cell_1;
 object portal;
-object highres;
-object english;
-
 object land;
 object dungeons;
 
@@ -20,6 +19,7 @@ static void create()
 {
     /* general utility */
     compile_object(OBJECT_PATH(RandSeq));
+    compile_object(OBJECT_PATH(Container));
 
     /* DAT image handling */
     compile_object(OBJECT_PATH(BTree));
@@ -29,17 +29,16 @@ static void create()
 			  "/usr/Asheron/dat/data/client_cell_1.dat");
     portal = clone_object(OBJECT_PATH(DatImage),
 			  "/usr/Asheron/dat/data/client_portal.dat");
-    highres = clone_object(OBJECT_PATH(DatImage),
-			   "/usr/Asheron/dat/data/client_highres.dat");
-    english = clone_object(OBJECT_PATH(DatImage),
-			   "/usr/Asheron/dat/data/client_local_English.dat");
 
     /* land */
     land = compile_object(LANDBLOCKS);
     dungeons = compile_object(DUNGEONS);
     /* call_out("initCells", 0, cell_1->iterator()); */
 
-    /* player login */
+    /* creatures */
+    compile_object(CREATURE_SERVER);
+
+    /* players */
     compile_object(TELNET_SERVER);
     compile_object(UDP_SERVER);
     compile_object(UDP_RELAY_SERVER);
@@ -49,8 +48,6 @@ static void create()
 
 object cell_1() { return cell_1; }
 object portal() { return portal; }
-object highres() { return highres; }
-object english() { return english; }
 
 
 private string getCellData(DatItem item)

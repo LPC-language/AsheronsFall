@@ -107,9 +107,7 @@ static void create(string blob)
 		     "iiiiiiiii" +
 		     "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"+
 		     "tiiii");
-    if (blob != "") {
-	error("Garbage in message " + strlen(blob));
-    }
+    checkEmpty(blob);
 }
 
 

@@ -21,7 +21,7 @@ static string body()
 	   serialize("i", sz);
     for (i = 0; i < sz; i++) {
 	body += serialize("iti", characters[i]->id(), characters[i]->name(),
-			  characters[i]->deleteTimer());
+			  -characters[i]->deleteTimer());
     }
     body += "\0\0\0\0" +
 	    serialize("it", slots, accountName) +
@@ -33,13 +33,13 @@ static string body()
 /*
  * create a CharacterList message
  */
-static void create(Account account)
+static void create(Character *characters, int slots, string accountName)
 {
     ::create(MSG_CHARACTER_LIST);
 
-    characters = account->characters();
-    slots = account->slots();
-    accountName = account->name();
+    ::characters = characters;
+    ::slots = slots;
+    ::accountName = accountName;
 }
 
 

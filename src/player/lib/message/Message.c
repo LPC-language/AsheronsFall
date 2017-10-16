@@ -47,6 +47,16 @@ static void create(int mesg)
     ::group = MSG_GROUP(mesg);
 }
 
+/*
+ * check that there is no garbage in the left-overs
+ */
+static void checkEmpty(string remainder)
+{
+    if (strlen(remainder) != 0) {
+	error("Garbage in message");
+    }
+}
+
 
 int type()	{ return type; }
 int group()	{ return group; }
