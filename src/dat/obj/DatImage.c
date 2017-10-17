@@ -36,7 +36,14 @@ int blockBTree;				/* block of BTree root node */
  */
 private void loadHeader()
 {
+    string header;
+
+    header = read_file(fileName, HEADER_OFFSET, 36);
+    if (!header) {
+	error("Missing DAT file: " + fileName);
+    }
     ({
+	header,
 	fileType,
 	blockSize,
 	fileSize,
@@ -46,7 +53,7 @@ private void loadHeader()
 	freeTail,
 	freeCount,
 	blockBTree
-    }) = deSerialize(read_file(fileName, HEADER_OFFSET, 36), "iiiiiiiii")[1 ..];
+    }) = deSerialize(header, "iiiiiiiii");
 
     /*
      * Perform some minimal sanity checks.
@@ -118,6 +125,14 @@ private BTree getBTree(int block)
 StringBuffer getItemData(DatItem item)
 {
     return getData(item->block(), item->length());
+}
+
+/*
+ * get a reader for a DatItem
+ */
+SerialReader getItemReader(DatItem item)
+{
+    return new SerialReader(getItemData(item));
 }
 
 

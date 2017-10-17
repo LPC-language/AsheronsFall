@@ -17,13 +17,14 @@ private int iteration;		/* item iteration */
 static void create(string entry)
 {
     ({
+	entry,
 	flags,
 	id,
 	block,
 	length,
 	timeStamp,
 	iteration
-    }) = deSerialize(entry, "iiiiii")[1 ..];
+    }) = deSerialize(entry, "iiiiii");
 }
 
 int flags()		{ return flags; }

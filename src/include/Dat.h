@@ -1,6 +1,8 @@
 # define DatImage		object "/usr/Asheron/dat/obj/DatImage"
 # define DatItem		object "/usr/Asheron/dat/lib/DatItem"
 
+# define DAT_SERVER		"/usr/Asheron/dat/sys/datserver"
+
 # define DAT_ITERATION		0xffff0001
 
 # define DAT_CELL_X(id)		(((id) >> 24) & 0xff)

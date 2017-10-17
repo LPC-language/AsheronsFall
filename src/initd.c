@@ -1,7 +1,6 @@
-# include <Iterator.h>
 # include "RandSeq.h"
+# include "Serialized.h"
 # include "Object.h"
-# include "BTree.h"
 # include "Dat.h"
 # include "landblock.h"
 # include "dungeon.h"
@@ -10,30 +9,19 @@
 # include "User.h"
 
 
-object cell_1;
-object portal;
-object land;
-object dungeons;
-
 static void create()
 {
-    /* general utility */
+    /* general use */
     compile_object(OBJECT_PATH(RandSeq));
+    compile_object(OBJECT_PATH(SerialReader));
     compile_object(OBJECT_PATH(Container));
 
-    /* DAT image handling */
-    compile_object(OBJECT_PATH(BTree));
-    compile_object(OBJECT_PATH(DatItem));
-    compile_object(OBJECT_PATH(DatImage));
-    cell_1 = clone_object(OBJECT_PATH(DatImage),
-			  "/usr/Asheron/dat/data/client_cell_1.dat");
-    portal = clone_object(OBJECT_PATH(DatImage),
-			  "/usr/Asheron/dat/data/client_portal.dat");
+    /* DAT image server */
+    compile_object(DAT_SERVER);
 
     /* land */
-    land = compile_object(LANDBLOCKS);
-    dungeons = compile_object(DUNGEONS);
-    /* call_out("initCells", 0, cell_1->iterator()); */
+    compile_object(LANDBLOCKS);
+    compile_object(DUNGEONS);
 
     /* creatures */
     compile_object(CREATURE_SERVER);
@@ -44,63 +32,4 @@ static void create()
     compile_object(UDP_RELAY_SERVER);
     compile_object(ACCOUNT_SERVER);
     compile_object(USER_SERVER);
-}
-
-object cell_1() { return cell_1; }
-object portal() { return portal; }
-
-
-private string getCellData(DatItem item)
-{
-    string chunk, match;
-    int id;
-
-    chunk = cell_1->getItemData(item)->chunk();
-    id = item->id();
-    match = "    ";
-    match[0] = id;
-    match[1] = id >> 8;
-    match[2] = id >> 16;
-    match[3] = id >> 24;
-    if (chunk[.. 3] != match) {
-	error("Item " + id + " data doesn't match");
-    }
-
-    return chunk[4 ..];
-}
-
-static void initCells(Iterator cells)
-{
-    DatItem item;
-    int id, x, y;
-
-    item = cells->next();
-    if (item) {
-	id = item->id();
-	x = DAT_CELL_X(id);
-	y = DAT_CELL_Y(id);
-	switch (id & DAT_CELL_MASK) {
-	case DAT_CELL_LANDINFO:
-	    land->setInfo(x, y, getCellData(item), item->flags(),
-			  item->timeStamp(), item->iteration());
-	    break;
-
-	case DAT_CELL_LANDBLOCK:
-	    land->setBlock(x, y, getCellData(item), item->flags(),
-			   item->timeStamp(), item->iteration());
-	    break;
-
-	default:
-	    if (id == DAT_ITERATION) {
-		land->setIteration(cell_1->getItemData(item)->chunk());
-	    } else {
-		dungeons->setCell(x, y, id & DAT_CELL_MASK, getCellData(item),
-				  item->flags(), item->timeStamp(),
-				  item->iteration());
-	    }
-	    break;
-	}
-
-	call_out("initCells", 0, cells);
-    }
 }
