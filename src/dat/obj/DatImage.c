@@ -139,7 +139,8 @@ string fileName() { return fileName; }
 mixed iteratorStart(mixed from, mixed to)
 {
     mixed *stack;
-    int index, low, high, mid, id;
+    float index, id;
+    int intId, low, high, mid;
     BTree node;
     DatItem *entries;
     int *branches;
@@ -152,14 +153,16 @@ mixed iteratorStart(mixed from, mixed to)
      * find the starting entry in the BTree
      */
     stack = ({ to });
-    index = from;
+    intId = from;
+    index = ldexp((float) (intId >> 1), 1) + (float) (intId & 1);
     for (node = root; ; node = getBTree(branches[mid])) {
 	entries = node->entries();
 	high = sizeof(entries);
 	low = 0;
 	while (low < high) {
 	    mid = (low + high) >> 1;
-	    id = entries[mid]->id();
+	    intId = entries[mid]->id();
+	    id = ldexp((float) (intId >> 1), 1) + (float) (intId & 1);
 	    if (index <= id) {
 		if (index == id) {
 		    /* found it */
