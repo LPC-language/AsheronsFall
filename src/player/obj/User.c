@@ -14,11 +14,19 @@ Interface interface;	/* interface */
 int plain;		/* using unaltered DAT files from the installer? */
 
 /*
- * send a message to the client
+ * send a required message to the client
  */
-private void send(Message message, int required)
+private void send(Message message)
 {
-    interface->sendMessage(message->transport(), message->group(), required);
+    interface->sendMessage(message->transport(), message->group(), TRUE);
+}
+
+/*
+ * send an optional message to the client
+ */
+private void sendOptional(Message message)
+{
+    interface->sendMessage(message->transport(), message->group(), FALSE);
 }
 
 /*
@@ -27,9 +35,8 @@ private void send(Message message, int required)
 private void loginScreen()
 {
     send(new CharacterList(account->characters(), account->slots(),
-			   account->name()),
-	 TRUE);
-    send(new ServerName("Asheron's Fall", 0, -1), TRUE);
+			   account->name()));
+    send(new ServerName("Asheron's Fall", 0, -1));
 }
 
 /*
@@ -58,10 +65,10 @@ static void receive(string blob)
 	    break;
 
 	default:
-	    send(new CharacterError(CHARERR_SERVER_CRASH), TRUE);
+	    send(new CharacterError(CHARERR_SERVER_CRASH));
 	    return;
 	}
-	send(new Message(MSG_DDD_END), TRUE);
+	send(new Message(MSG_DDD_END));
 	break;
 
     case MSG_TYPE(MSG_DDD_END):
@@ -72,10 +79,9 @@ static void receive(string blob)
 	message = new ClientCharacterCreate(body);
 	({ response, id }) = account->characterCreate(message->name());
 	if (response == CHARGEN_RESPONSE_OK) {
-	    send(new CharacterCreateResponse(response, id, message->name(), 0),
-		 TRUE);
+	    send(new CharacterCreateResponse(response, id, message->name(), 0));
 	} else {
-	    send(new CharacterCreateResponse(response), TRUE);
+	    send(new CharacterCreateResponse(response));
 	}
 	break;
 
@@ -84,13 +90,13 @@ static void receive(string blob)
 	if (message->accountName() == account->name()) {
 	    response = account->characterDelete(message->slot());
 	    if (response == CHARERR_OK) {
-		send(new Message(MSG_CHARACTER_DELETE_RESPONSE), TRUE);
+		send(new Message(MSG_CHARACTER_DELETE_RESPONSE));
 		loginScreen();
 	    } else {
-		send(new CharacterError(response), TRUE);
+		send(new CharacterError(response));
 	    }
 	} else {
-	    send(new CharacterError(CHARERR_DELETE), TRUE);
+	    send(new CharacterError(CHARERR_DELETE));
 	}
 	break;
 
@@ -99,22 +105,21 @@ static void receive(string blob)
 	({ response, character }) = account->characterRestore(message->id());
 	if (response == CHARGEN_RESPONSE_OK) {
 	    send(new CharacterCreateResponse(response, message->id(),
-					     character->name(), 0),
-		 TRUE);
+					     character->name(), 0));
 	} else {
-	    send(new CharacterCreateResponse(response), TRUE);
+	    send(new CharacterCreateResponse(response));
 	}
 	break;
 
     case MSG_TYPE(MSG_CHARACTER_LOGIN_REQUEST):
 	/*
-	 * provides the opportinity to limit the number of simultaneous logins
+	 * provides the opportunity to limit the number of simultaneous logins
 	 */
-	send(new Message(MSG_CHARACTER_SERVER_READY), TRUE);
+	send(new Message(MSG_CHARACTER_SERVER_READY));
 	break;
 
     default:
-	error("Unknown message type " + type);
+	error("Unhandled message type " + type);
     }
 }
 
@@ -141,8 +146,7 @@ void establishConnection()
 				"\1\0\0\0" +
 				"\2\0\0\0" +
 				"\0\0\0\0" +
-				"\1\0\0\0"),
-	     TRUE);
+				"\1\0\0\0"));
     }
 }
 
