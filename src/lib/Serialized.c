@@ -189,7 +189,7 @@ static string serialize(string format, varargs mixed args...)
 
 	case 't':
 	    /*
-	     * variable length text
+	     * variable length text, aligned
 	     */
 	    str = args[n++];
 	    num = strlen(str);
@@ -201,6 +201,29 @@ static string serialize(string format, varargs mixed args...)
 		str += "\0\0\0"[.. 3 - (offset & 3)];
 		offset = (offset + 3) & ~3;
 	    }
+	    break;
+
+	case 'p':
+	    /*
+	     * variable length text, 8 bit length
+	     */
+	    str = args[n++];
+	    num = strlen(str);
+	    str = "\0" + str;
+	    str[0] = num;
+	    offset += num + 1;
+	    break;
+
+	case 'P':
+	    /*
+	     * variable length text, 16 bit length
+	     */
+	    str = args[n++];
+	    num = strlen(str);
+	    str = "\0\0" + str;
+	    str[0] = num;
+	    str[1] = num >> 8;
+	    offset += num + 2;
 	    break;
 
 	case 'f':
@@ -426,13 +449,32 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 
 	    case 't':
 		/*
-		 * variable length text
+		 * variable length text, aligned
 		 */
 		x = serialized[offset] +
 		    (serialized[offset + 1] << 8);
 		offset += 2 + x;
 		x = serialized[offset - x .. offset - 1];
 		offset = (offset + 3) & ~3;
+		break;
+
+	    case 'p':
+		/*
+		 * variable length text, 8 bit length
+		 */
+		x = serialized[offset];
+		offset += 1 + x;
+		x = serialized[offset - x .. offset - 1];
+		break;
+
+	    case 'P':
+		/*
+		 * variable length text, 16 bit length
+		 */
+		x = serialized[offset] +
+		    (serialized[offset + 1] << 8);
+		offset += 2 + x;
+		x = serialized[offset - x .. offset - 1];
 		break;
 
 	    case 'f':
