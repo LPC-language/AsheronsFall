@@ -4,7 +4,7 @@
  */
 
 # include "Serialized.h"
-# include "Dat.h"
+# include "dat.h"
 
 # define ENTRY_SIZE	24	/* size of BTree entry, 6 * sizeof(uint32_t) */
 

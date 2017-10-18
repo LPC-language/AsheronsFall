@@ -7,7 +7,7 @@
 # include <Iterator.h>
 # include "Serialized.h"
 # include "BTree.h"
-# include "Dat.h"
+# include "dat.h"
 
 inherit Iterable;
 inherit Serialized;
