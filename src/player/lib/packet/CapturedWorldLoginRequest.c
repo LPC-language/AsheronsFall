@@ -6,14 +6,14 @@ inherit WorldLoginRequest;
 /*
  * create a WorldLoginRequest from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int interfaceCookie, sessionCookie;
 
     ({
-	blob,
+	offset,
 	interfaceCookie,
 	sessionCookie
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(interfaceCookie, sessionCookie);
 }

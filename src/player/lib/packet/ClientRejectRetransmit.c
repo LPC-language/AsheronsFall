@@ -6,13 +6,13 @@ inherit RejectRetransmit;
 /*
  * create a RejectTransmit from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int count;
 
     ({
-	blob,
+	offset,
 	count
-    }) = deSerialize(blob, headerLayout());
-    ::create(deSerialize(blob, "i", count)[1 ..]);
+    }) = deSerialize(blob, offset, headerLayout());
+    ::create(deSerialize(blob, offset, "i", count)[1 ..]);
 }

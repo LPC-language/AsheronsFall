@@ -7,7 +7,7 @@ inherit ClientPacket;
 /*
  * process packet options
  */
-static string processOptions(int flags, string body)
+static int processOptions(int flags, string blob, int offset)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_SERVER_SWITCH |
@@ -31,37 +31,37 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_SERVER_SWITCH) {
 	ServerSwitch serverSwitch;
 
-	serverSwitch = new CapturedServerSwitch(body);
+	serverSwitch = new CapturedServerSwitch(blob, offset);
 	addData(serverSwitch);
-	body = body[serverSwitch->size() ..];
+	offset += serverSwitch->size();
     }
     if (flags & PACKET_REFERRAL) {
 	Referral referral;
 
-	referral = new CapturedReferral(body);
+	referral = new CapturedReferral(blob, offset);
 	addData(referral);
-	body = body[referral->size() ..];
+	offset += referral->size();
     }
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
 
-	requestRetransmit = new ClientRequestRetransmit(body);
+	requestRetransmit = new ClientRequestRetransmit(blob, offset);
 	addData(requestRetransmit);
-	body = body[requestRetransmit->size() ..];
+	offset += requestRetransmit->size();
     }
     if (flags & PACKET_REJECT_RETRANSMIT) {
 	RejectRetransmit rejectRetransmit;
 
-	rejectRetransmit = new ClientRejectRetransmit(body);
+	rejectRetransmit = new ClientRejectRetransmit(blob, offset);
 	addData(rejectRetransmit);
-	body = body[rejectRetransmit->size() ..];
+	offset += rejectRetransmit->size();
     }
     if (flags & PACKET_ACK_SEQUENCE) {
 	AckSequence ackSequence;
 
-	ackSequence = new ClientAckSequence(body);
+	ackSequence = new ClientAckSequence(blob, offset);
 	addData(ackSequence);
-	body = body[ackSequence->size() ..];
+	offset += ackSequence->size();
     }
     if (flags & PACKET_DISCONNECT) {
 	setDisconnect();
@@ -69,80 +69,80 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
 
-	loginRequest = new ClientLoginRequest(body);
+	loginRequest = new ClientLoginRequest(blob, offset);
 	addData(loginRequest);
-	body = body[loginRequest->size() ..];
+	offset += loginRequest->size();
     }
     if (flags & PACKET_WORLD_LOGIN_REQUEST) {
 	WorldLoginRequest worldLoginRequest;
 
-	worldLoginRequest = new CapturedWorldLoginRequest(body);
+	worldLoginRequest = new CapturedWorldLoginRequest(blob, offset);
 	addData(worldLoginRequest);
-	body = body[worldLoginRequest->size() ..];
+	offset += worldLoginRequest->size();
     }
     if (flags & PACKET_CONNECT_REQUEST) {
 	ConnectRequest connectRequest;
 
-	connectRequest = new CapturedConnectRequest(body);
+	connectRequest = new CapturedConnectRequest(blob, offset);
 	addData(connectRequest);
-	body = body[connectRequest->size() ..];
+	offset += connectRequest->size();
     }
     if (flags & PACKET_CONNECT_RESPONSE) {
 	ConnectResponse connectResponse;
 
-	connectResponse = new ClientConnectResponse(body);
+	connectResponse = new ClientConnectResponse(blob, offset);
 	addData(connectResponse);
-	body = body[connectResponse->size() ..];
+	offset += connectResponse->size();
     }
     if (flags & PACKET_CONNECT_ERROR) {
 	ConnectError connectError;
 
-	connectError = new ClientConnectError(body);
+	connectError = new ClientConnectError(blob, offset);
 	addData(connectError);
-	body = body[connectError->size() ..];
+	offset += connectError->size();
     }
     if (flags & PACKET_CONNECT_CLOSE) {
 	ConnectClose connectClose;
 
-	connectClose = new ClientConnectClose(body);
+	connectClose = new ClientConnectClose(blob, offset);
 	addData(connectClose);
-	body = body[connectClose->size() ..];
+	offset += connectClose->size();
     }
     if (flags & PACKET_CICMD_COMMAND) {
 	CICMDCommand command;
 
-	command = new ClientCICMDCommand(body);
+	command = new ClientCICMDCommand(blob, offset);
 	addData(command);
-	body = body[command->size() ..];
+	offset += command->size();
     }
     if (flags & PACKET_TIME_SYNCH) {
 	TimeSynch timeSynch;
 
-	timeSynch = new ClientTimeSynch(body);
+	timeSynch = new ClientTimeSynch(blob, offset);
 	addData(timeSynch);
-	body = body[timeSynch->size() ..];
+	offset += timeSynch->size();
     }
     if (flags & PACKET_ECHO_REQUEST) {
 	EchoRequest echoRequest;
 
-	echoRequest = new ClientEchoRequest(body);
+	echoRequest = new ClientEchoRequest(blob, offset);
 	addData(echoRequest);
-	body = body[echoRequest->size() ..];
+	offset += echoRequest->size();
     }
     if (flags & PACKET_ECHO_RESPONSE) {
 	EchoResponse echoResponse;
 
-	echoResponse = new CapturedEchoResponse(body);
+	echoResponse = new CapturedEchoResponse(blob, offset);
 	addData(echoResponse);
-	body = body[echoResponse->size() ..];
+	offset += echoResponse->size();
     }
     if (flags & PACKET_FLOW) {
 	Flow flow;
 
-	flow = new ClientFlow(body);
+	flow = new ClientFlow(blob, offset);
 	addData(flow);
-	body = body[flow->size() ..];
+	offset += flow->size();
     }
 
-    return body;
+    return offset;
 }

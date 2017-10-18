@@ -35,18 +35,18 @@ private int start;		/* offset in file after header */
 static void create(string pcapng)
 {
     string header;
-    int magic, orderMagic;
+    int offset, magic, orderMagic;
 
     file = new File(pcapng);
     header = file->read(0, PCAPNG_HEADER_SIZE);
     ({
-	header,
+	offset,
 	magic,
 	start,
 	orderMagic,
 	versionMajor,
 	versionMinor
-    }) = deSerialize(header, "iiiss");
+    }) = deSerialize(header, 0, "iiiss");
     if (magic != PCAPNG_MAGIC) {
 	error("Not a PCAPNG file");
     }
@@ -73,18 +73,18 @@ mixed iteratorStart(mixed from, mixed to)
 mixed *iteratorNext(mixed offset)
 {
     string header;
-    int type, length, origLength, snapLength, timeHigh, timeLow;
+    int dummy, type, length, origLength, snapLength, timeHigh, timeLow;
     int time, low;
     float mtime, high;
 
     while (offset < fileSize) {
 	header = file->read(offset, PACKET_HEADER_SIZE);
 	({
-	    header,
+	    dummy,
 	    type,
 	    length,
 	    origLength
-	}) = deSerialize(header, "iii");
+	}) = deSerialize(header, 0, "iii");
 	if (offset + length > fileSize) {
 	    error("Invalid PCAPNG record");
 	}
@@ -93,9 +93,9 @@ mixed *iteratorNext(mixed offset)
 	case PCAPNG_IFACE_DESC:
 	    header = file->read(offset + PACKET_HEADER_SIZE, 4);
 	    ({
-		header,
+		dummy,
 		snapLength
-	    }) = deSerialize(header, "i");
+	    }) = deSerialize(header, 0, "i");
 	    if (snapLength < ETHER_HEADER_SIZE + IP_HEADER_SIZE +
 			     IP_MAX_OPTIONS_SIZE + UDP_HEADER_SIZE +
 			     AC_MAX_PACKET_SIZE) {
@@ -116,12 +116,12 @@ mixed *iteratorNext(mixed offset)
 	    header = file->read(offset + PACKET_HEADER_SIZE,
 				PACKET_ENHANCED_SIZE);
 	    ({
-		header,
+		dummy,
 		timeHigh,
 		timeLow,
 		snapLength,
 		origLength
-	    }) = deSerialize(header, "iiii");
+	    }) = deSerialize(header, 0, "iiii");
 
 	    /* carefully add the bits without losing precision */
 	    time = timeHigh * 4294;

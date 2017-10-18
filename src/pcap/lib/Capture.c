@@ -32,14 +32,14 @@ private int network;		/* data link type */
 static void create(string pcap)
 {
     string header;
-    int magic, sigfigs;
+    int offset, magic, sigfigs;
 
     fileName = pcap;
     fileSize = file_info(pcap)[0];
     file = new File(pcap);
     header = file->read(0, PCAP_HEADER_SIZE);
     ({
-	header,
+	offset,
 	magic,
 	versionMajor,
 	versionMinor,
@@ -47,7 +47,7 @@ static void create(string pcap)
 	sigfigs,
 	snapLength,
 	network
-    }) = deSerialize(header, "issiiii");
+    }) = deSerialize(header, 0, "issiiii");
     if (magic != PCAP_MAGIC) {
 	error("Not a PCAP file");
     }
@@ -74,7 +74,7 @@ mixed iteratorStart(mixed from, mixed to)
 mixed *iteratorNext(mixed offset)
 {
     string header;
-    int time, utime, length, origLength;
+    int dummy, time, utime, length, origLength;
 
     if (offset == fileSize) {
 	return ({ offset, nil });	/* end of file */
@@ -83,12 +83,12 @@ mixed *iteratorNext(mixed offset)
     header = file->read(offset, PACKET_HEADER_SIZE);
     offset += PACKET_HEADER_SIZE;
     ({
-	header,
+	dummy,
 	time,
 	utime,
 	length,
 	origLength
-    }) = deSerialize(header, "iiii");
+    }) = deSerialize(header, 0, "iiii");
     if (length > snapLength || offset + length > fileSize) {
 	error("Invalid PCAP record");
     }

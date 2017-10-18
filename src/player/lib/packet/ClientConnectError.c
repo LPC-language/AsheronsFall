@@ -6,15 +6,15 @@ inherit ConnectError;
 /*
  * create a ConnectError from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int something1, something2;
 
     ({
-	blob,
+	offset,
 	something1,
 	something2,
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
 
     ::create(something1, something2);
 }

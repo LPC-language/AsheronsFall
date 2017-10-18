@@ -38,7 +38,7 @@ private int points;		/* skill points? */
  */
 static void create(string blob)
 {
-    int one, numSkills;
+    int offset, one, numSkills;
 
     ::create(MSG_CHARACTER_CREATE);
     body = allocate(3);
@@ -51,7 +51,7 @@ static void create(string blob)
     skills = allocate_int(55);
 
     ({
-	blob,
+	offset,
 
 	accountName,
 	one,
@@ -102,12 +102,12 @@ static void create(string blob)
 	admin,
 	envoy,
 	points
-    }) = deSerialize(blob,
+    }) = deSerialize(blob, 4,
 		     "tiiiiiiiiiiiiiiiiidddddd" +
 		     "iiiiiiiii" +
 		     "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"+
 		     "tiiii");
-    checkEmpty(blob);
+    checkEmpty(blob, offset);
 }
 
 

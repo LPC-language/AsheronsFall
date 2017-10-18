@@ -291,20 +291,20 @@ static string serialize(string format, varargs mixed args...)
 /*
  * deserialize a double precision floating point number
  */
-private float deSerializeDouble(string serialized)
+private float deSerializeDouble(string serialized, int offset)
 {
     int exponent, mantissa24, mantissa28;
     float x;
 
-    exponent = ((serialized[7] & 0x7f) << 4) +
-	       (serialized[6] >> 4);
-    mantissa28 = ((serialized[6] & 0x0f) << 24) +
-		 (serialized[5] << 16) +
-		 (serialized[4] << 8) +
-		 serialized[3];
-    mantissa24 = (serialized[2] << 16) +
-		 (serialized[1] << 8) +
-		 serialized[0];
+    exponent = ((serialized[offset + 7] & 0x7f) << 4) +
+	       (serialized[offset + 6] >> 4);
+    mantissa28 = ((serialized[offset + 6] & 0x0f) << 24) +
+		 (serialized[offset + 5] << 16) +
+		 (serialized[offset + 4] << 8) +
+		 serialized[offset + 3];
+    mantissa24 = (serialized[offset + 2] << 16) +
+		 (serialized[offset + 1] << 8) +
+		 serialized[offset];
     if (exponent == 0) {
 	if ((mantissa24 | mantissa28) == 0) {
 	    return 0.0;
@@ -315,7 +315,7 @@ private float deSerializeDouble(string serialized)
     }
     x = ldexp((float) mantissa28, exponent - DBL_BIAS - 28) +
 	ldexp((float) mantissa24, exponent - DBL_BIAS - 52);
-    if (serialized[7] & 0x80) {
+    if (serialized[offset + 7] & 0x80) {
 	x = -x;	/* negative */
     }
 
@@ -325,17 +325,18 @@ private float deSerializeDouble(string serialized)
 /*
  * extract mantissa bits from a double precision floating point number
  */
-private int deSerializeBits(string serialized, int bits, int offset)
+private int deSerializeBits(string serialized, int offset, int bits,
+			    int bitOffset)
 {
     int x, i, n;
 
     x = 0;
-    i = (offset >> 3) + 1;
-    for (n = bits + ((offset + 7) & ~0x7) - offset; n >= 8; n -= 8) {
-	x = (x << 8) | serialized[--i];
+    i = (bitOffset >> 3) + 1;
+    for (n = bits + ((bitOffset + 7) & ~0x7) - bitOffset; n >= 8; n -= 8) {
+	x = (x << 8) | serialized[offset + --i];
     }
     if (n != 0) {
-	x = (x << n) | (serialized[--i] >> (8 - n));
+	x = (x << n) | (serialized[offset + --i] >> (8 - n));
     }
     return x & ~(0xffffffff << bits);
 }
@@ -343,31 +344,34 @@ private int deSerializeBits(string serialized, int bits, int offset)
 /*
  * deserialize a "date" from a double precision floating point number
  */
-private mixed *deSerializeDate(string serialized)
+private mixed *deSerializeDate(string serialized, int offset)
 {
-    int exponent, offset, x;
+    int exponent, bitOffset, x;
     float y;
 
-    exponent = ((serialized[7] & 0x7f) << 4) +
-	       (serialized[6] >> 4);
+    exponent = ((serialized[offset + 7] & 0x7f) << 4) +
+	       (serialized[offset + 6] >> 4);
     if (exponent == 0) {
 	return ({ 0, 0.0 });
     }
     exponent -= DBL_BIAS;
     if (exponent < 0) {
-	return ({ 0, deSerializeDouble(serialized) });
+	return ({ 0, deSerializeDouble(serialized, offset) });
     }
     if (exponent > 30) {
 	error("DD format number too large");
     }
 
-    offset = 52;
+    bitOffset = 52;
     x = (exponent != 0) ?
-	 deSerializeBits(serialized, exponent, offset) | (1 << exponent) : 1;
-    offset -= exponent;
-    exponent = (offset <= 31) ? offset : 31;
-    y = ldexp((float) deSerializeBits(serialized, exponent, offset), -exponent);
-    if (serialized[7] & 0x80) {
+	 deSerializeBits(serialized, offset, exponent, bitOffset) |
+							    (1 << exponent) :
+	 1;
+    bitOffset -= exponent;
+    exponent = (bitOffset <= 31) ? bitOffset : 31;
+    y = ldexp((float) deSerializeBits(serialized, offset, exponent, bitOffset),
+	      -exponent);
+    if (serialized[offset + 7] & 0x80) {
 	x = -x;
 	y = -y;
     }
@@ -378,10 +382,11 @@ private mixed *deSerializeDate(string serialized)
  * Deserialize a string, based on a format description.  Returns an array
  * containing the remaining unserialized input, and the results.
  */
-static mixed *deSerialize(string serialized, string format, varargs int number)
+static mixed *deSerialize(string serialized, int offset, string format,
+			  varargs int number)
 {
     mixed *results;
-    int len, n, offset, i, j;
+    int len, n, i, j;
     int exponent, mantissa;
     mixed x;
 
@@ -391,7 +396,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
     len = strlen(format);
 
     results = allocate(1 + number * len);
-    n = offset = 0;
+    n = 0;
 
     for (i = 0; i < number; i++) {
 	for (j = 0; j < len; j++) {
@@ -507,7 +512,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		/*
 		 * 8 byte IEEE float, little endian
 		 */
-		x = deSerializeDouble(serialized[offset .. offset + 7]);
+		x = deSerializeDouble(serialized, offset);
 		offset += 8;
 		break;
 
@@ -518,8 +523,7 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 		if (format[++j] != 'D') {
 		    error("Unknown format 'D" + format[j .. j] + "'");
 		}
-		({ results[++n], x }) =
-			    deSerializeDate(serialized[offset .. offset + 7]);
+		({ results[++n], x }) = deSerializeDate(serialized, offset);
 		offset += 8;
 		break;
 
@@ -530,6 +534,6 @@ static mixed *deSerialize(string serialized, string format, varargs int number)
 	}
     }
 
-    results[0] = serialized[offset ..];
+    results[0] = offset;
     return results;
 }

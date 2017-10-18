@@ -37,13 +37,14 @@ int blockBTree;				/* block of BTree root node */
 private void loadHeader()
 {
     string header;
+    int offset;
 
     header = read_file(fileName, HEADER_OFFSET, 36);
     if (!header) {
 	error("Missing DAT file: " + fileName);
     }
     ({
-	header,
+	offset,
 	fileType,
 	blockSize,
 	fileSize,
@@ -53,7 +54,7 @@ private void loadHeader()
 	freeTail,
 	freeCount,
 	blockBTree
-    }) = deSerialize(header, "iiiiiiiii");
+    }) = deSerialize(header, 0, "iiiiiiiii");
 
     /*
      * Perform some minimal sanity checks.
@@ -94,15 +95,15 @@ private string getBlock(int block)
 private StringBuffer getData(int block, int length)
 {
     StringBuffer buffer;
-    int n;
+    int n, offset;
     string chunk;
 
     buffer = new StringBuffer;
     if (length != 0) {
 	for (n = (length - 1) / (blockSize - 4); n != 0; --n) {
 	    chunk = getBlock(block);
-	    ({ chunk, block }) = deSerialize(chunk, "i");
-	    buffer->append(chunk);
+	    ({ offset, block }) = deSerialize(chunk, 0, "i");
+	    buffer->append(chunk[offset ..]);
 	}
 
 	chunk = getBlock(block);

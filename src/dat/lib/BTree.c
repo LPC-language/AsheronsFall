@@ -16,18 +16,19 @@ private DatItem *entries;
 
 static void create(string node)
 {
-    int n, i, offset;
+    int offset, n, i;
 
-    branches = deSerialize(node[.. 247], "i", 62)[1 ..];
-    ({ n }) = deSerialize(node[248 .. 251], "i")[1 ..];
+    branches = deSerialize(node, 0, "i", 62)[1 ..];
+    ({ offset, n }) = deSerialize(node, 248, "i");
     if (branches[0] == 0) {
 	branches = ({ });	/* leaf node */
     } else {
 	branches = branches[.. n];
     }
     entries = allocate(n);
-    for (offset = 252, i = 0; i < n; offset += ENTRY_SIZE, i++) {
-	entries[i] = new DatItem(node[offset .. offset + ENTRY_SIZE - 1]);
+    for (i = 0; i < n; i++) {
+	entries[i] = new DatItem(node, offset);
+	offset += ENTRY_SIZE;
     }
 }
 

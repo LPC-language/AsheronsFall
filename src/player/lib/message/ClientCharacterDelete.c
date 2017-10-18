@@ -11,13 +11,15 @@ private int slot;		/* character slot in list */
  */
 static void create(string blob)
 {
+    int offset;
+
     ::create(MSG_CHARACTER_DELETE);
     ({
-	blob,
+	offset,
 	accountName,
 	slot
-    }) = deSerialize(blob, "ti");
-    checkEmpty(blob);
+    }) = deSerialize(blob, 4, "ti");
+    checkEmpty(blob, offset);
 }
 
 

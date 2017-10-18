@@ -50,9 +50,9 @@ static void create(int mesg)
 /*
  * check that there is no garbage in the left-overs
  */
-static void checkEmpty(string remainder)
+static void checkEmpty(string remainder, int offset)
 {
-    if (strlen(remainder) != 0) {
+    if (strlen(remainder) != offset) {
 	error("Garbage in message");
     }
 }

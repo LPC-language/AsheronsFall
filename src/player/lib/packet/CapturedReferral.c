@@ -6,13 +6,13 @@ inherit Referral;
 /*
  * create a Referral from a blob
  */
-static create(string blob)
+static create(string blob, int offset)
 {
     int interfaceCookie, sessionCookie, flags, port, address, something1, zero,
 	serverId, something2, something3;
 
     ({
-	blob,
+	offset,
 	interfaceCookie,
 	sessionCookie,
 	flags,
@@ -23,7 +23,7 @@ static create(string blob)
 	serverId,
 	something2,
 	something3
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     if (zero != 0) {
 	error("Zero field not 0");
     }

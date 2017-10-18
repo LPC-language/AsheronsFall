@@ -10,6 +10,7 @@ private inherit Serialized;
 
 
 private string chunk1, chunk2;	/* first two chunks */
+private int offset;		/* offset in first chunk */
 private int limit;		/* half of maximum string length */
 private StringBuffer buffer;	/* the StringBuffer to get more chunks from */
 
@@ -20,6 +21,7 @@ static void create(StringBuffer buffer)
 {
     chunk1 = buffer->chunk();
     chunk2 = buffer->chunk();
+    offset = 0;
     limit = status(ST_STRSIZE) / 2;
     ::buffer = buffer;
 }
@@ -31,7 +33,7 @@ int length()
 {
     int length;
 
-    length = strlen(chunk1) + buffer->length();
+    length = strlen(chunk1) - offset + buffer->length();
     if (chunk2) {
 	length += strlen(chunk2);
     }
@@ -43,14 +45,15 @@ int length()
  */
 private void refill()
 {
-    if (chunk2 && strlen(chunk1) <= limit) {
+    if (chunk2 && strlen(chunk1) - offset <= limit) {
 	if (strlen(chunk2) <= limit) {
-	    chunk1 += chunk2;
+	    chunk1 = chunk1[offset ..] + chunk2;
 	    chunk2 = buffer->chunk();
 	} else {
-	    chunk1 += chunk2[.. limit - 1];
+	    chunk1 = chunk1[offset ..] + chunk2[.. limit - 1];
 	    chunk2 = chunk2[limit ..];
 	}
+	offset = 0;
     }
 }
 
@@ -61,8 +64,8 @@ mixed *read(string format, varargs int n)
 {
     mixed *list;
 
-    list = deSerialize(chunk1, format, n);
-    chunk1 = list[0];
+    list = deSerialize(chunk1, offset, format, n);
+    offset = list[0];
     refill();
     return list[1 ..];
 }
@@ -72,6 +75,6 @@ mixed *read(string format, varargs int n)
  */
 void skip(int bytes)
 {
-    chunk1 = chunk1[bytes ..];
+    offset += bytes;
     refill();
 }

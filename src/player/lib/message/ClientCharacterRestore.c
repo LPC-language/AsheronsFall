@@ -10,16 +10,16 @@ private int id;		/* id of character to restore */
  */
 static void create(string blob)
 {
-    int something1, something2;
+    int offset, something1, something2;
 
     ::create(MSG_CHARACTER_RESTORE);
     ({
-	blob,
+	offset,
 	id,
 	something1,
 	something2
-    }) = deSerialize(blob, "iii");
-    checkEmpty(blob);
+    }) = deSerialize(blob, 4, "iii");
+    checkEmpty(blob, offset);
 }
 
 

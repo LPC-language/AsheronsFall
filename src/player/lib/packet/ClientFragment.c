@@ -8,23 +8,24 @@ inherit Fragment;
 /*
  * create from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
-    string body;
     int sequence, id, count, size, index, group;
 
     ({
-	body,
+	offset,
 	sequence,
 	id,
 	count,
 	size,
 	index,
 	group
-    }) = deSerialize(blob, headerLayout());
-    if (size > strlen(blob)) {
+    }) = deSerialize(blob, offset, headerLayout());
+    size -= HEADER_SIZE;
+    if (size <= 0 || offset + size > strlen(blob)) {
 	error("Bad fragment size");
     }
 
-    ::create(sequence, id, count, index, group, body[.. size - HEADER_SIZE - 1]);
+    ::create(sequence, id, count, index, group,
+	     blob[offset .. offset + size - 1]);
 }

@@ -21,42 +21,41 @@ private Fragment *fragments;	/* fragments in this packet */
 /*
  * Bad Todd checksum calculation
  */
-private int badTodd(string blob)
+private int badTodd(string blob, int offset, int len)
 {
-    int len, tail, checksum, c0, c1, c2, c3, i;
-
-    len = strlen(blob);
+    int tail, checksum, c0, c1, c2, c3;
 
     /* include length */
     checksum = len << 16;
     c0 = c1 = c2 = c3 = 0;
 
     tail = len & 3;
-    len -= tail;
+    len += offset - tail;
 
     /* little endian */
-    for (i = 0; i < len; i += 4) {
-	c0 += blob[i];
-	c1 += blob[i + 1];
-	c2 += blob[i + 2];
-	c3 += blob[i + 3];
+    while (offset < len) {
+	c0 += blob[offset];
+	c1 += blob[offset + 1];
+	c2 += blob[offset + 2];
+	c3 += blob[offset + 3];
+	offset += 4;
     }
 
     /* big endian */
     switch (tail) {
     case 3:
-	c3 += blob[i];
-	c2 += blob[i + 1];
-	c1 += blob[i + 2];
+	c3 += blob[offset];
+	c2 += blob[offset + 1];
+	c1 += blob[offset + 2];
 	break;
 
     case 2:
-	c3 += blob[i];
-	c2 += blob[i + 1];
+	c3 += blob[offset];
+	c2 += blob[offset + 1];
 	break;
 
     case 1:
-	c3 += blob[i];
+	c3 += blob[offset];
 	break;
     }
 
@@ -66,18 +65,19 @@ private int badTodd(string blob)
 /*
  * compute header checksum
  */
-static void setHeaderChecksum(string header)
+static void setHeaderChecksum(string blob)
 {
-    headerChecksum = badTodd(header) - checksum + 0xBADD70DD;
+    headerChecksum = badTodd(blob, 0, PACKET_HEADER_SIZE) - checksum +
+		     0xBADD70DD;
     bodyChecksum = 0;
 }
 
 /*
  * accumulate body checksum
  */
-static void addBodyChecksum(string body)
+static void addBodyChecksum(string blob, int offset, int len)
 {
-    bodyChecksum += badTodd(body);
+    bodyChecksum += badTodd(blob, offset, len);
 }
 
 /*
@@ -125,11 +125,12 @@ string transport()
 	packet[n++] = packetData[i]->transport();
     }
     if (sz != 0) {
-	addBodyChecksum(implode(packet[1 .. sz], ""));
+	blob = implode(packet[1 .. sz], "");
+	addBodyChecksum(blob, 0, strlen(blob));
     }
     for (sz = sizeof(fragments), i = 0; i < sz; i++) {
-	packet[n] = fragments[i]->transport();
-	addBodyChecksum(packet[n++]);
+	blob = packet[n++] = fragments[i]->transport();
+	addBodyChecksum(blob, 0, strlen(blob));
     }
 
     blob = packet[0];

@@ -6,15 +6,15 @@ inherit CICMDCommand;
 /*
  * create a CICMDCommand from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int command;
     int parameter;
 
     ({
-	blob,
+	offset,
 	command,
 	parameter
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(command, parameter);
 }

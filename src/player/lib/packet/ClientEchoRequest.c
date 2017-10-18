@@ -6,14 +6,14 @@ inherit EchoRequest;
 /*
  * create an EchoRequest from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     float clientTime;
 
     ({
-	blob,
+	offset,
 	clientTime,
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
 
     ::create(clientTime);
 }

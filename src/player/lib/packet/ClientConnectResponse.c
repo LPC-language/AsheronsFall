@@ -6,14 +6,14 @@ inherit ConnectResponse;
 /*
  * create a ConnectResponse from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int interfaceCookie, sessionSeed;
 
     ({
-	blob,
+	offset,
 	interfaceCookie,
 	sessionSeed
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(interfaceCookie, sessionSeed);
 }

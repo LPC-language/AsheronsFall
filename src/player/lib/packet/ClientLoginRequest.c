@@ -6,13 +6,13 @@ inherit LoginRequest;
 /*
  * create a LoginRequest from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     string version, account, ticket;
     int size, authType, flags, zero1, zero2, time, ticketLength, len;
 
     ({
-	blob,
+	offset,
 	version,
 	size,
 	authType,
@@ -22,7 +22,7 @@ static void create(string blob)
 	account,
 	zero2,
 	ticketLength
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     len = 20 + 2 + strlen(account);
     len = (len + 3) & ~3;
     if (size != len + ticketLength) {
@@ -45,7 +45,7 @@ static void create(string blob)
 	if (ticketLength == 0) {
 	    error("Missing ticket");
 	}
-	ticket = blob[.. ticketLength - 1];
+	ticket = blob[offset .. offset + ticketLength - 1];
 	break;
 
     default:

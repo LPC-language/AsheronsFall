@@ -6,7 +6,7 @@ inherit Packet;
 /*
  * process packet options
  */
-static string processOptions(int flags, string body)
+static int processOptions(int flags, string blob, int offset)
 {
     if (flags & ~(PACKET_RETRANSMISSION | PACKET_ENCRYPTED_CHECKSUM |
 		  PACKET_BLOB_FRAGMENTS | PACKET_REQUEST_RETRANSMIT |
@@ -27,23 +27,23 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
 
-	requestRetransmit = new ClientRequestRetransmit(body);
+	requestRetransmit = new ClientRequestRetransmit(blob, offset);
 	addData(requestRetransmit);
-	body = body[requestRetransmit->size() ..];
+	offset += requestRetransmit->size();
     }
     if (flags & PACKET_REJECT_RETRANSMIT) {
 	RejectRetransmit rejectRetransmit;
 
-	rejectRetransmit = new ClientRejectRetransmit(body);
+	rejectRetransmit = new ClientRejectRetransmit(blob, offset);
 	addData(rejectRetransmit);
-	body = body[rejectRetransmit->size() ..];
+	offset += rejectRetransmit->size();
     }
     if (flags & PACKET_ACK_SEQUENCE) {
 	AckSequence ackSequence;
 
-	ackSequence = new ClientAckSequence(body);
+	ackSequence = new ClientAckSequence(blob, offset);
 	addData(ackSequence);
-	body = body[ackSequence->size() ..];
+	offset += ackSequence->size();
     }
     if (flags & PACKET_DISCONNECT) {
 	setDisconnect();
@@ -51,61 +51,61 @@ static string processOptions(int flags, string body)
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
 
-	loginRequest = new ClientLoginRequest(body);
+	loginRequest = new ClientLoginRequest(blob, offset);
 	addData(loginRequest);
-	body = body[loginRequest->size() ..];
+	offset += loginRequest->size();
     }
     if (flags & PACKET_CONNECT_RESPONSE) {
 	ConnectResponse connectResponse;
 
-	connectResponse = new ClientConnectResponse(body);
+	connectResponse = new ClientConnectResponse(blob, offset);
 	addData(connectResponse);
-	body = body[connectResponse->size() ..];
+	offset += connectResponse->size();
     }
     if (flags & PACKET_CONNECT_ERROR) {
 	ConnectError connectError;
 
-	connectError = new ClientConnectError(body);
+	connectError = new ClientConnectError(blob, offset);
 	addData(connectError);
-	body = body[connectError->size() ..];
+	offset += connectError->size();
     }
     if (flags & PACKET_CONNECT_CLOSE) {
 	ConnectClose connectClose;
 
-	connectClose = new ClientConnectClose(body);
+	connectClose = new ClientConnectClose(blob, offset);
 	addData(connectClose);
-	body = body[connectClose->size() ..];
+	offset += connectClose->size();
     }
     if (flags & PACKET_CICMD_COMMAND) {
 	CICMDCommand command;
 
-	command = new ClientCICMDCommand(body);
+	command = new ClientCICMDCommand(blob, offset);
 	addData(command);
-	body = body[command->size() ..];
+	offset += command->size();
     }
     if (flags & PACKET_TIME_SYNCH) {
 	TimeSynch timeSynch;
 
-	timeSynch = new ClientTimeSynch(body);
+	timeSynch = new ClientTimeSynch(blob, offset);
 	addData(timeSynch);
-	body = body[timeSynch->size() ..];
+	offset += timeSynch->size();
     }
     if (flags & PACKET_ECHO_REQUEST) {
 	EchoRequest echoRequest;
 
-	echoRequest = new ClientEchoRequest(body);
+	echoRequest = new ClientEchoRequest(blob, offset);
 	addData(echoRequest);
-	body = body[echoRequest->size() ..];
+	offset += echoRequest->size();
     }
     if (flags & PACKET_FLOW) {
 	Flow flow;
 
-	flow = new ClientFlow(body);
+	flow = new ClientFlow(blob, offset);
 	addData(flow);
-	body = body[flow->size() ..];
+	offset += flow->size();
     }
 
-    return body;
+    return offset;
 }
 
 /*
@@ -113,14 +113,13 @@ static string processOptions(int flags, string body)
  */
 static void create(string blob)
 {
-    string body;
-    int sequence, flags, checksum, id, time, size, table;
+    int offset, sequence, flags, checksum, id, time, size, table;
 
     /*
      * process packet header
      */
     ({
-	body,
+	offset,
 	sequence,
 	flags,
 	checksum,
@@ -128,19 +127,18 @@ static void create(string blob)
 	time,
 	size,
 	table
-    }) = deSerialize(blob, headerLayout());
-    if (size != strlen(body)) {
+    }) = deSerialize(blob, 0, headerLayout());
+    if (strlen(blob) != offset + size) {
 	error("Bad packet size");
     }
     ::create(checksum, id, table);
     setSequence(sequence);
     setTime(time);
-    setHeaderChecksum(blob[.. PACKET_HEADER_SIZE - 1]);
+    setHeaderChecksum(blob);
 
-    body = processOptions(flags, body);
-    if (size != strlen(body)) {
-	addBodyChecksum(blob[PACKET_HEADER_SIZE ..
-			     strlen(blob) - strlen(body) - 1]);
+    offset = processOptions(flags, blob, offset);
+    if (offset != PACKET_HEADER_SIZE) {
+	addBodyChecksum(blob, PACKET_HEADER_SIZE, offset - PACKET_HEADER_SIZE);
     }
 
     /*
@@ -151,15 +149,15 @@ static void create(string blob)
 	int size;
 
 	do {
-	    fragment = new ClientFragment(body);
+	    fragment = new ClientFragment(blob, offset);
 	    addFragment(fragment);
 	    size = fragment->size();
-	    addBodyChecksum(body[.. size - 1]);
-	    body = body[size ..];
-	} while (strlen(body) != 0);
+	    addBodyChecksum(blob, offset, size);
+	    offset += size;
+	} while (strlen(blob) != offset);
     }
 
-    if (body != "") {
+    if (strlen(blob) != offset) {
 	error("Garbage in packet");
     }
 }

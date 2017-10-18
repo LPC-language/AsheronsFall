@@ -6,14 +6,14 @@ inherit EchoResponse;
 /*
  * create an EchoResponse from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     float clientTime, timeDiff;
 
     ({
-	blob,
+	offset,
 	clientTime,
 	timeDiff
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(clientTime, timeDiff);
 }

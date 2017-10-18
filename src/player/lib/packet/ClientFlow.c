@@ -6,15 +6,15 @@ inherit Flow;
 /*
  * create a Flow from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int flowSize, flowTime;
 
     ({
-	blob,
+	offset,
 	flowSize,
 	flowTime,
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
 
     ::create(flowSize, flowTime);
 }

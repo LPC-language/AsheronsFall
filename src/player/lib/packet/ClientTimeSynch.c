@@ -6,15 +6,15 @@ inherit TimeSynch;
 /*
  * create a TimeSynch from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int time;
     float mtime;
 
     ({
-	blob,
+	offset,
 	time,
 	mtime
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(time, mtime);
 }

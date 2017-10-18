@@ -44,19 +44,18 @@ private void loginScreen()
  */
 static void receive(string blob)
 {
-    int type, response, id;
-    string body;
+    int offset, type, response, id;
     Message message;
     Character character;
 
     ({
-	body,
+	offset,
 	type
-    }) = deSerialize(blob, "i");
+    }) = deSerialize(blob, 0, "i");
 
     switch (type) {
     case MSG_TYPE(MSG_DDD_INTERROGATION_RESPONSE):
-	switch (hash_crc16(body)) {
+	switch (hash_crc16(blob[offset ..])) {
 	case DAT_PLAIN:
 	    plain = TRUE;
 	    break;
@@ -76,7 +75,7 @@ static void receive(string blob)
 	break;
 
     case MSG_TYPE(MSG_CHARACTER_CREATE):
-	message = new ClientCharacterCreate(body);
+	message = new ClientCharacterCreate(blob);
 	({ response, id }) = account->characterCreate(message->name());
 	if (response == CHARGEN_RESPONSE_OK) {
 	    send(new CharacterCreateResponse(response, id, message->name(), 0));
@@ -86,7 +85,7 @@ static void receive(string blob)
 	break;
 
     case MSG_TYPE(MSG_CHARACTER_DELETE):
-	message = new ClientCharacterDelete(body);
+	message = new ClientCharacterDelete(blob);
 	if (message->accountName() == account->name()) {
 	    response = account->characterDelete(message->slot());
 	    if (response == CHARERR_OK) {
@@ -101,7 +100,7 @@ static void receive(string blob)
 	break;
 
     case MSG_TYPE(MSG_CHARACTER_RESTORE):
-	message = new ClientCharacterRestore(body);
+	message = new ClientCharacterRestore(blob);
 	({ response, character }) = account->characterRestore(message->id());
 	if (response == CHARGEN_RESPONSE_OK) {
 	    send(new CharacterCreateResponse(response, message->id(),

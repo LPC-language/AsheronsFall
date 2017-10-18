@@ -6,14 +6,14 @@ inherit ConnectRequest;
 /*
  * create a ConnectRequest from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int time, interfaceCookie, sessionCookie, clientId, serverSeed, clientSeed,
 	something;
     float mtime;
 
     ({
-	blob,
+	offset,
 	time,
 	mtime,
 	interfaceCookie,
@@ -22,7 +22,7 @@ static void create(string blob)
 	serverSeed,
 	clientSeed,
 	something
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
     ::create(time, mtime, interfaceCookie, sessionCookie, clientId, serverSeed,
 	     clientSeed, something);
 }

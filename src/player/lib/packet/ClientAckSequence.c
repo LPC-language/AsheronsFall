@@ -6,14 +6,14 @@ inherit AckSequence;
 /*
  * create an AckSequence from a blob
  */
-static void create(string blob)
+static void create(string blob, int offset)
 {
     int sequence;
 
     ({
-	blob,
+	offset,
 	sequence,
-    }) = deSerialize(blob, headerLayout());
+    }) = deSerialize(blob, offset, headerLayout());
 
     ::create(sequence);
 }

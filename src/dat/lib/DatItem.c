@@ -14,17 +14,17 @@ private int length;		/* length of item */
 private int timeStamp;		/* creation time */
 private int iteration;		/* item iteration */
 
-static void create(string entry)
+static void create(string blob, int offset)
 {
     ({
-	entry,
+	offset,
 	flags,
 	id,
 	block,
 	length,
 	timeStamp,
 	iteration
-    }) = deSerialize(entry, "iiiiii");
+    }) = deSerialize(blob, offset, "iiiiii");
 }
 
 int flags()		{ return flags; }
