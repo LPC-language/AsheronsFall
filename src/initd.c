@@ -1,5 +1,4 @@
 # include "RandSeq.h"
-# include "Serialized.h"
 # include "Object.h"
 # include "Dat.h"
 # include "landblock.h"
@@ -13,7 +12,6 @@ static void create()
 {
     /* general use */
     compile_object(OBJECT_PATH(RandSeq));
-    compile_object(OBJECT_PATH(SerialReader));
     compile_object(OBJECT_PATH(Container));
 
     /* DAT image server */

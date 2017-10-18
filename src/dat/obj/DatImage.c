@@ -131,9 +131,9 @@ StringBuffer getItemData(DatItem item)
 /*
  * get a reader for a DatItem
  */
-SerialReader getItemReader(DatItem item)
+DatReader getItemReader(DatItem item)
 {
-    return new SerialReader(getItemData(item));
+    return new DatReader(getItemData(item));
 }
 
 

@@ -1,5 +1,6 @@
 # define DatImage		object "/usr/Asheron/dat/obj/DatImage"
 # define DatItem		object "/usr/Asheron/dat/lib/DatItem"
+# define DatReader		object "/usr/Asheron/dat/lib/DatReader"
 
 # define DAT_SERVER		"/usr/Asheron/dat/sys/datserver"
 

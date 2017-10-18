@@ -15,6 +15,7 @@ static void create()
 
     compile_object(OBJECT_PATH(BTree));
     compile_object(OBJECT_PATH(DatItem));
+    compile_object(OBJECT_PATH(DatReader));
     compile_object(OBJECT_PATH(DatImage));
     cell_1 = clone_object(OBJECT_PATH(DatImage),
 			  "/usr/Asheron/dat/data/client_cell_1.dat");
