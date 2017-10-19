@@ -1,6 +1,6 @@
 # include "RandSeq.h"
 # include "Object.h"
-# include "Dat.h"
+# include "dat.h"
 # include "landblock.h"
 # include "dungeon.h"
 # include "Interface.h"
