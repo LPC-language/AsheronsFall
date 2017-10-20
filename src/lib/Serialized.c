@@ -178,6 +178,22 @@ static string serialize(string format, varargs mixed args...)
 	    offset += 2;
 	    break;
 
+	case 'S':
+	    /*
+	     * packed 15 bit integer, big endian
+	     */
+	    num = args[n++];
+	    if (num <= 0x7f) {
+		str = "\0";
+		str[0] = num;
+	    } else {
+		str = "\0\0";
+		str[0] = (num >> 8) + 0x80;
+		str[1] = num >> 8;
+		offset += 2;
+	    }
+	    break;
+
 	case 'c':
 	    /*
 	     * 1 byte integer
@@ -442,6 +458,20 @@ static mixed *deSerialize(string serialized, int offset, string format,
 		x = serialized[offset] +
 		    (serialized[offset + 1] << 8);
 		offset += 2;
+		break;
+
+	    case 'S':
+		/*
+		 * packed 15 bit integer, big endian
+		 */
+		x = serialized[offset];
+		if (x <= 0x7f) {
+		    offset++;
+		} else {
+		    x = ((x & 0x7f) << 8) +
+			serialized[offset + 1];
+		    offset += 2;
+		}
 		break;
 
 	    case 'c':

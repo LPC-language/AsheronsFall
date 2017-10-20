@@ -45,6 +45,10 @@ static void create(string blob, int offset)
 	if (ticketLength == 0) {
 	    error("Missing ticket");
 	}
+	({
+	    offset,
+	    ticketLength
+	}) = deSerialize(blob, offset, "S");
 	ticket = blob[offset .. offset + ticketLength - 1];
 	break;
 

@@ -10,7 +10,7 @@ private int size;		/* size of the remaining part */
 private int flags;		/* bitflags */
 private int time;		/* client time */
 private string account;		/* player account */
-private string ticket;		/* GLS ticket (password starting with \n) */
+private string ticket;		/* GLS ticket (password) */
 
 /*
  * layout of everything but the ticket
@@ -42,7 +42,7 @@ string transport()
 
     if (ticket) {
 	authType = AUTH_ACCOUNT_TICKET;
-	str = ticket;
+	str = serialize("S", strlen(ticket)) + ticket;
     } else {
 	authType = AUTH_ACCOUNT;
 	str = "";
@@ -63,7 +63,7 @@ static void create(string version, int flags, int time, string account,
     ::size = 20 + 2 + strlen(account);
     ::size = (::size + 3) & ~3;
     if (ticket) {
-	::size += strlen(ticket);
+	::size += (strlen(ticket) > 255) + 1 + strlen(ticket);
     }
     ::flags = flags;
     ::time = time;
