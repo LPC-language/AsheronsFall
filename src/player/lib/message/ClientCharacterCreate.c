@@ -11,7 +11,7 @@ inherit Message;
 private string accountName;	/* name of associated account */
 private string name;		/* proposed name of character */
 
-private int sex;		/* male 1, female 0 */
+private int sex;		/* male 1, female 2 */
 private int eyes;
 private int nose;
 private int mouth;
@@ -114,6 +114,7 @@ static void create(string blob)
 string accountName()		{ return accountName; }
 string name()			{ return name; }
 mixed *bodyStyleColourHue()	{ return body; }
+mixed *hairStyleColourHue()	{ return hair; }
 mixed *headgearStyleColourHue()	{ return headgear; }
 mixed *shirtStyleColourHue()	{ return shirt; }
 mixed *trousersStyleColourHue()	{ return trousers; }

@@ -64,6 +64,7 @@
 # define PACKET_REQUIRED		0x10000000
 
 /* other NetworkData types */
+# define ND_DATA			0x00000000
 # define ND_PACKET			0x20000000
 # define ND_MESSAGE			0x40000000
 

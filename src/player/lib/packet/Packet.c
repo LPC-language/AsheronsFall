@@ -119,17 +119,17 @@ string transport()
 			  flags & PACKET_TRANSPORT_FLAGS, checksum, id, time,
 			  size, table);
     setHeaderChecksum(packet[0]);
-    n = 1;
+    n = 0;
     packetData = map_values(data);
     for (sz = sizeof(packetData), i = 0; i < sz; i++) {
-	packet[n++] = packetData[i]->transport();
+	packet[++n] = packetData[i]->transport();
     }
     if (sz != 0) {
 	blob = implode(packet[1 .. sz], "");
 	addBodyChecksum(blob, 0, strlen(blob));
     }
     for (sz = sizeof(fragments), i = 0; i < sz; i++) {
-	blob = packet[n++] = fragments[i]->transport();
+	blob = packet[++n] = fragments[i]->transport();
 	addBodyChecksum(blob, 0, strlen(blob));
     }
 

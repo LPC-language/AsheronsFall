@@ -305,6 +305,17 @@ static string serialize(string format, varargs mixed args...)
 }
 
 /*
+ * add the padding needed to align to 4 bytes
+ */
+static string serializeAlign(string serialized)
+{
+    int size;
+
+    size = strlen(serialized) & 3;
+    return (size != 0) ? serialized + "\0\0\0\0"[size ..] : serialized;
+}
+
+/*
  * deserialize a double precision floating point number
  */
 private float deSerializeDouble(string serialized, int offset)
@@ -566,4 +577,12 @@ static mixed *deSerialize(string serialized, int offset, string format,
 
     results[0] = offset;
     return results;
+}
+
+/*
+ * align to 4 bytes
+ */
+static int align(int size)
+{
+    return ((size + 3) & ~3);
 }

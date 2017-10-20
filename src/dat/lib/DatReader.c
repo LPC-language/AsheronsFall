@@ -9,10 +9,6 @@
 private inherit Serialized;
 
 
-/* 4 byte alignment */
-# define ALIGN_DOWN(o)		((o) & ~3)
-# define ALIGN_UP(o)		ALIGN_DOWN((o) + 3)
-
 private string chunk1, chunk2;	/* first two chunks */
 private int offset;		/* offset in first chunk */
 private int limit;		/* half of maximum string length */
@@ -51,7 +47,7 @@ private void refill()
 {
     int boundary;
 
-    boundary = ALIGN_DOWN(offset);
+    boundary = offset & ~3;
     if (chunk2 && strlen(chunk1) - boundary <= limit) {
 	if (strlen(chunk2) <= limit) {
 	    chunk1 = chunk1[boundary ..] + chunk2;
@@ -91,5 +87,5 @@ void skip(int bytes)
  */
 void align()
 {
-    offset = ALIGN_UP(offset);
+    offset = ::align(offset);
 }
