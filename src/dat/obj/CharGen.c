@@ -1,3 +1,5 @@
+# include <Iterator.h>
+# include <Continuation.h>
 # include "dat.h"
 
 
@@ -12,6 +14,7 @@ static void create(DatReader reader)
 {
     int n, i;
     string name;
+    Continuation cont;
 
     ({
 	id,
@@ -42,11 +45,19 @@ static void create(DatReader reader)
      */
     n = reader->read("c")[0];
     heritageGroups = allocate(n);
-    for (i = 0; i < n; i++) {
-	heritageGroups[i] = new DatHeritage(reader);
-    }
+
+    cont = new IterativeContinuation(new IntIterator(0, n - 1), "readHeritage",
+				     reader);
+    cont->runNext();
 }
 
+/*
+ * read heritage group
+ */
+static void readHeritage(int i, DatReader reader)
+{
+    heritageGroups[i] = new DatHeritage(reader);
+}
 
 int id()			{ return id; }
 mixed *starterAreas()		{ return starterAreas; }
