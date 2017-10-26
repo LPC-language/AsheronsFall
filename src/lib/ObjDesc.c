@@ -7,7 +7,7 @@ inherit Serialized;
 
 # define OBJDESC	0x11	/* first byte in transport */
 
-private int paletteBaseId;
+private int paletteBase;
 private int **palettes;
 private int **textures;
 private int **models;
@@ -44,7 +44,7 @@ string transport()
     n = 0;
     sz = sizeof(palettes);
     if (sz != 0) {
-	blobs[0] += serialize("I", paletteBaseId);
+	blobs[0] += serialize("I", paletteBase);
 	for (i = 0; i < sz; i++) {
 	    blobs[++n] += serialize("Icc", palettes[i]...);
 	}
@@ -64,18 +64,18 @@ string transport()
 /*
  * initialize
  */
-static void create(int paletteBaseId, int **palettes, int **textures,
+static void create(int paletteBase, int **palettes, int **textures,
 		   int **models)
 {
     ::create(ND_DATA);
-    ::paletteBaseId = paletteBaseId;
+    ::paletteBase = paletteBase;
     ::palettes = palettes;
     ::textures = textures;
     ::models = models;
 }
 
 
-int paletteBaseId()	{ return paletteBaseId; }
+int paletteBase()	{ return paletteBase; }
 int **palettes()	{ return palettes; }
 int **textures()	{ return textures; }
 int **models()		{ return models; }

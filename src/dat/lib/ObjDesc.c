@@ -23,7 +23,7 @@ static void create(DatReader reader)
 
     palettes = allocate(numPalettes);
     if (numPalettes != 0) {
-	paletteBaseId = reader->read("I");
+	paletteBase = reader->read("I");
 	for (i = 0; i < numPalettes; i++) {
 	    palettes[i] = reader->read("ccI");
 	}
@@ -41,5 +41,5 @@ static void create(DatReader reader)
 
     reader->align();
 
-    ::create(paletteBaseId, palettes, textures, models);
+    ::create(paletteBase, palettes, textures, models);
 }
