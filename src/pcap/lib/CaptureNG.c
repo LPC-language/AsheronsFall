@@ -129,8 +129,7 @@ mixed *iteratorNext(mixed offset)
 	    time += low / 1000;
 	    low = low % 1000 * 1000 + timeHigh * 296;
 	    time += low / 1000000;
-	    mtime = (float) (low % 1000000) + ldexp((float) (timeLow >> 1), 1) +
-		    (float) (timeLow & 1);
+	    mtime = (float) (low % 1000000) + unsignedToFloat(timeLow);
 	    ({ mtime, high }) = modf(mtime / 1000000.0);
 	    time += (int) high;
 

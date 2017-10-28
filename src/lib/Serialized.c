@@ -112,6 +112,15 @@ private string serializeDate(int secs, float msecs)
 }
 
 /*
+ * convert a floating point number to an unsigned integer, represented as a
+ * signed integer
+ */
+static int floatToUnsigned(float flt)
+{
+    return (int) ((flt >= 2147483648.0) ? flt - 4294967296.0 : flt);
+}
+
+/*
  * Serialize a number of arguments, given a format string.  Return a string
  * with the serialized data.
  */
@@ -132,6 +141,25 @@ static string serialize(string format, varargs mixed args...)
 	     */
 	    str = "\0";
 	    offset++;
+	    break;
+
+	case 'l':
+	    /*
+	     * 8 byte integer, from a float
+	     */
+	    mantissa = args[n++];
+	    str = "\0\0\0\0\0\0\0\0";
+	    num = floatToUnsigned(fmod(mantissa, 4294967296.0));
+	    str[0] = num;
+	    str[1] = num >> 8;
+	    str[2] = num >> 16;
+	    str[3] = num >> 24;
+	    num = (int) floor(ldexp(mantissa, -32));
+	    str[4] = num;
+	    str[5] = num >> 8;
+	    str[6] = num >> 16;
+	    str[7] = num >> 24;
+	    offset += 8;
 	    break;
 
 	case 'i':
@@ -165,6 +193,19 @@ static string serialize(string format, varargs mixed args...)
 		str[3] = num >> 8;
 		offset += 4;
 	    }
+	    break;
+
+	case 'u':
+	    /*
+	     * 4 byte unsigned integer, little endian, from a float
+	     */
+	    num = floatToUnsigned(args[n++]);
+	    str = "\0\0\0\0";
+	    str[0] = num;
+	    str[1] = num >> 8;
+	    str[2] = num >> 16;
+	    str[3] = num >> 24;
+	    offset += 4;
 	    break;
 
 	case 's':
@@ -406,6 +447,14 @@ private mixed *deSerializeDate(string serialized, int offset)
 }
 
 /*
+ * convert an unsigned int (represented as signed) to a float
+ */
+static float unsignedToFloat(int num)
+{
+    return (num < 0) ? (float) num + 4294967296.0 : (float) num;
+}
+
+/*
  * Deserialize a string, based on a format description.  Returns an array
  * containing the remaining unserialized input, and the results.
  */
@@ -435,6 +484,21 @@ static mixed *deSerialize(string serialized, int offset, string format,
 		offset++;
 		continue;
 
+	    case 'l':
+		/*
+		 * 8 byte integer, little endian, converted to float
+		 */
+		x = unsignedToFloat(serialized[offset] +
+				    (serialized[offset + 1] << 8) +
+				    (serialized[offset + 2] << 16) +
+				    (serialized[offset + 3] << 24)) +
+		    ldexp((float) (serialized[offset + 4] +
+				   (serialized[offset + 5] << 8) +
+				   (serialized[offset + 6] << 16) +
+				   (serialized[offset + 7] << 24)), 32);
+		offset += 8;
+		break;
+
 	    case 'i':
 		/*
 		 * 4 byte integer, little endian
@@ -460,6 +524,17 @@ static mixed *deSerialize(string serialized, int offset, string format,
 			(serialized[offset + 3] << 8);
 		    offset += 4;
 		}
+		break;
+
+	    case 'u':
+		/*
+		 * 4 byte unsigned integer, little endian, to a float
+		 */
+		x = unsignedToFloat(serialized[offset] +
+				    (serialized[offset + 1] << 8) +
+				    (serialized[offset + 2] << 16) +
+				    (serialized[offset + 3] << 24));
+		offset += 4;
 		break;
 
 	    case 's':

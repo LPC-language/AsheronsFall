@@ -156,7 +156,7 @@ mixed iteratorStart(mixed from, mixed to)
 {
     mixed *stack;
     float index, id;
-    int intId, low, high, mid;
+    int low, high, mid;
     BTree node;
     DatItem *entries;
     int *branches;
@@ -169,16 +169,14 @@ mixed iteratorStart(mixed from, mixed to)
      * find the starting entry in the BTree
      */
     stack = ({ to });
-    intId = from;
-    index = ldexp((float) (intId >> 1), 1) + (float) (intId & 1);
+    index = unsignedToFloat(from);
     for (node = root; ; node = getBTree(branches[mid])) {
 	entries = node->entries();
 	high = sizeof(entries);
 	low = 0;
 	while (low < high) {
 	    mid = (low + high) >> 1;
-	    intId = entries[mid]->id();
-	    id = ldexp((float) (intId >> 1), 1) + (float) (intId & 1);
+	    id = unsignedToFloat(entries[mid]->id());
 	    if (index <= id) {
 		if (index == id) {
 		    /* found it */
