@@ -1,3 +1,4 @@
+# include <Time.h>
 # include "Packet.h"
 
 inherit ConnectRequest;
@@ -8,14 +9,13 @@ inherit ConnectRequest;
  */
 static void create(string blob, int offset)
 {
-    int time, interfaceCookie, sessionCookie, clientId, serverSeed, clientSeed,
+    Time time;
+    int interfaceCookie, sessionCookie, clientId, serverSeed, clientSeed,
 	something;
-    float mtime;
 
     ({
 	offset,
 	time,
-	mtime,
 	interfaceCookie,
 	sessionCookie,
 	clientId,
@@ -23,6 +23,6 @@ static void create(string blob, int offset)
 	clientSeed,
 	something
     }) = deSerialize(blob, offset, headerLayout());
-    ::create(time, mtime, interfaceCookie, sessionCookie, clientId, serverSeed,
+    ::create(time, interfaceCookie, sessionCookie, clientId, serverSeed,
 	     clientSeed, something);
 }

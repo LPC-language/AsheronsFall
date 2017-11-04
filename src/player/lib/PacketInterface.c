@@ -1,4 +1,5 @@
 # include <kernel/user.h>
+# include <Time.h>
 # include "RandSeq.h"
 # include "Packet.h"
 # include "Interface.h"
@@ -23,8 +24,7 @@ static void acknowledgedSeq(int sequence);
 
 private int serverId;		/* ID of the server */
 private Packet bufPacket;	/* buffered partial packet */
-private int bufTime;		/* buf start time */
-private float bufMTime;		/* buf start millitime */
+private Time bufTime;		/* buf start time */
 private int bufSize;		/* packet buffer space used */
 private int pendingDrain;	/* buffer drain callout active? */
 private int serverFrag;		/* seq of last fragment sent */
@@ -43,7 +43,7 @@ private void bufCreate(int serverId)
 private void bufStart()
 {
     bufPacket = new Packet(0, serverId, 0);
-    ({ bufTime, bufMTime }) = millitime();
+    bufTime = new Time(millitime()...);
     if (pendingDrain == 0) {
 	pendingDrain = call_out("bufDrain", 0.005, bufPacket);
     }
@@ -71,7 +71,7 @@ static void bufDrain(Packet packet)
     } else if (bufPacket) {
 	float timePassed;
 
-	timePassed = timeDiff(bufTime, bufMTime, millitime()...);
+	timePassed = timeDiff(bufTime, new Time(millitime()...));
 	if (timePassed >= 0.005) {
 	    bufFlush();
 	} else {
@@ -250,7 +250,7 @@ static void ack()
 static void sync()
 {
     call_out("sync", 20);
-    bufData(new TimeSynch(0, 0.0), TRUE);
+    bufData(new TimeSynch(new Time(0)), TRUE);
 }
 
 /*

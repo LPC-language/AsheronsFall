@@ -1,3 +1,4 @@
+# include <Time.h>
 # include "Serialized.h"
 # include "Packet.h"
 
@@ -5,8 +6,7 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int time;		/* game time */
-private float mtime;		/* game millitime */
+private Time time;		/* game time */
 private int interfaceCookie;	/* interface cookie (clone number) */
 private int sessionCookie;	/* random session cookie */
 private int clientId;		/* ID the client must use */
@@ -19,7 +19,7 @@ private int something;		/* not flags, 0 in first ConnectRequest */
  */
 static string headerLayout()
 {
-    return "DDiiiiii";
+    return "Diiiiii";
 }
 
 /*
@@ -35,22 +35,19 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), time, mtime, interfaceCookie,
-		     sessionCookie, clientId, serverSeed, clientSeed,
-		     something);
+    return serialize(headerLayout(), time, interfaceCookie, sessionCookie,
+		     clientId, serverSeed, clientSeed, something);
 }
 
 /*
  * create a ConnectRequest
  */
-static void create(int time, float mtime, int interfaceCookie,
-		   int sessionCookie, int clientId, int serverSeed,
-		   int clientSeed, int something)
+static void create(Time time, int interfaceCookie, int sessionCookie,
+		   int clientId, int serverSeed, int clientSeed, int something)
 {
     ::create(PACKET_CONNECT_REQUEST);
 
     ::time = time;
-    ::mtime = mtime;
     ::interfaceCookie = interfaceCookie;
     ::sessionCookie = sessionCookie;
     ::clientId = clientId;
@@ -62,8 +59,7 @@ static void create(int time, float mtime, int interfaceCookie,
 /*
  * fields
  */
-int time()		{ return time; }
-float mtime()		{ return mtime; }
+Time time()		{ return time; }
 int interfaceCookie()	{ return interfaceCookie; }
 int sessionCookie()	{ return sessionCookie; }
 int clientId()		{ return clientId; }

@@ -1,3 +1,5 @@
+# include <Time.h>
+
 # define FLT_BIAS	127
 # define DBL_BIAS	1023
 
@@ -129,6 +131,7 @@ static string serialize(string format, varargs mixed args...)
     int len, i, n, offset, num, exponent;
     string *result, str;
     float mantissa;
+    Time time;
 
     len = strlen(format);
     result = allocate(len);
@@ -323,16 +326,12 @@ static string serialize(string format, varargs mixed args...)
 	    offset += 8;
 	    break;
 
-	case 'D':	/* DD */
+	case 'D':
 	    /*
 	     * (int, float) as 8 byte IEEE double, little endian
 	     */
-	    result[i] = "";
-	    if (format[++i] != 'D') {
-		error("Unknown format 'D" + format[i .. i] + "'");
-	    }
-	    num = args[n++];
-	    str = serializeDate(num, args[n++]);
+	    time = args[n++];
+	    str = serializeDate(time->time(), time->mtime());
 	    offset += 8;
 	    break;
 
@@ -632,14 +631,11 @@ static mixed *deSerialize(string serialized, int offset, string format,
 		offset += 8;
 		break;
 
-	    case 'D':	/* DD */
+	    case 'D':
 		/*
 		 * 8 byte IEEE float, little endian as (int, float)
 		 */
-		if (format[++j] != 'D') {
-		    error("Unknown format 'D" + format[j .. j] + "'");
-		}
-		({ results[++n], x }) = deSerializeDate(serialized, offset);
+		x = new Time(deSerializeDate(serialized, offset)...);
 		offset += 8;
 		break;
 

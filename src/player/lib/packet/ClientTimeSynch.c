@@ -1,3 +1,4 @@
+# include <Time.h>
 # include "Packet.h"
 
 inherit TimeSynch;
@@ -8,13 +9,11 @@ inherit TimeSynch;
  */
 static void create(string blob, int offset)
 {
-    int time;
-    float mtime;
+    Time time;
 
     ({
 	offset,
 	time,
-	mtime
     }) = deSerialize(blob, offset, headerLayout());
-    ::create(time, mtime);
+    ::create(time);
 }

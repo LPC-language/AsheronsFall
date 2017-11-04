@@ -1,4 +1,5 @@
 # include <kernel/user.h>
+# include <Time.h>
 # include "RandSeq.h"
 # include "Packet.h"
 # include "Interface.h"
@@ -16,8 +17,7 @@ inherit Interface;
 
 
 Interface interface;		/* the interface to relay for */
-int sessionTime;		/* session start time */
-float sessionMTime;		/* session start millitime */
+Time sessionTime;		/* session start time */
 int serverId;			/* server ID */
 RandSeq serverRand;		/* for checksum encryption */
 int pendingTransmit;		/* transmit callout active? */
@@ -81,7 +81,7 @@ static void transmit()
     }
 
     ({ time, mtime }) = millitime();
-    session = timeDiff(sessionTime, sessionMTime, time, mtime);
+    session = timeDiff(sessionTime, new Time(time, mtime));
 
     /*
      * prepare packet for transmission
@@ -101,7 +101,7 @@ static void transmit()
     }
     if (flags & PACKET_TIME_SYNCH) {
 	/* replaced by up-to-date TimeSynch */
-	packet->addData(new TimeSynch(timeServer(time, mtime)...));
+	packet->addData(new TimeSynch(timeServer(time, mtime)));
     }
     if (flags & PACKET_ECHO_RESPONSE) {
 	float clientTime;
@@ -236,7 +236,7 @@ static int _login(string str, object connObj)
     }
 
     connection(connObj);
-    ({ sessionTime, sessionMTime }) = millitime();
+    sessionTime = new Time(millitime()...);
 
     /* verify that all parameters are correct */
     clientId = packet->id();

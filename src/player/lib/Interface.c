@@ -1,4 +1,5 @@
 # include <status.h>
+# include <Time.h>
 # include "User.h"
 
 inherit "~System/lib/user";
@@ -7,17 +8,18 @@ inherit "~System/lib/user";
 /*
  * time since the server first booted (call with current time)
  */
-static mixed *timeServer(int time, float mtime)
+static Time timeServer(int time, float mtime)
 {
-    return ({ time - status(ST_STARTTIME), mtime });
+    return new Time(time - status(ST_STARTTIME), mtime);
 }
 
 /*
  * time difference
  */
-static float timeDiff(int timeA, float mtimeA, int timeB, float mtimeB)
+static float timeDiff(Time timeA, Time timeB)
 {
-    return mtimeB - mtimeA + (float) (timeB - timeA);
+    return timeB->mtime() - timeA->mtime() +
+	   (float) (timeB->time() - timeA->time());
 }
 
 /*

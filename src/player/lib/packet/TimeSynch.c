@@ -1,3 +1,4 @@
+# include <Time.h>
 # include "Serialized.h"
 # include "Packet.h"
 
@@ -5,15 +6,14 @@ inherit NetworkData;
 inherit Serialized;
 
 
-private int time;	/* time to sync with */
-private float mtime;	/* mtime to sync with */
+private Time time;	/* time to sync with */
 
 /*
  * layout of TimeSync
  */
 static string headerLayout()
 {
-    return "DD";
+    return "D";
 }
 
 /*
@@ -29,22 +29,20 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), time, mtime);
+    return serialize(headerLayout(), time);
 }
 
 /*
  * create a TimeSynch
  */
-static void create(int time, float mtime)
+static void create(Time time)
 {
     ::create(PACKET_TIME_SYNCH);
 
     ::time = time;
-    ::mtime = mtime;
 }
 
 /*
  * fields
  */
-int time()	{ return time; }
-float mtime()	{ return mtime; }
+Time time()	{ return time; }

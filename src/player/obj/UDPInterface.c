@@ -35,8 +35,7 @@ static int _login(string str, object connObj)
     Packet packet;
     LoginRequest loginRequest;
     string name, password;
-    int interfaceCookie, clientId, clientSeed, time;
-    float mtime;
+    int interfaceCookie, clientId, clientSeed;
 
     catch {
 	packet = new ClientPacket(str);
@@ -83,11 +82,10 @@ static int _login(string str, object connObj)
 	return MODE_DISCONNECT;
     }
 
-    ({ time, mtime }) = timeServer(millitime()...);
     packet = new Packet(0, SERVER_ID, 0);
-    packet->addData(new ConnectRequest(time, mtime, interfaceCookie,
-				       serverSeed, clientId, serverSeed,
-				       clientSeed, 0));
+    packet->addData(new ConnectRequest(timeServer(millitime()...),
+				       interfaceCookie, serverSeed, clientId,
+				       serverSeed, clientSeed, 0));
     sendConnectRequest(packet->transport(), 5);
     return MODE_NOCHANGE;
 }
