@@ -10,6 +10,7 @@ private int size;		/* size of the remaining part */
 private int flags;		/* bitflags */
 private int time;		/* client time */
 private string account;		/* player account */
+private string ticketArchive;	/* archive containing ticket */
 private string ticket;		/* GLS ticket (password) */
 
 /*
@@ -40,9 +41,9 @@ string transport()
     int authType;
     string str;
 
-    if (ticket) {
+    if (ticketArchive) {
 	authType = AUTH_ACCOUNT_TICKET;
-	str = serialize("S", strlen(ticket)) + ticket;
+	str = ticketArchive;
     } else {
 	authType = AUTH_ACCOUNT;
 	str = "";
@@ -55,19 +56,23 @@ string transport()
  * create a LoginRequest with the given fields
  */
 static void create(string version, int flags, int time, string account,
-		   string ticket)
+		   string ticketArchive, varargs string ticket)
 {
     ::create(PACKET_LOGIN_REQUEST);
 
     ::version = version;
     ::size = 20 + 2 + strlen(account);
     ::size = (::size + 3) & ~3;
-    if (ticket) {
-	::size += (strlen(ticket) > 255) + 1 + strlen(ticket);
+    if (ticket && !ticketArchive) {
+	ticketArchive = serialize("S", strlen(ticket)) + ticket;
+    }
+    if (ticketArchive) {
+	::size += strlen(ticketArchive);
     }
     ::flags = flags;
     ::time = time;
     ::account = account;
+    ::ticketArchive = ticketArchive;
     ::ticket = ticket;
 }
 
@@ -78,4 +83,5 @@ string version()	{ return version; }
 int flags()		{ return flags; }
 int time()		{ return time; }
 string account()	{ return account; }
+string ticketArchive()	{ return ticketArchive; }
 string ticket()		{ return ticket; }

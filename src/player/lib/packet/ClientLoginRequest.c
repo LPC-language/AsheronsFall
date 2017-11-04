@@ -8,7 +8,7 @@ inherit LoginRequest;
  */
 static void create(string blob, int offset)
 {
-    string version, account, ticket;
+    string version, account, ticketArchive, ticket;
     int size, authType, flags, zero1, zero2, time, ticketLength, len;
 
     ({
@@ -45,16 +45,17 @@ static void create(string blob, int offset)
 	if (ticketLength == 0) {
 	    error("Missing ticket");
 	}
+	ticketArchive = blob[offset .. offset + ticketLength - 1];
 	({
 	    offset,
 	    ticketLength
-	}) = deSerialize(blob, offset, "S");
-	ticket = blob[offset .. offset + ticketLength - 1];
+	}) = deSerialize(ticketArchive, 0, "S");
+	ticket = ticketArchive[offset .. offset + ticketLength - 1];
 	break;
 
     default:
 	error("Unsupported authentication method");
     }
 
-    ::create(version, flags, time, account, ticket);
+    ::create(version, flags, time, account, ticketArchive, ticket);
 }
