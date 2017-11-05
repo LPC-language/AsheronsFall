@@ -8,7 +8,6 @@ inherit PhysicalObject;
  * a creature with vitals, attributes, skills, level, experience and inventory
  */
 
-private int id;
 private int *vitals;
 private int *attributes;
 private int *skills;
@@ -18,7 +17,8 @@ private Container *inventory;
 
 static void create(int class, string name, int *attributes, int *skills)
 {
-    ::create(class, name);
+    int id;
+
     if (sscanf(object_name(this_object()), "%*s#%d", id) != 0) {
 	if (id < 0) {
 	    error("Creature must be a persistent object");
@@ -26,12 +26,11 @@ static void create(int class, string name, int *attributes, int *skills)
     } else {
 	id = status(this_object(), O_INDEX);
     }
-    id = (id << 16) + OBJECT_ID_PERSISTENT;
+    ::create(class, (id << OBJECT_ID_PERSISTENT_SHIFT) +
+		    OBJECT_ID_TYPE_PERSISTENT,
+	     name);
 
     ::attributes = attributes;
     ::skills = skills;
     inventory = ({ new Container(102) });
 }
-
-
-int id()	{ return id; }

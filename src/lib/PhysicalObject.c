@@ -3,7 +3,7 @@
 inherit Object;
 
 /*
- * an object with a name, dimensions, position, orientation, weight, value
+ * an object with a name, dimensions, position, orientation, weight
  */
 
 
@@ -12,9 +12,9 @@ private string name;	/* name of this object */
 /*
  * initialize physical object
  */
-static void create(int class, string name)
+static void create(int class, int id, string name)
 {
-    ::create(class);
+    ::create(class, id);
     ::name = name;
 }
 

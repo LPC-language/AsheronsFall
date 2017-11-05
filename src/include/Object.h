@@ -2,7 +2,12 @@
 # define PhysicalObject		object "/usr/Asheron/lib/PhysicalObject"
 # define Container		object "/usr/Asheron/lib/Container"
 
-# define OBJECT_ID_MASK			0x03
-# define OBJECT_ID_PERSISTENT		0x00
-# define OBJECT_ID_CONTAINED		0x01
-# define OBJECT_ID_ENVIRONMENTAL	0x02
+# define OBJECT_ID_TYPE_MASK		0x03
+# define OBJECT_ID_TYPE_PERSISTENT	0x00
+# define OBJECT_ID_TYPE_CONTAINED	0x01
+# define OBJECT_ID_TYPE_ENVIRONMENTAL	0x02
+
+# define OBJECT_ID_PERSISTENT_MASK	0xfffff000
+# define OBJECT_ID_PERSISTENT_SHIFT	12
+# define OBJECT_ID_LOCAL_MASK		0x00000ffc
+# define OBJECT_ID_LOCAL_SHIFT		4
