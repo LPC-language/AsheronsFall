@@ -138,14 +138,6 @@ static string serialize(string format, varargs mixed args...)
     n = offset = 0;
     for (i = 0; i < len; i++) {
 	switch (format[i]) {
-	case '0':
-	    /*
-	     * zero padding
-	     */
-	    str = "\0";
-	    offset++;
-	    break;
-
 	case 'l':
 	    /*
 	     * 8 byte integer, from a float
@@ -476,13 +468,6 @@ static mixed *deSerialize(string serialized, int offset, string format,
     for (i = 0; i < number; i++) {
 	for (j = 0; j < len; j++) {
 	    switch (format[j]) {
-	    case '0':
-		/*
-		 * padding
-		 */
-		offset++;
-		continue;
-
 	    case 'l':
 		/*
 		 * 8 byte integer, little endian, converted to float
