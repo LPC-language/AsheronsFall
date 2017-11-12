@@ -1,10 +1,26 @@
 # define Message			object "/usr/Asheron/player/lib/message/Message"
 # define GenericMessage			object "/usr/Asheron/player/lib/message/GenericMessage"
+# define PrivateRemoveInstance		object "/usr/Asheron/player/lib/message/PrivateRemoveInstance"
+# define PrivateUpdateInt		object "/usr/Asheron/player/lib/message/PrivateUpdateInt"
+# define UpdateInt			object "/usr/Asheron/player/lib/message/UpdateInt"
+# define PrivateUpdateLong		object "/usr/Asheron/player/lib/message/PrivateUpdateLong"
+# define PrivateUpdateBool		object "/usr/Asheron/player/lib/message/PrivateUpdateBool"
+# define UpdateBool			object "/usr/Asheron/player/lib/message/UpdateBool"
+# define PrivateUpdateDouble		object "/usr/Asheron/player/lib/message/PrivateUpdateDouble"
+# define PrivateUpdateTime		object "/usr/Asheron/player/lib/message/PrivateUpdateTime"
+# define UpdateDouble			object "/usr/Asheron/player/lib/message/UpdateDouble"
+# define UpdateTime			object "/usr/Asheron/player/lib/message/UpdateTime"
+# define UpdateString			object "/usr/Asheron/player/lib/message/UpdateString"
+# define PrivateUpdateData		object "/usr/Asheron/player/lib/message/PrivateUpdateData"
+# define UpdateData			object "/usr/Asheron/player/lib/message/UpdateData"
+# define PrivateUpdateInstance		object "/usr/Asheron/player/lib/message/PrivateUpdateInstance"
+# define UpdateInstance			object "/usr/Asheron/player/lib/message/UpdateInstance"
 # define ClientCharacterDelete		object "/usr/Asheron/player/lib/message/ClientCharacterDelete"
 # define ClientCharacterCreate		object "/usr/Asheron/player/lib/message/ClientCharacterCreate"
 # define CharacterCreateResponse	object "/usr/Asheron/player/lib/message/CharacterCreateResponse"
 # define CharacterList			object "/usr/Asheron/player/lib/message/CharacterList"
 # define CharacterError			object "/usr/Asheron/player/lib/message/CharacterError"
+# define GameEvent			object "/usr/Asheron/player/lib/message/GameEvent"
 # define ClientCharacterRestore		object "/usr/Asheron/player/lib/message/ClientCharacterRestore"
 # define ServerName			object "/usr/Asheron/player/lib/message/ServerName"
 
@@ -74,24 +90,24 @@
 # define MSG_212				0x100d4
 # define MSG_407				0x90197
 # define MSG_414				0x9019e
-# define MSG_475				0x901db
+# define MSG_PRIVATE_REMOVE_INSTANCE		0x901db
 # define MSG_480				0x901e0
 # define MSG_482				0x901e2
 # define MSG_584				0x90248
 # define MSG_699				0x902bb
 # define MSG_700				0x902bc
-# define MSG_717				0x902cd
-# define MSG_718				0x902ce
-# define MSG_719				0x902cf
-# define MSG_721				0x902d1
-# define MSG_722				0x902d2
-# define MSG_723				0x902d3
-# define MSG_724				0x902d4
-# define MSG_726				0x902d6
-# define MSG_727				0x902d7
-# define MSG_728				0x902d8
-# define MSG_729				0x902d9
-# define MSG_730				0x902da
+# define MSG_PRIVATE_UPDATE_INT			0x902cd
+# define MSG_UPDATE_INT				0x902ce
+# define MSG_PRIVATE_UPDATE_LONG		0x902cf
+# define MSG_PRIVATE_UPDATE_BOOL		0x902d1
+# define MSG_UPDATE_BOOL			0x902d2
+# define MSG_PRIVATE_UPDATE_DOUBLE		0x902d3
+# define MSG_UPDATE_DOUBLE			0x902d4
+# define MSG_UPDATE_STRING			0x902d6
+# define MSG_PRIVATE_UPDATE_DATA		0x902d7
+# define MSG_UPDATE_DATA			0x902d8
+# define MSG_PRIVATE_UPDATE_INSTANCE		0x902d9
+# define MSG_UPDATE_INSTANCE			0x902da
 # define MSG_731				0x902db
 # define MSG_733				0x902dd
 # define MSG_737				0x902e1
@@ -126,7 +142,7 @@
 # define MSG_63312				0xaf750
 # define MSG_63313				0xaf751
 # define MSG_63317				0xaf755
-# define MSG_63408				0x9f7b0
+# define MSG_GAME_EVENT				0x9f7b0
 # define MSG_63409				0x3f7b1
 # define MSG_63426				0x2f7c2
 # define MSG_CHARACTER_LOGIN_REQUEST		0x4f7c8

@@ -13,13 +13,28 @@ static void create()
     characters = ([ ]);
 
     compile_object(OBJECT_PATH(Character));
-
+    compile_object(OBJECT_PATH(PrivateRemoveInstance));
+    compile_object(OBJECT_PATH(PrivateUpdateInt));
+    compile_object(OBJECT_PATH(UpdateInt));
+    compile_object(OBJECT_PATH(PrivateUpdateLong));
+    compile_object(OBJECT_PATH(PrivateUpdateBool));
+    compile_object(OBJECT_PATH(UpdateBool));
+    compile_object(OBJECT_PATH(PrivateUpdateDouble));
+    compile_object(OBJECT_PATH(PrivateUpdateTime));
+    compile_object(OBJECT_PATH(UpdateDouble));
+    compile_object(OBJECT_PATH(UpdateTime));
+    compile_object(OBJECT_PATH(UpdateString));
+    compile_object(OBJECT_PATH(PrivateUpdateData));
+    compile_object(OBJECT_PATH(UpdateData));
+    compile_object(OBJECT_PATH(PrivateUpdateInstance));
+    compile_object(OBJECT_PATH(UpdateInstance));
     compile_object(OBJECT_PATH(GenericMessage));
     compile_object(OBJECT_PATH(CharacterCreateResponse));
     compile_object(OBJECT_PATH(ClientCharacterDelete));
     compile_object(OBJECT_PATH(ClientCharacterCreate));
     compile_object(OBJECT_PATH(CharacterList));
     compile_object(OBJECT_PATH(CharacterError));
+    compile_object(OBJECT_PATH(GameEvent));
     compile_object(OBJECT_PATH(ClientCharacterRestore));
     compile_object(OBJECT_PATH(ServerName));
 }
