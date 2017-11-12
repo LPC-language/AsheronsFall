@@ -28,6 +28,7 @@ static void create()
     compile_object(OBJECT_PATH(UpdateData));
     compile_object(OBJECT_PATH(PrivateUpdateInstance));
     compile_object(OBJECT_PATH(UpdateInstance));
+    compile_object(OBJECT_PATH(PrivateUpdatePosition));
     compile_object(OBJECT_PATH(GenericMessage));
     compile_object(OBJECT_PATH(CharacterCreateResponse));
     compile_object(OBJECT_PATH(ClientCharacterDelete));

@@ -15,6 +15,7 @@
 # define UpdateData			object "/usr/Asheron/player/lib/message/UpdateData"
 # define PrivateUpdateInstance		object "/usr/Asheron/player/lib/message/PrivateUpdateInstance"
 # define UpdateInstance			object "/usr/Asheron/player/lib/message/UpdateInstance"
+# define PrivateUpdatePosition		object "/usr/Asheron/player/lib/message/PrivateUpdatePosition"
 # define ClientCharacterDelete		object "/usr/Asheron/player/lib/message/ClientCharacterDelete"
 # define ClientCharacterCreate		object "/usr/Asheron/player/lib/message/ClientCharacterCreate"
 # define CharacterCreateResponse	object "/usr/Asheron/player/lib/message/CharacterCreateResponse"
@@ -108,7 +109,7 @@
 # define MSG_UPDATE_DATA			0x902d8
 # define MSG_PRIVATE_UPDATE_INSTANCE		0x902d9
 # define MSG_UPDATE_INSTANCE			0x902da
-# define MSG_731				0x902db
+# define MSG_PRIVATE_UPDATE_POSITION		0x902db
 # define MSG_733				0x902dd
 # define MSG_737				0x902e1
 # define MSG_738				0x902e2
