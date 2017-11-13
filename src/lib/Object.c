@@ -37,10 +37,6 @@ int id()			{ return id; }
 /*
  * bool properties
  */
-static void setBoolProperty(int prop, int value)
-{
-    error("Unknown bool property " + prop);
-}
 
 static int getBoolProperty(int prop)
 {
@@ -63,25 +59,9 @@ string getBoolProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setBoolProperties(string blob, int offset, int n)
-{
-    int *list, i;
-
-    list = deSerialize(blob, offset, "ii", n);
-    for (i = 0; i < n; i++) {
-	setBoolProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * int properties
  */
-
-static void setIntProperty(int prop, int value)
-{
-    error("Unknown int property " + prop);
-}
 
 static int getIntProperty(int prop)
 {
@@ -104,25 +84,9 @@ string getIntProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setIntProperties(string blob, int offset, int n)
-{
-    int *list, i;
-
-    list = deSerialize(blob, offset, "ii", n);
-    for (i = 0; i < n; i++) {
-	setIntProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * long properties
  */
-
-static void setLongProperty(int prop, float value)
-{
-    error("Unknown long property " + prop);
-}
 
 static float getLongProperty(int prop)
 {
@@ -146,35 +110,13 @@ string getLongProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setLongProperties(string blob, int offset, int n)
-{
-    mixed *list;
-    int i;
-
-    list = deSerialize(blob, offset, "il", n);
-    for (i = 0; i < n; i++) {
-	setLongProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * double properties
  */
 
-static void setDoubleProperty(int prop, float value)
-{
-    error("Unknown double property " + prop);
-}
-
 static float getDoubleProperty(int prop)
 {
     error("Unknown double property " + prop);
-}
-
-static void setTimeProperty(int prop, Time time)
-{
-    error("Unknown time property " + prop);
 }
 
 static Time getTimeProperty(int prop)
@@ -254,35 +196,9 @@ string getDoubleProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setDoubleProperties(string blob, int offset, int n)
-{
-    int i, prop;
-
-    for (i = 0; i < n; i++) {
-	({ offset, prop }) = deSerialize(blob, offset, "i");
-	if (isTimeProperty(prop)) {
-	    Time time;
-
-	    ({ offset, time }) = deSerialize(blob, offset, "D");
-	    setTimeProperty(prop, time);
-	} else {
-	    float value;
-
-	    ({ offset, value }) = deSerialize(blob, offset, "d");
-	    setDoubleProperty(prop, value);
-	}
-    }
-    return offset;
-}
-
 /*
  * string properties
  */
-
-static void setStringProperty(int prop, string value)
-{
-    error("Unknown string property " + prop);
-}
 
 static string getStringProperty(int prop)
 {
@@ -306,26 +222,9 @@ string getStringProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setStringProperties(string blob, int offset, int n)
-{
-    mixed *list;
-    int i;
-
-    list = deSerialize(blob, offset, "it", n);
-    for (i = 0; i < n; i++) {
-	setStringProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * data properties
  */
-
-static void setDataProperty(int prop, int value)
-{
-    error("Unknown data property " + prop);
-}
 
 static int getDataProperty(int prop)
 {
@@ -348,25 +247,9 @@ string getDataProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setDataProperties(string blob, int offset, int n)
-{
-    int *list, i;
-
-    list = deSerialize(blob, offset, "ii", n);
-    for (i = 0; i < n; i++) {
-	setDataProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * instance properties
  */
-
-static void setInstanceProperty(int prop, int value)
-{
-    error("Unknown instance property " + prop);
-}
 
 static int getInstanceProperty(int prop)
 {
@@ -389,25 +272,9 @@ string getInstanceProperties(int *props)
     return serialize(implode(format, ""), values...);
 }
 
-int setInstanceProperties(string blob, int offset, int n)
-{
-    int *list, i;
-
-    list = deSerialize(blob, offset, "ii", n);
-    for (i = 0; i < n; i++) {
-	setInstanceProperty(list[i * 2 + 1], list[i * 2 + 2]);
-    }
-    return list[0];
-}
-
 /*
  * position properties
  */
-
-static void setPositionProperty(int prop, Position value)
-{
-    error("Unknown position property " + prop);
-}
 
 static Position getPositionProperty(int prop)
 {
@@ -426,16 +293,4 @@ string getPositionProperties(int *props)
 	values[i * 2 + 1] = getPositionProperty(props[i])->transport();
     }
     return implode(values, "");
-}
-
-int setPositionProperties(string blob, int offset, int n)
-{
-    int i, prop;
-
-    for (i = 0; i < n; i++) {
-	({ offset, prop }) = deSerialize(blob, offset, "i");
-	setPositionProperty(prop, new ClientPosition(blob, offset));
-	offset += 32;
-    }
-    return offset;
 }
