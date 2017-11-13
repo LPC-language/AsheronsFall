@@ -1,5 +1,6 @@
 # include <status.h>
 # include <Time.h>
+# include "Position.h"
 # include "Serialized.h"
 # include "Properties.h"
 
@@ -397,4 +398,44 @@ int setInstanceProperties(string blob, int offset, int n)
 	setInstanceProperty(list[i * 2 + 1], list[i * 2 + 2]);
     }
     return list[0];
+}
+
+/*
+ * position properties
+ */
+
+static void setPositionProperty(int prop, Position value)
+{
+    error("Unknown position property " + prop);
+}
+
+static Position getPositionProperty(int prop)
+{
+    error("Unknown position property " + prop);
+}
+
+string getPositionProperties(int *props)
+{
+    int sz, i;
+    string *values;
+
+    sz = sizeof(props);
+    values = allocate(sz * 2);
+    for (i = 0; i < sz; i++) {
+	values[i * 2] = serialize("i", props[i]);
+	values[i * 2 + 1] = getPositionProperty(props[i])->transport();
+    }
+    return implode(values, "");
+}
+
+int setPositionProperties(string blob, int offset, int n)
+{
+    int i, prop;
+
+    for (i = 0; i < n; i++) {
+	({ offset, prop }) = deSerialize(blob, offset, "i");
+	setPositionProperty(prop, new ClientPosition(blob, offset));
+	offset += 32;
+    }
+    return offset;
 }

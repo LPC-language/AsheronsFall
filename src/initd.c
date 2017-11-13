@@ -1,5 +1,6 @@
 # include "RandSeq.h"
 # include "Object.h"
+# include "Position.h"
 # include "dat.h"
 # include "landblock.h"
 # include "dungeon.h"
@@ -13,6 +14,7 @@ static void create()
     /* general use */
     compile_object(OBJECT_PATH(RandSeq));
     compile_object(OBJECT_PATH(Container));
+    compile_object(OBJECT_PATH(ClientPosition));
 
     /* DAT image server */
     compile_object(DAT_SERVER);

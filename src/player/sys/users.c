@@ -20,9 +20,7 @@ static void create()
     compile_object(OBJECT_PATH(PrivateUpdateBool));
     compile_object(OBJECT_PATH(UpdateBool));
     compile_object(OBJECT_PATH(PrivateUpdateDouble));
-    compile_object(OBJECT_PATH(PrivateUpdateTime));
     compile_object(OBJECT_PATH(UpdateDouble));
-    compile_object(OBJECT_PATH(UpdateTime));
     compile_object(OBJECT_PATH(UpdateString));
     compile_object(OBJECT_PATH(PrivateUpdateData));
     compile_object(OBJECT_PATH(UpdateData));

@@ -1,36 +1,13 @@
 # include "Message.h"
 
-inherit Message;
+inherit UpdateProperty;
 
-
-private int sequence;	/* sequence number */
-private int objectId;	/* object ID */
-private int property;	/* the bool property */
-private int value;	/* the property value */
-
-/*
- * export as a blob
- */
-static string body()
-{
-    return serialize("ciii", sequence, objectId, property, value);
-}
 
 /*
  * create UpdateBool
  */
-static void create(int objectId, int property, int value)
+static void create(object obj, int property)
 {
-    ::create(MSG_UPDATE_BOOL);
-    ::objectId = objectId;
-    ::property = property;
-    ::value = value;
+    ::create(MSG_UPDATE_BOOL, serialize("i", obj->id()) +
+			      obj->getBoolProperties(({ property })));
 }
-
-
-setSequence(int sequence)	{ ::sequence = sequence; }
-
-int sequence()			{ return sequence; }
-int objectId()			{ return objectId; }
-int property()			{ return property; }
-int value()			{ return value; }

@@ -1,40 +1,19 @@
 # include "Message.h"
 
-inherit Message;
+inherit UpdateProperty;
 
-
-private int sequence;	/* sequence number */
-private int objectId;	/* object ID */
-private int property;	/* the string property */
-private string value;	/* the property value */
-
-/*
- * export as a blob
- */
-static string body()
-{
-    /*
-     * note the order: property, objectId, value
-     */
-    return serializeAlign(serialize("cii", sequence, property, objectId)) +
-	   serialize("t", value);
-}
 
 /*
  * create UpdateString
  */
-static void create(int objectId, int property, string value)
+static void create(object obj, int property)
 {
-    ::create(MSG_UPDATE_STRING);
-    ::objectId = objectId;
-    ::property = property;
-    ::value = value;
+    string body;
+
+    /*
+     * note the order: property, objectId, value
+     */
+    body = obj->getStringProperties(({ property }));
+    ::create(MSG_UPDATE_STRING, body[.. 3] + serialize("i", obj->id()) +
+				"\0\0\0" + body[4 ..]);
 }
-
-
-setSequence(int sequence)	{ ::sequence = sequence; }
-
-int sequence()			{ return sequence; }
-int objectId()			{ return objectId; }
-int property()			{ return property; }
-string value()			{ return value; }
