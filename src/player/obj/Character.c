@@ -1,6 +1,7 @@
 # include <status.h>
 # include "Creature.h"
 # include "User.h"
+# include "Properties.h"
 
 inherit Humanoid;
 
@@ -67,6 +68,94 @@ int cancelDelete()
 static void delete()
 {
     destruct_object(this_object());
+}
+
+static int getBoolProperty(int prop)
+{
+    switch (prop) {
+    case PROP_BOOL_IS_ADMIN:
+    case PROP_BOOL_IS_ARCH:
+    case PROP_BOOL_IS_SENTINEL:
+    case PROP_BOOL_IS_ADVOCATE:
+    case PROP_BOOL_IS_PSR:
+    case PROP_BOOL_ACCOUNT_15_DAYS:
+	return FALSE;
+
+    case PROP_BOOL_ACTD_RECEIVED_ITEMS:
+	return TRUE;
+
+    default:
+	return ::getBoolProperty(prop);
+    }
+}
+
+static int getIntProperty(int prop)
+{
+    switch (prop) {
+    case PROP_INT_COIN_VALUE:
+	return 10000;
+
+    case PROP_INT_CONTAINERS_CAPACITY:
+	return 20;
+
+    case PROP_INT_CREATION_TIMESTAMP:
+	return 1485707122;
+
+    case PROP_INT_PLAYER_KILLER_STATUS:
+	return 2;
+
+    case PROP_INT_HERITAGE_GROUP:
+	return 1;
+
+    case PROP_INT_MELEE_MASTERY:
+	return 6;
+
+    case PROP_INT_RANGED_MASTERY:
+	return 8;
+
+    case PROP_INT_ALLEGIANCE_RANK:
+    case PROP_INT_HEALING_RESIST_RATING:
+    case PROP_INT_DAMAGE_OVER_TIME:
+    case PROP_INT_LUM_AUG_DAMAGE_RATING:
+    case PROP_INT_LUM_AUG_DAMAGE_REDUCTION_RATING:
+    case PROP_INT_LUM_AUG_CRIT_DAMAGE_RATING:
+    case PROP_INT_LUM_AUG_CRIT_REDUCTION_RATING:
+    case PROP_INT_LUM_AUG_SURGE_CHANCE_RATING:
+    case PROP_INT_LUM_AUG_ITEM_MANA_USAGE:
+    case PROP_INT_LUM_AUG_ITEM_MANA_GAIN:
+    case PROP_INT_LUM_AUG_HEALING_RATING:
+    case PROP_INT_LUM_AUG_SKILLED_CRAFT:
+    case PROP_INT_LUM_AUG_SKILLED_SPEC:
+    case PROP_INT_LUM_AUG_ALL_SKILLS:
+    case PROP_INT_PK_DAMAGE_RATING:
+    case PROP_INT_PK_DAMAGE_RESIST_RATING:
+    case PROP_INT_ENLIGHTENMENT:
+	return 0;
+
+    default:
+	return ::getIntProperty(prop);
+    }
+}
+
+static float getLongProperty(int prop)
+{
+    switch (prop) {
+    case PROP_LONG_AVAILABLE_LUMINANCE:
+    case PROP_LONG_MAXIMUM_LUMINANCE:
+	return 0.0;
+
+    default:
+	return ::getLongProperty(prop);
+    }
+}
+
+static float getDoubleProperty(int prop)
+{
+    if (prop == PROP_DOUBLE_GLOBAL_XP_MOD) {
+	return 1.0;
+    }
+
+    return ::getDoubleProperty(prop);
 }
 
 
