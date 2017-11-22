@@ -12,6 +12,7 @@
 # define DatEyeShape		object "/usr/Asheron/dat/lib/EyeShape"
 # define DatFeature		object "/usr/Asheron/dat/lib/Feature"
 # define DatGarment		object "/usr/Asheron/dat/lib/Garment"
+# define XpTable		object "/usr/Asheron/dat/obj/XpTable"
 
 
 # define DAT_SERVER		"/usr/Asheron/dat/sys/datserver"
@@ -28,3 +29,4 @@
 # define DAT_PORTAL_MASK	0x00ffffff
 
 # define DAT_CHARGEN		0x0e000002
+# define DAT_XPTABLE		0x0e000018
