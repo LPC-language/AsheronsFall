@@ -9,14 +9,16 @@ inherit PhysicalObject;
  * a creature with vitals, attributes, skills, level, experience and inventory
  */
 
-private int *vitals;
 private int *attributes;
+private int *vitalAttributes;
+private int *vitals;
 private int *skills;
 private int level;
 private float experience;
 private Container *inventory;
 
-static void create(int class, string name, int *attributes, int *skills)
+static void create(int class, string name, int *attributes,
+		   int *vitalAttributes, int *skills)
 {
     int id;
 
@@ -32,9 +34,21 @@ static void create(int class, string name, int *attributes, int *skills)
 	     name);
 
     ::attributes = attributes;
+    ::vitalAttributes = vitalAttributes;
+    vitals = ({ 1, 1, 1 });
     ::skills = skills;
     inventory = ({ new Container(102) });
 }
+
+
+static int *attributes()	{ return attributes; }
+static int *vitalAttributes()	{ return vitalAttributes; }
+static int *skills()		{ return skills; }
+int attribute(int attr)		{ return attributes[attr - 1]; }
+int vitalAttribute(int vital)	{ return vitalAttributes[vital - 1]; }
+int vital(int vital)		{ return vitals[vital - 1]; }
+int skill(int skill)		{ return skills[skill - 1]; }
+
 
 static int getIntProperty(int prop)
 {

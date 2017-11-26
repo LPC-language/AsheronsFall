@@ -7,7 +7,8 @@ inherit Creature;
  */
 
 
-static void create(int class, string name, int *attributes, int *skills)
+static void create(int class, string name, int *attributes,
+		   int *vitalAttributes, int *skills)
 {
-    ::create(class, name, attributes, skills);
+    ::create(class, name, attributes, vitalAttributes, skills);
 }

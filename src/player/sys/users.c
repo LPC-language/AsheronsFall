@@ -1,9 +1,17 @@
 # include "Message.h"
 # include "Object.h"
 # include "User.h"
+# include "Creature.h"
+# include "dat.h"
 
 
-mapping characters;	/* characters to keep track of */
+mapping characters;		/* characters to keep track of */
+float *attributeXp;		/* attribute XP cost table */
+float *vitalXp;			/* vital XP cost table */
+float *trainedSkillXp;		/* trained skill XP cost table */
+float *specializedSkillXp;	/* specialized skill XP cost table */
+float *levelXp;			/* level XP cost table */
+int *skillPoints;		/* skill points per level */
 
 /*
  * initialize user/character server
@@ -27,6 +35,10 @@ static void create()
     compile_object(OBJECT_PATH(PrivateUpdateInstance));
     compile_object(OBJECT_PATH(UpdateInstance));
     compile_object(OBJECT_PATH(PrivateUpdatePosition));
+    compile_object(OBJECT_PATH(PrivateUpdateSkill));
+    compile_object(OBJECT_PATH(PrivateUpdateAttribute));
+    compile_object(OBJECT_PATH(PrivateUpdateVital));
+    compile_object(OBJECT_PATH(PrivateUpdateVitalLevel));
     compile_object(OBJECT_PATH(GenericMessage));
     compile_object(OBJECT_PATH(CharacterCreateResponse));
     compile_object(OBJECT_PATH(ClientCharacterDelete));
@@ -36,6 +48,22 @@ static void create()
     compile_object(OBJECT_PATH(GameEvent));
     compile_object(OBJECT_PATH(ClientCharacterRestore));
     compile_object(OBJECT_PATH(ServerName));
+
+    call_out("loadXpTables", 0);
+}
+
+static void loadXpTables()
+{
+    object datXpTable;
+
+    datXpTable = clone_object(OBJECT_PATH(XpTable));
+    attributeXp = datXpTable->attributes();
+    vitalXp = datXpTable->vitals();
+    trainedSkillXp = datXpTable->trainedSkills();
+    specializedSkillXp = datXpTable->specializedSkills();
+    levelXp = datXpTable->levels();
+    skillPoints = datXpTable->skillPoints();
+    destruct_object(datXpTable);
 }
 
 /*
@@ -90,5 +118,25 @@ void characterRemove(Character character)
 	if (map_sizeof(map) == 0) {
 	    characters[name[.. 1]] = nil;
 	}
+    }
+}
+
+
+float attributeXp(int level)		{ return attributeXp[level]; }
+float vitalXp(int level)		{ return vitalXp[level]; }
+float levelXp(int level)		{ return levelXp[level]; }
+int skillPoint(int level)		{ return skillPoints[level]; }
+
+float skillXp(int stat, int level)
+{
+    switch (stat) {
+    case SKILLSTAT_TRAINED:
+	return trainedSkillXp[level];
+
+    case SKILLSTAT_SPECIALIZED:
+	return specializedSkillXp[level];
+
+    default:
+	return 0.0;
     }
 }

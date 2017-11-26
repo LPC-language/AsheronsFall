@@ -1,4 +1,5 @@
 # include <status.h>
+# include <Time.h>
 # include "Creature.h"
 # include "User.h"
 # include "Properties.h"
@@ -6,6 +7,9 @@
 inherit Humanoid;
 
 
+int *attributes;
+int *vitalAttributes;
+int *skills;
 Account account;	/* account this character is in */
 int deleteTimer;	/* delete timer handle */
 
@@ -14,7 +18,8 @@ int deleteTimer;	/* delete timer handle */
  */
 static void create(Account account, string name)
 {
-    ::create(0, name, ({ 100, 100, 100, 100, 100, 100 }), ({ }));
+    ::create(0, name, ({ 100, 100, 100, 100, 100, 100 }), ({ 100, 100, 100 }),
+	     ({ }));
     ::account = account;
 }
 
@@ -50,7 +55,7 @@ int timedDelete()
 }
 
 /*
- * csncel a timed delete
+ * cancel a timed delete
  */
 int cancelDelete()
 {
@@ -69,6 +74,38 @@ static void delete()
 {
     destruct_object(this_object());
 }
+
+
+string getAttribute(int attr)
+{
+    int incr;
+
+    incr = attributes[attr];
+    return serialize("iiiu", attr, incr, ::attribute(attr),
+		     USER_SERVER->attributeXp(incr));
+}
+
+string getVitalAttribute(int vital)
+{
+    int incr;
+
+    incr = vitalAttributes[vital];
+    return serialize("iiiui", vital, incr, ::vitalAttribute(vital),
+		     USER_SERVER->vitalXp(incr), ::vital(vital));
+}
+
+string getSkill(int skill)
+{
+    int statIncr, stat, incr;
+
+    statIncr = skills[skill];
+    stat = SKILL_STAT(statIncr);
+    incr = SKILL_INCR(statIncr);
+    return serialize("issiuiiD", skill, incr, TRUE, SKILL_STAT(statIncr),
+		     USER_SERVER->skillXp(stat, incr), ::skill(skill), 0,
+		     new Time(0, 0.0));
+}
+
 
 static int getBoolProperty(int prop)
 {
