@@ -34,6 +34,8 @@ static void create()
     default:
 	error("Unknown portal.dat version");
     }
+
+    compile_object(OBJECT_PATH(XpTable));
 }
 
 object cell_1() { return cell_1; }

@@ -12,11 +12,15 @@ private int *skillPoints;		/* skill points per level */
 /*
  * read from portal.dat
  */
-static void create(DatReader reader)
+static void create()
 {
+    object portal;
+    DatReader reader;
     int attributeLevels, vitalLevels, trainedSkillLevels,
 	specializedSkillLevels, numLevels;
 
+    portal = DAT_SERVER->portal();
+    reader = portal->getItemReader(portal->iterator(DAT_XPTABLE)->next());
     ({
 	id,
 	attributeLevels,
