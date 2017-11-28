@@ -107,7 +107,7 @@ string getSkill(int skill)
 }
 
 
-static int getBoolProperty(int prop)
+static int boolProperty(int prop)
 {
     switch (prop) {
     case PROP_BOOL_IS_ADMIN:
@@ -122,11 +122,11 @@ static int getBoolProperty(int prop)
 	return TRUE;
 
     default:
-	return ::getBoolProperty(prop);
+	return ::boolProperty(prop);
     }
 }
 
-static int getIntProperty(int prop)
+static int intProperty(int prop)
 {
     switch (prop) {
     case PROP_INT_COIN_VALUE:
@@ -170,11 +170,11 @@ static int getIntProperty(int prop)
 	return 0;
 
     default:
-	return ::getIntProperty(prop);
+	return ::intProperty(prop);
     }
 }
 
-static float getLongProperty(int prop)
+static float longProperty(int prop)
 {
     switch (prop) {
     case PROP_LONG_AVAILABLE_LUMINANCE:
@@ -182,17 +182,17 @@ static float getLongProperty(int prop)
 	return 0.0;
 
     default:
-	return ::getLongProperty(prop);
+	return ::longProperty(prop);
     }
 }
 
-static float getDoubleProperty(int prop)
+static float doubleProperty(int prop)
 {
     if (prop == PROP_DOUBLE_GLOBAL_XP_MOD) {
 	return 1.0;
     }
 
-    return ::getDoubleProperty(prop);
+    return ::doubleProperty(prop);
 }
 
 

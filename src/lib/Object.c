@@ -38,93 +38,59 @@ int id()			{ return id; }
  * bool properties
  */
 
-static int getBoolProperty(int prop)
+static int boolProperty(int prop)
 {
     error("Unknown bool property " + prop);
 }
 
-string getBoolProperties(int *props)
+string getBoolProperty(int prop)
 {
-    int sz, i, *values;
-    string *format;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate_int(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "ii";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getBoolProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("ii", prop, boolProperty(prop));
 }
 
 /*
  * int properties
  */
 
-static int getIntProperty(int prop)
+static int intProperty(int prop)
 {
     error("Unknown int property " + prop);
 }
 
-string getIntProperties(int *props)
+string getIntProperty(int prop)
 {
-    int sz, i, *values;
-    string *format;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate_int(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "ii";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getIntProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("ii", prop, intProperty(prop));
 }
 
 /*
  * long properties
  */
 
-static float getLongProperty(int prop)
+static float longProperty(int prop)
 {
     error("Unknown long property " + prop);
 }
 
-string getLongProperties(int *props)
+string getLongProperty(int prop)
 {
-    int sz, i;
-    string *format;
-    mixed *values;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "il";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getLongProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("il", prop, longProperty(prop));
 }
 
 /*
  * double properties
  */
 
-static float getDoubleProperty(int prop)
+static float doubleProperty(int prop)
 {
     error("Unknown double property " + prop);
 }
 
-static Time getTimeProperty(int prop)
+static Time timeProperty(int prop)
 {
     error("Unknown time property " + prop);
 }
 
-private int isTimeProperty(int prop)
+string getDoubleProperty(int prop)
 {
     switch (prop) {
     case PROP_DOUBLE_HEARTBEAT_TIMESTAMP:
@@ -167,130 +133,65 @@ private int isTimeProperty(int prop)
     case PROP_DOUBLE_START_MISSILE_ATTACK_TIMESTAMP:
     case PROP_DOUBLE_LAST_RARE_USED_TIMESTAMP:
     case PROP_DOUBLE_ALLEGIANCE_GAG_TIMESTAMP:
-	return TRUE;
+	return serialize("iD", prop, timeProperty(prop));
 
     default:
-	return FALSE;
+	return serialize("id", prop, doubleProperty(prop));
     }
-}
-
-string getDoubleProperties(int *props)
-{
-    int sz, i;
-    string *format;
-    mixed *values;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate(sz * 2);
-    for (i = 0; i < sz; i++) {
-	values[i * 2] = props[i];
-	if (isTimeProperty(props[i])) {
-	    format[i] = "iD";
-	    values[i * 2 + 1] = getTimeProperty(props[i]);
-	} else {
-	    format[i] = "id";
-	    values[i * 2 + 1] = getDoubleProperty(props[i]);
-	}
-    }
-    return serialize(implode(format, ""), values...);
 }
 
 /*
  * string properties
  */
 
-static string getStringProperty(int prop)
+static string stringProperty(int prop)
 {
     error("Unknown string property " + prop);
 }
 
-string getStringProperties(int *props)
+string getStringProperty(int prop)
 {
-    int sz, i;
-    string *format;
-    mixed *values;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "it";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getStringProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("it", prop, stringProperty(prop));
 }
 
 /*
  * data properties
  */
 
-static int getDataProperty(int prop)
+static int dataProperty(int prop)
 {
     error("Unknown data property " + prop);
 }
 
-string getDataProperties(int *props)
+string getDataProperty(int prop)
 {
-    int sz, i, *values;
-    string *format;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate_int(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "ii";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getDataProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("ii", prop, dataProperty(prop));
 }
 
 /*
  * instance properties
  */
 
-static int getInstanceProperty(int prop)
+static int instanceProperty(int prop)
 {
     error("Unknown instance property " + prop);
 }
 
-string getInstanceProperties(int *props)
+string getInstanceProperty(int prop)
 {
-    int sz, i, *values;
-    string *format;
-
-    sz = sizeof(props);
-    format = allocate(sz);
-    values = allocate_int(sz * 2);
-    for (i = 0; i < sz; i++) {
-	format[i] = "ii";
-	values[i * 2] = props[i];
-	values[i * 2 + 1] = getInstanceProperty(props[i]);
-    }
-    return serialize(implode(format, ""), values...);
+    return serialize("ii", prop, instanceProperty(prop));
 }
 
 /*
  * position properties
  */
 
-static Position getPositionProperty(int prop)
+static Position positionProperty(int prop)
 {
     error("Unknown position property " + prop);
 }
 
-string getPositionProperties(int *props)
+string getPositionProperty(int prop)
 {
-    int sz, i;
-    string *values;
-
-    sz = sizeof(props);
-    values = allocate(sz * 2);
-    for (i = 0; i < sz; i++) {
-	values[i * 2] = serialize("i", props[i]);
-	values[i * 2 + 1] = getPositionProperty(props[i])->transport();
-    }
-    return implode(values, "");
+    return serialize("i", prop) + positionProperty(prop)->transport();
 }

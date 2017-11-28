@@ -9,5 +9,5 @@ inherit UpdateProperty;
 static void create(object obj, int property)
 {
     ::create(MSG_UPDATE_INSTANCE, serialize("i", obj->id()) +
-				  obj->getInstanceProperties(({ property })));
+				  obj->getInstanceProperty(property));
 }

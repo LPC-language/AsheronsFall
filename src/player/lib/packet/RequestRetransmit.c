@@ -28,15 +28,7 @@ int size()
  */
 string transport()
 {
-    string *serialized;
-    int sz, i;
-
-    sz = sizeof(sequences);
-    serialized = allocate(sz);
-    for (i = 0; i < sz; i++) {
-	serialized[i] = serialize("i", sequences[i]);
-    }
-    return serialize(headerLayout(), sz) + implode(serialized, "");
+    return serializeArray(sequences);
 }
 
 /*

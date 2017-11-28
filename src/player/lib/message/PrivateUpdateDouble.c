@@ -8,6 +8,5 @@ inherit UpdateProperty;
  */
 static void create(object obj, int property)
 {
-    ::create(MSG_PRIVATE_UPDATE_DOUBLE,
-	     obj->getDoubleProperties(({ property })));
+    ::create(MSG_PRIVATE_UPDATE_DOUBLE, obj->getDoubleProperty(property));
 }

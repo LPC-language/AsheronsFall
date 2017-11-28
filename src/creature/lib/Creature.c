@@ -50,7 +50,7 @@ int vital(int vital)		{ return vitals[vital - 1]; }
 int skill(int skill)		{ return skills[skill - 1]; }
 
 
-static int getIntProperty(int prop)
+static int intProperty(int prop)
 {
     switch (prop) {
     case PROP_INT_LEVEL:
@@ -96,11 +96,11 @@ static int getIntProperty(int prop)
 	return 0;
 
     default:
-	return ::getIntProperty(prop);
+	return ::intProperty(prop);
     }
 }
 
-static float getDoubleProperty(int prop)
+static float doubleProperty(int prop)
 {
     switch (prop) {
     case PROP_DOUBLE_WEAPON_AURA_OFFENSE:
@@ -113,20 +113,20 @@ static float getDoubleProperty(int prop)
 	return 1.0;
 
     default:
-	return ::getDoubleProperty(prop);
+	return ::doubleProperty(prop);
     }
 }
 
-static string getStringProperty(int prop)
+static string stringProperty(int prop)
 {
     if (prop == PROP_STRING_NAME) {
 	return name();
     }
 
-    return ::getStringProperty(prop);
+    return ::stringProperty(prop);
 }
 
-static int getDataProperty(int prop)
+static int dataProperty(int prop)
 {
     switch (prop) {
     case PROP_DATA_MOTION_TABLE:
@@ -136,6 +136,6 @@ static int getDataProperty(int prop)
 	return 805306368;
 
     default:
-	return ::getDataProperty(prop);
+	return ::dataProperty(prop);
     }
 }

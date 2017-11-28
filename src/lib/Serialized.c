@@ -337,6 +337,50 @@ static string serialize(string format, varargs mixed args...)
 }
 
 /*
+ * serialize an array, optionally calling a function for each element
+ */
+static string serializeArray(mixed *arr, varargs object obj, string func)
+{
+    int sz, i;
+    string *strList;
+
+    sz = sizeof(arr);
+    strList = allocate(sz + 1);
+    strList[0] = serialize("i", sz);
+    if (obj) {
+	for (i = 0; i < sz; i++) {
+	    strList[i + 1] = call_other(obj, func, arr[i]);
+	}
+    } else {
+	/* array of integers */
+	for (i = 0; i < sz; i++) {
+	    strList[i + 1] = serialize("i", arr[i]);
+	}
+    }
+
+    return implode(strList, "");
+}
+
+/*
+ * serialize a mapping, calling a function for each value
+ */
+static string serializeMapping(int *keys, int hashBuckets, object obj,
+			       string func)
+{
+    int sz, i;
+    string *strList;
+
+    sz = sizeof(keys);
+    strList = allocate(sz + 1);
+    strList[0] = serialize("ii", sz, hashBuckets);
+    for (i = 0; i < sz; i++) {
+	strList[i + 1] = call_other(obj, func, keys[i]);
+    }
+
+    return implode(strList, "");
+}
+
+/*
  * add the padding needed to align to 4 bytes
  */
 static string serializeAlign(string serialized)
@@ -633,6 +677,50 @@ static mixed *deSerialize(string serialized, int offset, string format,
 
     results[0] = offset;
     return results;
+}
+
+/*
+ * deserialize an array, optionally calling a function for each element
+ */
+static mixed *deSerializeArray(string blob, int offset,
+			       varargs object obj, string func)
+{
+    int sz, i;
+    mixed *arr;
+
+    ({ offset, sz }) = deSerialize(blob, offset, "i");
+    if (obj || sz == 0) {
+	arr = allocate(sz);
+	for (i = 0; i < sz; i++) {
+	    ({ offset, arr[i] }) = call_other(obj, func, blob, offset);
+	}
+    } else {
+	/* array of integers */
+	arr = deSerialize(blob, offset, "i", sz);
+	offset = arr[0];
+	arr = arr[1 ..];
+    }
+    return ({ offset, arr });
+}
+
+/*
+ * deserialize a mapping, calling a function for each value
+ */
+static mixed *deSerializeMapping(string blob, int offset, object obj,
+				 string func)
+{
+    int sz, i, hashBuckets, index;
+    mapping map;
+    mixed value;
+
+    ({ offset, sz, hashBuckets }) = deSerialize(blob, offset, "ii");
+    map = ([ ]);
+    for (i = 0; i < sz; i++) {
+	({ offset, index, value }) = call_other(obj, func, blob, offset);
+	map[index] = value;
+    }
+
+    return ({ offset, map });
 }
 
 /*

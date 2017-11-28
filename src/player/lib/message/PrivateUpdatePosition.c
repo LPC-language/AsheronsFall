@@ -8,6 +8,5 @@ inherit UpdateProperty;
  */
 static void create(object obj, int property)
 {
-    ::create(MSG_PRIVATE_UPDATE_POSITION,
-	     obj->getPositionProperties(({ property })));
+    ::create(MSG_PRIVATE_UPDATE_POSITION, obj->getPositionPropertiy(property));
 }

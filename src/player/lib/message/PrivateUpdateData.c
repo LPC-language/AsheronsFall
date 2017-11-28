@@ -8,5 +8,5 @@ inherit UpdateProperty;
  */
 static void create(object obj, int property)
 {
-    ::create(MSG_PRIVATE_UPDATE_DATA, obj->getDataProperties(({ property })));
+    ::create(MSG_PRIVATE_UPDATE_DATA, obj->getDataProperty(property));
 }

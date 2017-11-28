@@ -9,20 +9,21 @@ private int slots;		/* maxixmum number of characters */
 private string accountName;	/* account name */
 
 /*
+ * serialize a character
+ */
+static string char(Character char)
+{
+    return serialize("iti", char->id(), char->name(), -char->deleteTimer());
+}
+
+/*
  * export the body as a blob
  */
 static string body()
 {
-    int sz, i;
     string body;
 
-    sz = sizeof(characters);
-    body = "\0\0\0\0" +
-	   serialize("i", sz);
-    for (i = 0; i < sz; i++) {
-	body += serialize("iti", characters[i]->id(), characters[i]->name(),
-			  -characters[i]->deleteTimer());
-    }
+    body = "\0\0\0\0" + serializeArray(characters, this_object(), "char");
     body += "\0\0\0\0" +
 	    serialize("it", slots, accountName) +
 	    "\1\0\0\0" +	/* Turbine Chat */

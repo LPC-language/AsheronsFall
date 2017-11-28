@@ -13,7 +13,7 @@ static void create(object obj, int property)
     /*
      * note the order: property, objectId, value
      */
-    body = obj->getStringProperties(({ property }));
+    body = obj->getStringProperty(property);
     ::create(MSG_UPDATE_STRING, body[.. 3] + serialize("i", obj->id()) +
 				"\0\0\0" + body[4 ..]);
 }

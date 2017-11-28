@@ -9,5 +9,5 @@ inherit UpdateProperty;
 static void create(object obj, int property)
 {
     ::create(MSG_UPDATE_DOUBLE, serialize("i", obj->id()) +
-				obj->getDoubleProperties(({ property })));
+				obj->getDoubleProperty(property));
 }
