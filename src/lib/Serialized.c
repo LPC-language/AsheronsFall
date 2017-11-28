@@ -372,7 +372,26 @@ static string serializeMapping(int *keys, int hashBuckets, object obj,
 
     sz = sizeof(keys);
     strList = allocate(sz + 1);
-    strList[0] = serialize("ii", sz, hashBuckets);
+    strList[0] = serialize("ss", sz, hashBuckets);
+    for (i = 0; i < sz; i++) {
+	strList[i + 1] = call_other(obj, func, keys[i]);
+    }
+
+    return implode(strList, "");
+}
+
+/*
+ * serialize a large mapping, calling a function for each value
+ */
+static string serializeBigMapping(int *keys, int hashBuckets, object obj,
+				  string func)
+{
+    int sz, i;
+    string *strList;
+
+    sz = sizeof(keys);
+    strList = allocate(sz + 1);
+    strList[0] = serialize("i", sz + (hashBuckets << 24));
     for (i = 0; i < sz; i++) {
 	strList[i + 1] = call_other(obj, func, keys[i]);
     }
