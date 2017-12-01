@@ -13,6 +13,7 @@ inherit Serialized;
 Account account;	/* account */
 Interface interface;	/* interface */
 int plain;		/* using unaltered DAT files from the installer? */
+int eventSeq;		/* event sequence number */
 
 /*
  * send a required message to the client
@@ -28,6 +29,15 @@ private void send(Message message)
 private void sendOptional(Message message)
 {
     interface->sendMessage(message->transport(), message->group(), FALSE);
+}
+
+/*
+ * send an event to the player
+ */
+private void sendEvent(GameEvent event)
+{
+    event->setSequence(++eventSeq);
+    interface->sendMessage(event->transport(), event->group(), TRUE);
 }
 
 /*
@@ -132,7 +142,7 @@ static void receive(string blob)
 	    send(new CharacterError(CHARERR_NOT_OWNED));
 	    break;
 	}
-	send(new PlayerDescription(player));
+	sendEvent(new PlayerDescription(player));
 	break;
 
     default:

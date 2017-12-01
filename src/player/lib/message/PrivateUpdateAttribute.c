@@ -8,5 +8,6 @@ inherit UpdateProperty;
  */
 static void create(object obj, int attr)
 {
-    ::create(MSG_PRIVATE_UPDATE_ATTRIBUTE, obj->getAttribute(attr));
+    ::create(MSG_PRIVATE_UPDATE_ATTRIBUTE,
+	     serialize("i", attr) + obj->getAttribute(attr));
 }

@@ -130,21 +130,8 @@ private string properties(object player)
 
 private string abilities(object player)
 {
-    int *attrList, *vitalList, *skillList, flags;
+    int *skillList, flags;
 
-    attrList = ({
-	ATTR_STRENGTH,
-	ATTR_ENDURANCE,
-	ATTR_QUICKNESS,
-	ATTR_COORDINATION,
-	ATTR_FOCUS,
-	ATTR_SELF
-    });
-    vitalList = ({
-	VITAL_HEALTH,
-	VITAL_STAMINA,
-	VITAL_MANA
-    });
     skillList = ({
 	SKILL_MELEE_DEFENSE,
 	SKILL_MISSILE_DEFENSE,
@@ -188,8 +175,15 @@ private string abilities(object player)
 
     flags = FLAG_ATTRIBUTE | FLAG_SKILL;
     return serialize("iii", flags, 0x01, 0x1ff) + 
-	   serializeArray(attrList, player, "getAttribute") +
-	   serializeArray(vitalList, player, "getVitalAttribute") +
+	   player->getAttribute(ATTR_STRENGTH) +
+	   player->getAttribute(ATTR_ENDURANCE) +
+	   player->getAttribute(ATTR_QUICKNESS) +
+	   player->getAttribute(ATTR_COORDINATION) +
+	   player->getAttribute(ATTR_FOCUS) +
+	   player->getAttribute(ATTR_SELF) +
+	   player->getVitalAttribute(VITAL_HEALTH) +
+	   player->getVitalAttribute(VITAL_STAMINA) +
+	   player->getVitalAttribute(VITAL_MANA) +
 	   serializeMapping(skillList, 0x20, player, "getSkill");
 }
 

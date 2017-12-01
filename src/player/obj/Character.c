@@ -84,7 +84,7 @@ string getAttribute(int attr)
     int incr;
 
     incr = attributes[attr - 1];
-    return serialize("iiiu", attr, incr, ::attribute(attr),
+    return serialize("iiu", incr, ::attribute(attr),
 		     USER_SERVER->attributeXp(incr));
 }
 
@@ -93,7 +93,7 @@ string getVitalAttribute(int vital)
     int incr;
 
     incr = vitalAttributes[vital - 1];
-    return serialize("iiiui", vital, incr, ::vitalAttribute(vital),
+    return serialize("iiui", incr, ::vitalAttribute(vital),
 		     USER_SERVER->vitalXp(incr), ::vital(vital));
 }
 
