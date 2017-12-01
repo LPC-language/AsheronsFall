@@ -1,6 +1,7 @@
 # include "Serialized.h"
 # include "Interface.h"
 # include "Message.h"
+# include "Event.h"
 # include "User.h"
 
 inherit Serialized;
@@ -46,7 +47,7 @@ static void receive(string blob)
 {
     int offset, type, response, id;
     Message message;
-    Character character;
+    Character player;
 
     ({
 	offset,
@@ -101,10 +102,13 @@ static void receive(string blob)
 
     case MSG_TYPE(MSG_CHARACTER_RESTORE):
 	message = new ClientCharacterRestore(blob);
-	({ response, character }) = account->characterRestore(message->id());
+	({
+	    response,
+	    player
+	}) = account->characterRestore(message->playerId());
 	if (response == CHARGEN_RESPONSE_OK) {
-	    send(new CharacterCreateResponse(response, message->id(),
-					     character->name(), 0));
+	    send(new CharacterCreateResponse(response, message->playerId(),
+					     player->name(), 0));
 	} else {
 	    send(new CharacterCreateResponse(response));
 	}
@@ -115,6 +119,20 @@ static void receive(string blob)
 	 * provides the opportunity to limit the number of simultaneous logins
 	 */
 	send(new Message(MSG_CHARACTER_SERVER_READY));
+	break;
+
+    case MSG_TYPE(MSG_CHARACTER_ENTER_WORLD):
+	message = new ClientCharacterEnterWorld(blob);
+	if (message->accountName() != account->name()) {
+	    send(new CharacterError(CHARERR_NOT_OWNED));
+	    break;
+	}
+	player = account->character(message->playerId());
+	if (!player) {
+	    send(new CharacterError(CHARERR_NOT_OWNED));
+	    break;
+	}
+	send(new PlayerDescription(player));
 	break;
 
     default:

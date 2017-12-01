@@ -11,9 +11,10 @@ private string accountName;	/* account name */
 /*
  * serialize a character
  */
-static string char(Character char)
+static string player(Character player)
 {
-    return serialize("iti", char->id(), char->name(), -char->deleteTimer());
+    return serialize("iti", player->id(), player->name(),
+		     -player->deleteTimer());
 }
 
 /*
@@ -23,7 +24,7 @@ static string body()
 {
     string body;
 
-    body = "\0\0\0\0" + serializeArray(characters, this_object(), "char");
+    body = "\0\0\0\0" + serializeArray(characters, this_object(), "player");
     body += "\0\0\0\0" +
 	    serialize("it", slots, accountName) +
 	    "\1\0\0\0" +	/* Turbine Chat */

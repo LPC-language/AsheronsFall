@@ -22,6 +22,7 @@
 # define ClientCharacterDelete		object "/usr/Asheron/player/lib/message/ClientCharacterDelete"
 # define ClientCharacterCreate		object "/usr/Asheron/player/lib/message/ClientCharacterCreate"
 # define CharacterCreateResponse	object "/usr/Asheron/player/lib/message/CharacterCreateResponse"
+# define ClientCharacterEnterWorld	object "/usr/Asheron/player/lib/message/ClientCharacterEnterWorld"
 # define CharacterList			object "/usr/Asheron/player/lib/message/CharacterList"
 # define CharacterError			object "/usr/Asheron/player/lib/message/CharacterError"
 # define GameEvent			object "/usr/Asheron/player/lib/message/GameEvent"
@@ -130,7 +131,7 @@
 # define MSG_CHARACTER_DELETE			0x4f655
 # define MSG_CHARACTER_DELETE_RESPONSE		0x9f655
 # define MSG_CHARACTER_CREATE			0x4f656
-# define MSG_63063				0x4f657
+# define MSG_CHARACTER_ENTER_WORLD		0x4f657
 # define MSG_CHARACTER_LIST			0x9f658
 # define MSG_CHARACTER_ERROR			0x9f659
 # define MSG_63210				0x2f6ea

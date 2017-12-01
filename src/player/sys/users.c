@@ -1,4 +1,5 @@
 # include "Message.h"
+# include "Event.h"
 # include "Object.h"
 # include "User.h"
 # include "Creature.h"
@@ -43,11 +44,14 @@ static void create()
     compile_object(OBJECT_PATH(CharacterCreateResponse));
     compile_object(OBJECT_PATH(ClientCharacterDelete));
     compile_object(OBJECT_PATH(ClientCharacterCreate));
+    compile_object(OBJECT_PATH(ClientCharacterEnterWorld));
     compile_object(OBJECT_PATH(CharacterList));
     compile_object(OBJECT_PATH(CharacterError));
     compile_object(OBJECT_PATH(GameEvent));
     compile_object(OBJECT_PATH(ClientCharacterRestore));
     compile_object(OBJECT_PATH(ServerName));
+
+    compile_object(OBJECT_PATH(PlayerDescription));
 
     call_out("loadXpTables", 0);
 }
@@ -88,31 +92,31 @@ Character character(string name)
 /*
  * add a new character
  */
-void characterAdd(Character character)
+void characterAdd(Character player)
 {
     if (previous_program() == OBJECT_PATH(Account)) {
 	string name;
 	mapping map;
 
-	name = character->name();
+	name = player->name();
 	map = characters[name[.. 1]];
 	if (!map) {
 	    map = characters[name[.. 1]] = ([ ]);
 	}
-	map[name] = character;
+	map[name] = player;
     }
 }
 
 /*
  * remove a character
  */
-void characterRemove(Character character)
+void characterRemove(Character player)
 {
     if (previous_program() == OBJECT_PATH(Account)) {
 	string name;
 	mapping map;
 
-	name = character->name();
+	name = player->name();
 	map = characters[name[.. 1]];
 	map[name] = nil;
 	if (map_sizeof(map) == 0) {

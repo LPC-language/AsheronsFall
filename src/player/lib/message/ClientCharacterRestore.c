@@ -3,7 +3,7 @@
 inherit Message;
 
 
-private int id;		/* id of character to restore */
+private int playerId;		/* id of character to restore */
 
 /*
  * initialize CharacterRestore
@@ -15,7 +15,7 @@ static void create(string blob)
     ::create(MSG_CHARACTER_RESTORE);
     ({
 	offset,
-	id,
+	playerId,
 	something1,
 	something2
     }) = deSerialize(blob, 4, "iii");
@@ -23,4 +23,4 @@ static void create(string blob)
 }
 
 
-int id()	{ return id; }
+int playerId()	{ return playerId; }

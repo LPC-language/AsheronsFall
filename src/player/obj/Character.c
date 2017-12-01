@@ -19,8 +19,11 @@ int deleteTimer;	/* delete timer handle */
 static void create(Account account, string name)
 {
     ::create(0, name, ({ 100, 100, 100, 100, 100, 100 }), ({ 100, 100, 100 }),
-	     ({ }));
+	     allocate_int(54));
     ::account = account;
+    attributes = allocate_int(6);
+    vitalAttributes = allocate_int(3);
+    skills = allocate_int(54);
 }
 
 /*
@@ -80,7 +83,7 @@ string getAttribute(int attr)
 {
     int incr;
 
-    incr = attributes[attr];
+    incr = attributes[attr - 1];
     return serialize("iiiu", attr, incr, ::attribute(attr),
 		     USER_SERVER->attributeXp(incr));
 }
@@ -89,7 +92,7 @@ string getVitalAttribute(int vital)
 {
     int incr;
 
-    incr = vitalAttributes[vital];
+    incr = vitalAttributes[vital - 1];
     return serialize("iiiui", vital, incr, ::vitalAttribute(vital),
 		     USER_SERVER->vitalXp(incr), ::vital(vital));
 }
@@ -98,12 +101,110 @@ string getSkill(int skill)
 {
     int statIncr, stat, incr;
 
-    statIncr = skills[skill];
+    statIncr = skills[skill - 1];
     stat = SKILL_STAT(statIncr);
     incr = SKILL_INCR(statIncr);
     return serialize("issiuiiD", skill, incr, TRUE, SKILL_STAT(statIncr),
 		     USER_SERVER->skillXp(stat, incr), ::skill(skill), 0,
 		     new Time(0, 0.0));
+}
+
+
+# define OPTIONLIST_SHORTCUT			0x0001
+# define OPTIONLIST_SQUELCH_LIST		0x0002
+# define OPTIONLIST_5_SPELL_TABS		0x0004
+# define OPTIONLIST_DESIRED_COMPS		0x0008
+# define OPTIONLIST_7_SPELL_TABS		0x0010
+# define OPTIONLIST_SPELLBOOK_FILTERS		0x0020
+# define OPTIONLIST_OPTIONS2			0x0040
+# define OPTIONLIST_TIMESTAMP_FORMAT		0x0080
+# define OPTIONLIST_PROPERTIES			0x0100
+# define OPTIONLIST_INTERFACE			0x0200
+# define OPTIONLIST_8_SPELL_TABS		0x0400
+
+# define OPTION1_AUTO_REPEAT_ATTACKS		0x00000002
+# define OPTION1_IGNORE_ALLEGIANCE_REQUESTS	0x00000004
+# define OPTION1_IGNORE_FELLOWSHIP_REQUESTS	0x00000008
+# define OPTION1_ACCEPT_ITEMS			0x00000040
+# define OPTION1_KEEP_COMBAT_TARGETS_IN_VIEW	0x00000080
+# define OPTION1_3D_TOOLTIPS			0x00000100
+# define OPTION1_ATTEMPT_TO_DECEIVE		0x00000200
+# define OPTION1_RUN_AS_DEFAULT_MOVEMENT	0x00000400
+# define OPTION1_STAY_IN_CHAT_MODE		0x00000800
+# define OPTION1_ADVANCED_COMBAT_UI		0x00001000
+# define OPTION1_AUTO_TARGET			0x00002000
+# define OPTION1_VIVID_TARGET_INDICATOR		0x00008000
+# define OPTION1_DISABLE_WEATHER		0x00010000
+# define OPTION1_IGNORE_TRADE_REQUESTS		0x00020000
+# define OPTION1_SHARE_FELLOWSHIP_EXPERIENCE	0x00040000
+# define OPTION1_ACCEPT_CORPSE_LOOT_PERMISSIONS	0x00080000
+# define OPTION1_SHARE_FELLOWSHIP_LOOT		0x00100000
+# define OPTION1_SIDE_BY_SIDE_VITALS		0x00200000
+# define OPTION1_COORDINATES			0x00400000
+# define OPTION1_SPELL_DURATIONS		0x00800000
+# define OPTION1_DISABLE_HOUSE_EFFECTS		0x02000000
+# define OPTION1_DRAGGING_ITEM_OPENS_TRADE	0x04000000
+# define OPTION1_ALLEGIANCE_LOGONS		0x08000000
+# define OPTION1_CHARGE_ATTACK			0x10000000
+# define OPTION1_AUTO_ACCEPT_FELLOWSHIP		0x20000000
+# define OPTION1_ALLEGIANCE_CHAT		0x40000000
+# define OPTION1_CRAFTING_CHANCE_DIALOG		0x80000000
+
+# define OPTION2_ALWAYS_DAYLIGHT_OUTDOORS	0x00000001
+# define OPTION2_SHOW_DATE_OF_BIRTH		0x00000002
+# define OPTION2_SHOW_CHESS_RANK		0x00000004
+# define OPTION2_SHOW_FISHING_SKILL		0x00000008
+# define OPTION2_SHOW_DEATHS			0x00000010
+# define OPTION2_SHOW_AGE			0x00000020
+# define OPTION2_TIMESTAMPS			0x00000040
+# define OPTION2_SALVAGE_MULTIPLE_MATERIALS	0x00000080
+# define OPTION2_GENERAL_CHAT			0x00000100
+# define OPTION2_TRADE_CHAT			0x00000200
+# define OPTION2_LFG_CHAT			0x00000400
+# define OPTION2_RP_CHAT			0x00000800
+# define OPTION2_APPEAR_OFFLINE			0x00001000
+# define OPTION2_SHOW_NUMBER_OF_TITLES		0x00002000
+# define OPTION2_ITEMS_TO_MAIN_PACK		0x00004000
+# define OPTION2_LEAD_MISSILE_TARGETS		0x00008000
+# define OPTION2_FAST_MISSILES			0x00010000
+# define OPTION2_FILTER_LANGUAGE		0x00020000
+# define OPTION2_CONFIRM_RARE_GEM_USE		0x00040000
+# define OPTION2_SOCIETY_CHAT			0x00080000
+# define OPTION2_SHOW_HEAD_GEAR			0x00100000
+# define OPTION2_DISABLE_DISTANCE_FOG		0x00200000
+# define OPTION2_MOUSE_TURNING			0x00400000
+# define OPTION2_SHOW_CLOAK			0x00800000
+# define OPTION2_LOCK_UI			0x01000000
+# define OPTION2_PK_DEATH_MESSAGES		0x02000000
+
+string options()
+{
+    int flags, options1, options2;
+
+    flags = OPTIONLIST_SPELLBOOK_FILTERS | OPTIONLIST_OPTIONS2 |
+	    OPTIONLIST_8_SPELL_TABS;
+    options1 = OPTION1_AUTO_REPEAT_ATTACKS |
+	       OPTION1_KEEP_COMBAT_TARGETS_IN_VIEW |
+	       OPTION1_ACCEPT_ITEMS |
+	       OPTION1_3D_TOOLTIPS |
+	       OPTION1_RUN_AS_DEFAULT_MOVEMENT |
+	       OPTION1_AUTO_TARGET |
+	       OPTION1_VIVID_TARGET_INDICATOR |
+	       OPTION1_SHARE_FELLOWSHIP_EXPERIENCE |
+	       OPTION1_COORDINATES |
+	       OPTION1_SPELL_DURATIONS |
+	       OPTION1_CHARGE_ATTACK |
+	       OPTION1_ALLEGIANCE_CHAT;
+    options2 = OPTION2_GENERAL_CHAT |
+	       OPTION2_TRADE_CHAT |
+	       OPTION2_LFG_CHAT |
+	       OPTION2_LEAD_MISSILE_TARGETS |
+	       OPTION2_CONFIRM_RARE_GEM_USE |
+	       OPTION2_SHOW_HEAD_GEAR |
+	       OPTION2_SHOW_CLOAK |
+	       OPTION2_PK_DEATH_MESSAGES;
+    return serialize("iiiiiiiiiiii", flags, options1, 0, 0, 0, 0, 0, 0, 0, 0,
+		     0x3fff, options2);
 }
 
 

@@ -55,7 +55,7 @@ atomic int *characterCreate(string name)
 {
     if (previous_object() == user) {
 	object users;
-	Character character;
+	Character player;
 
 	if (sizeof(characters) == CHARACTERS_MAX) {
 	    return ({ CHARGEN_RESPONSE_CORRUPT, 0 });
@@ -68,11 +68,28 @@ atomic int *characterCreate(string name)
 	    return ({ CHARGEN_RESPONSE_NAME_BANNED, 0 });
 	}
 
-	character = clone_object(OBJECT_PATH(Character), this_object(), name);
-	characters += ({ character });
-	users->characterAdd(character);
-	return ({ CHARGEN_RESPONSE_OK, character->id() });
+	player = clone_object(OBJECT_PATH(Character), this_object(), name);
+	characters += ({ player });
+	users->characterAdd(player);
+	return ({ CHARGEN_RESPONSE_OK, player->id() });
     }
+}
+
+/*
+ * find a character by ID
+ */
+Character character(int id)
+{
+    int sz, i;
+    Character player;
+
+    for (sz = sizeof(characters), i = 0; i < sz; i++) {
+	player = characters[i];
+	if (player->id() == id) {
+	    return player;
+	}
+    }
+    return nil;
 }
 
 /*
@@ -81,11 +98,11 @@ atomic int *characterCreate(string name)
 atomic int characterDelete(int slot)
 {
     if (previous_object() == user && slot >= 0 && slot < sizeof(characters)) {
-	Character character;
+	Character player;
 
-	character = characters[slot];
-	if (character->timedDelete()) {
-	    USER_SERVER->characterRemove(character);
+	player = characters[slot];
+	if (player->timedDelete()) {
+	    USER_SERVER->characterRemove(player);
 	    return CHARERR_OK;
 	}
     }
@@ -98,25 +115,22 @@ atomic int characterDelete(int slot)
 atomic mixed *characterRestore(int id)
 {
     if (previous_object() == user) {
-	int sz, i;
-	Character character;
+	Character player;
 	object users;
 
-	for (sz = sizeof(characters), i = 0; i < sz; i++) {
-	    character = characters[i];
-	    if (character->id() == id && character->deleteTimer() != 0) {
-		users = find_object(USER_SERVER);
-		if (users->character(character->name())) {
-		    return ({ CHARGEN_RESPONSE_NAME_IN_USE, nil });
-		}
-		if (users->characterBanned(character->name())) {
-		    return ({ CHARGEN_RESPONSE_NAME_BANNED, nil });
-		}
-
-		character->cancelDelete();
-		users->characterAdd(character);
-		return ({ CHARGEN_RESPONSE_OK, character });
+	player = character(id);
+	if (player && player->deleteTimer() != 0) {
+	    users = find_object(USER_SERVER);
+	    if (users->character(player->name())) {
+		return ({ CHARGEN_RESPONSE_NAME_IN_USE, nil });
 	    }
+	    if (users->characterBanned(player->name())) {
+		return ({ CHARGEN_RESPONSE_NAME_BANNED, nil });
+	    }
+
+	    player->cancelDelete();
+	    users->characterAdd(player);
+	    return ({ CHARGEN_RESPONSE_OK, player });
 	}
 	return ({ CHARGEN_RESPONSE_CORRUPT, nil });
     }
