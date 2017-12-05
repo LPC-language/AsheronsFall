@@ -130,11 +130,11 @@ int establish(Interface relay, int clientId, int seed)
 }
 
 /*
- * transmit a packet through the relay
+ * transmit packets through the relay
  */
-static void transmitPacket(Packet packet)
+static void transmitPackets(Packet *packets)
 {
-    relay->transmitPacket(packet);
+    relay->transmitPackets(packets);
 }
 
 /*

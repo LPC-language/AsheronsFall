@@ -7,7 +7,7 @@
 
 inherit Interface;
 
-static void transmitPacket(Packet packet);
+static void transmitPackets(Packet *packets);
 static void transmitPrioData(NetworkData data);
 static int retransmitPacket(int sequence);
 static void acknowledgedSeq(int sequence);
@@ -24,6 +24,7 @@ static void acknowledgedSeq(int sequence);
 
 private int serverId;		/* ID of the server */
 private Packet bufPacket;	/* buffered partial packet */
+private Packet *bufFragments;	/* buffered fragments */
 private Time bufTime;		/* buf start time */
 private int bufSize;		/* packet buffer space used */
 private int pendingDrain;	/* buffer drain callout active? */
@@ -35,6 +36,7 @@ private int serverFrag;		/* seq of last fragment sent */
 private void bufCreate(int serverId)
 {
     ::serverId = serverId;
+    bufFragments = ({ });
 }
 
 /*
@@ -55,9 +57,10 @@ private void bufStart()
 private void bufFlush()
 {
     if (bufPacket) {
-	transmitPacket(bufPacket);
+	transmitPackets(({ bufPacket }) + bufFragments);
 	bufPacket = nil;
 	bufSize = 0;
+	bufFragments = ({ });
     }
 }
 
@@ -118,60 +121,53 @@ private void bufData(NetworkData data, int required)
 static void bufMessage(string message, int group, int required)
 {
     int count, i, len;
-    Fragment fragment;
-
-    if (bufSize >= MAX_FRAG_SIZE) {
-	bufFlush();
-    }
-    if (!bufPacket) {
-	bufStart();
-    }
+    Packet packet;
 
     serverFrag++;
     count = 1;
     i = 0;
     len = strlen(message);
     if (bufSize + len > MAX_FRAG_SIZE) {
-	count += (bufSize + len - 1) / MAX_FRAG_SIZE;
-	len = MAX_FRAG_SIZE - bufSize;
+	count += (len - 1) / MAX_FRAG_SIZE;
 
-	/* first fragment */
-	fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
-				group, message[.. len - 1]);
-	bufPacket->addFragment(fragment);
+	/* fragments that fill a whole packet */
+	while (len >= MAX_FRAG_SIZE) {
+	    packet = new Packet(0, serverId, 0);
+	    packet->addFragment(new Fragment(serverFrag, serverFrag | FRAG_ID,
+					     count, i++, group,
+					     message[.. MAX_FRAG_SIZE - 1]));
+	    if (required) {
+		packet->setRequired();
+	    }
+	    bufFragments += ({ packet });
+	    message = message[MAX_FRAG_SIZE ..];
+	    len -= MAX_FRAG_SIZE;
+	}
+	if (!bufPacket) {
+	    transmitPackets(bufFragments);
+	    bufFragments = ({ });
+	}
+    }
+
+    if (len != 0) {
+	if (bufSize + len > MAX_FRAG_SIZE) {
+	    bufFlush();
+	}
+	if (!bufPacket) {
+	    bufStart();
+	}
+
+	/* last fragment */
+	bufPacket->addFragment(new Fragment(serverFrag, serverFrag | FRAG_ID,
+					    count, i, group, message));
 	if (required) {
 	    bufPacket->setRequired();
 	}
-	bufFlush();
-	message = message[len ..];
 
-	/* fragments that fill a whole packet */
-	while (++i < count - 1) {
-	    bufStart();
-	    fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i,
-				    group, message[.. MAX_FRAG_SIZE - 1]);
-	    bufPacket->addFragment(fragment);
-	    if (required) {
-		bufPacket->setRequired();
-	    }
+	bufSize += FRAG_HEADER_SIZE + len;
+	if (bufSize == MAX_BUF_SIZE) {
 	    bufFlush();
-	    message = message[MAX_FRAG_SIZE ..];
 	}
-
-	bufStart();
-    }
-
-    /* last fragment */
-    fragment = new Fragment(serverFrag, serverFrag | FRAG_ID, count, i, group,
-			    message);
-    bufPacket->addFragment(fragment);
-    if (required) {
-	bufPacket->setRequired();
-    }
-
-    bufSize += FRAG_HEADER_SIZE + strlen(message);
-    if (bufSize == MAX_BUF_SIZE) {
-	bufFlush();
     }
 }
 

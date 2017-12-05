@@ -127,24 +127,28 @@ static void transmit()
 }
 
 /*
- * add a packet to the transmit queue
+ * adds packets to the transmit queue
  */
-static void _transmitPacket(Packet packet)
+static void _transmitPackets(Packet *packets)
 {
-    packet->setEncryptedChecksum();
-    transmitQueue += ({ packet });
+    int i;
+
+    for (i = sizeof(packets); --i >= 0; ) {
+	packets[i]->setEncryptedChecksum();
+    }
+    transmitQueue += packets;
     if (pendingTransmit == 0) {
 	transmit();
     }
 }
 
 /*
- * callout wrapper for _transmitPacket
+ * callout wrapper for _transmitPackets
  */
-void transmitPacket(Packet packet)
+void transmitPackets(Packet *packets)
 {
     if (previous_program() == OBJECT_PATH(UDPInterface)) {
-	call_out("_transmitPacket", 0, packet);
+	call_out("_transmitPackets", 0, packets);
     }
 }
 
