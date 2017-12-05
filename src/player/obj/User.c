@@ -1,7 +1,10 @@
 # include "Serialized.h"
 # include "Interface.h"
 # include "Message.h"
-# include "Event.h"
+# include "GameEvent.h"
+# include "properties.h"
+# include "chat.h"
+# include "statusmessage.h"
 # include "User.h"
 
 inherit Serialized;
@@ -142,7 +145,14 @@ static void receive(string blob)
 	    send(new CharacterError(CHARERR_NOT_OWNED));
 	    break;
 	}
+	send(new PrivateUpdateBool(player, PROP_BOOL_ACCOUNT_15_DAYS));
+	send(new ServerMessage(CHAT_MAGIC, "Thanks you for purchasing the Throne of Destiny expansion! A special gift has been placed in your backpack."));
 	sendEvent(new PlayerDescription(player));
+	sendEvent(new StatusMessage(player, STATMSG_TURBINE_CHAT_ENABLED));
+	sendEvent(new CharacterTitle(player, ({ 9 }), ({ 9 })));
+	send(new GenericMessage(MSG_PLAYER_CREATE,
+				serialize("i", player->id())));
+	sendEvent(new PopupString(player, "Asheron has been defeated by Wael'Bharon!\nShadows run rampant in Dereth."));
 	break;
 
     default:

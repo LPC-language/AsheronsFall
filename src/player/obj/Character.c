@@ -2,7 +2,7 @@
 # include <Time.h>
 # include "Creature.h"
 # include "User.h"
-# include "Properties.h"
+# include "properties.h"
 
 inherit Humanoid;
 
@@ -18,12 +18,72 @@ int deleteTimer;	/* delete timer handle */
  */
 static void create(Account account, string name)
 {
-    ::create(0, name, ({ 100, 100, 100, 100, 100, 100 }), ({ 100, 100, 100 }),
-	     allocate_int(54));
+    ::create(0, name, ({ 40, 30, 100, 100, 50, 10 }), ({ 0, 0, 0 }),
+	     ({
+		0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 0,
+		0, 0, 0, 0, 0, 0
+	     }));
     ::account = account;
     attributes = allocate_int(6);
     vitalAttributes = allocate_int(3);
-    skills = allocate_int(54);
+    skills =  ({
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_SPECIALIZED, 0),	/* melee d */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* missile d */
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_SPECIALIZED, 0),	/* arcane */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* magic d */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* mana conv */
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* item t */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* assess p */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* deception */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* healing */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* jump */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* lockpick */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* run */
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* assess c */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* weapon t */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* armour t */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* magic t */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* creature */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* item */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* life */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* war */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* leadership */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* loyalty */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* fletching */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* alchemy */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* cooking */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* salvaging */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* 2handed */
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* void */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* heavy w */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* light w */
+		SKILL_STATINCR(SKILLSTAT_SPECIALIZED, 0),	/* finesse w */
+		SKILL_STATINCR(SKILLSTAT_SPECIALIZED, 0),	/* missile w */
+		SKILL_STATINCR(SKILLSTAT_TRAINED, 5),		/* shield */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* dual */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* reckless */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* sneak a */
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0),		/* dirty f */
+		SKILL_STATINCR(SKILLSTAT_INACTIVE, 0),
+		SKILL_STATINCR(SKILLSTAT_UNTRAINED, 0)		/* summoning */
+    });
 }
 
 /*
@@ -104,7 +164,7 @@ string getSkill(int skill)
     statIncr = skills[skill - 1];
     stat = SKILL_STAT(statIncr);
     incr = SKILL_INCR(statIncr);
-    return serialize("issiuiiD", skill, incr, TRUE, SKILL_STAT(statIncr),
+    return serialize("issiuiiD", skill, incr, TRUE, stat,
 		     USER_SERVER->skillXp(stat, incr), ::skill(skill), 0,
 		     new Time(0, 0.0));
 }
@@ -184,7 +244,7 @@ string options()
     flags = OPTIONLIST_SPELLBOOK_FILTERS | OPTIONLIST_OPTIONS2 |
 	    OPTIONLIST_8_SPELL_TABS;
     options1 = OPTION1_AUTO_REPEAT_ATTACKS |
-	       OPTION1_KEEP_COMBAT_TARGETS_IN_VIEW |
+	       OPTION1_IGNORE_FELLOWSHIP_REQUESTS |
 	       OPTION1_ACCEPT_ITEMS |
 	       OPTION1_3D_TOOLTIPS |
 	       OPTION1_RUN_AS_DEFAULT_MOVEMENT |
@@ -216,10 +276,10 @@ static int boolProperty(int prop)
     case PROP_BOOL_IS_SENTINEL:
     case PROP_BOOL_IS_ADVOCATE:
     case PROP_BOOL_IS_PSR:
-    case PROP_BOOL_ACCOUNT_15_DAYS:
 	return FALSE;
 
     case PROP_BOOL_ACTD_RECEIVED_ITEMS:
+    case PROP_BOOL_ACCOUNT_15_DAYS:
 	return TRUE;
 
     default:

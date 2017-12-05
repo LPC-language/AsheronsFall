@@ -27,6 +27,7 @@
 # define CharacterError			object "/usr/Asheron/player/lib/message/CharacterError"
 # define GameEvent			object "/usr/Asheron/player/lib/message/GameEvent"
 # define ClientCharacterRestore		object "/usr/Asheron/player/lib/message/ClientCharacterRestore"
+# define ServerMessage			object "/usr/Asheron/player/lib/message/ServerMessage"
 # define ServerName			object "/usr/Asheron/player/lib/message/ServerName"
 
 
@@ -136,7 +137,7 @@
 # define MSG_CHARACTER_ERROR			0x9f659
 # define MSG_63210				0x2f6ea
 # define MSG_63301				0xaf745
-# define MSG_63302				0xaf746
+# define MSG_PLAYER_CREATE			0xaf746
 # define MSG_63303				0xaf747
 # define MSG_63304				0xaf748
 # define MSG_63305				0xaf749
@@ -157,7 +158,7 @@
 # define MSG_63452				0x9f7dc
 # define MSG_63454				0x4f7de
 # define MSG_CHARACTER_SERVER_READY		0x9f7df
-# define MSG_63456				0x9f7e0
+# define MSG_SERVER_MESSAGE			0x9f7e0
 # define MSG_SERVER_NAME			0x9f7e1
 # define MSG_63458				0x5f7e2
 # define MSG_63459				0x5f7e3

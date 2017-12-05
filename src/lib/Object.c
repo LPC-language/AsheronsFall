@@ -2,7 +2,7 @@
 # include <Time.h>
 # include "Position.h"
 # include "Serialized.h"
-# include "Properties.h"
+# include "properties.h"
 
 /*
  * a client-visible object, not necessarily a physical object

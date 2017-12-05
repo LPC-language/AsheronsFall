@@ -1,5 +1,5 @@
-# include "Event.h"
-# include "Properties.h"
+# include "GameEvent.h"
+# include "properties.h"
 # include "Creature.h"
 
 inherit GameEvent;
@@ -18,13 +18,6 @@ inherit GameEvent;
 # define FLAG_SKILL		0x002
 # define FLAG_SPELL		0x100
 # define FLAG_ENCHANTMENT	0x200
-
-private string body;
-
-static string eventBody()
-{
-    return body;
-}
 
 private string properties(object player)
 {
@@ -133,23 +126,6 @@ private string abilities(object player)
     int *skillList, flags;
 
     skillList = ({
-	SKILL_MELEE_DEFENSE,
-	SKILL_MISSILE_DEFENSE,
-	SKILL_ARCANE_LORE,
-	SKILL_MAGIC_DEFENSE,
-	SKILL_MANA_CONVERSION,
-	SKILL_ITEM_TINKERING,
-	SKILL_ASSESS_PERSON,
-	SKILL_DECEPTION,
-	SKILL_HEALING,
-	SKILL_JUMP,
-	SKILL_LOCKPICK,
-	SKILL_RUN,
-	SKILL_ASSESS_CREATURE,
-	SKILL_WEAPON_TINKERING,
-	SKILL_ARMOR_TINKERING,
-	SKILL_MAGIC_ITEM_TINKERING,
-	SKILL_CREATURE_ENCHANTMENT,
 	SKILL_ITEM_ENCHANTMENT,
 	SKILL_LIFE_MAGIC,
 	SKILL_WAR_MAGIC,
@@ -157,24 +133,41 @@ private string abilities(object player)
 	SKILL_LOYALTY,
 	SKILL_FLETCHING,
 	SKILL_ALCHEMY,
+	SKILL_MELEE_DEFENSE,
 	SKILL_COOKING,
+	SKILL_MISSILE_DEFENSE,
 	SKILL_SALVAGING,
 	SKILL_TWO_HANDED_COMBAT,
 	SKILL_VOID_MAGIC,
 	SKILL_HEAVY_WEAPONS,
 	SKILL_LIGHT_WEAPONS,
 	SKILL_FINESSE_WEAPONS,
+	SKILL_ARCANE_LORE,
 	SKILL_MISSILE_WEAPONS,
+	SKILL_MAGIC_DEFENSE,
 	SKILL_SHIELD,
+	SKILL_MANA_CONVERSION,
 	SKILL_DUAL_WIELD,
 	SKILL_RECKLESSNESS,
+	SKILL_ITEM_TINKERING,
 	SKILL_SNEAK_ATTACK,
+	SKILL_ASSESS_PERSON,
 	SKILL_DIRTY_FIGHTING,
-	SKILL_SUMMONING
+	SKILL_DECEPTION,
+	SKILL_HEALING,
+	SKILL_SUMMONING,
+	SKILL_JUMP,
+	SKILL_LOCKPICK,
+	SKILL_RUN,
+	SKILL_ASSESS_CREATURE,
+	SKILL_WEAPON_TINKERING,
+	SKILL_ARMOR_TINKERING,
+	SKILL_MAGIC_ITEM_TINKERING,
+	SKILL_CREATURE_ENCHANTMENT
     });
 
     flags = FLAG_ATTRIBUTE | FLAG_SKILL;
-    return serialize("iii", flags, 0x01, 0x1ff) + 
+    return serialize("iii", flags, 0x01, 0x1ff) +
 	   player->getAttribute(ATTR_STRENGTH) +
 	   player->getAttribute(ATTR_ENDURANCE) +
 	   player->getAttribute(ATTR_QUICKNESS) +
@@ -189,9 +182,8 @@ private string abilities(object player)
 
 static void create(object player)
 {
-    ::create(EVT_PLAYER_DESCRIPTION, player->id());
-
-    body = properties(player) + abilities(player) + player->options() +
-	   "\0\0\0\0" +	/* inventory */
-	   "\0\0\0\0";	/* equipped */
+    ::create(EVT_PLAYER_DESCRIPTION, player,
+	     properties(player) + abilities(player) + player->options() +
+	     "\0\0\0\0" +	/* inventory */
+	     "\0\0\0\0");	/* equipped */
 }

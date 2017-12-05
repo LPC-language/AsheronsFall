@@ -35,7 +35,7 @@ static void create(int class, string name, int *attributes,
 
     ::attributes = attributes;
     ::vitalAttributes = vitalAttributes;
-    vitals = ({ 1, 1, 1 });
+    vitals = ({ 15, 30, 10 });
     ::skills = skills;
     inventory = ({ new Container(102) });
 }
