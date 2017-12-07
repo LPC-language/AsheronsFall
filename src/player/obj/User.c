@@ -146,7 +146,7 @@ static void receive(string blob)
 	    break;
 	}
 	send(new PrivateUpdateBool(player, PROP_BOOL_ACCOUNT_15_DAYS));
-	send(new ServerMessage(CHAT_MAGIC, "Thanks you for purchasing the Throne of Destiny expansion! A special gift has been placed in your backpack."));
+	send(new ServerMessage(CHAT_MAGIC, "Thank you for purchasing the Throne of Destiny expansion! A special gift has been placed in your backpack."));
 	sendEvent(new PlayerDescription(player));
 	sendEvent(new StatusMessage(player, STATMSG_TURBINE_CHAT_ENABLED));
 	sendEvent(new CharacterTitle(player, ({ 9 }), ({ 9 })));

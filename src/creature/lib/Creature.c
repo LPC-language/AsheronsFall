@@ -1,7 +1,7 @@
 # include <status.h>
 # include "Object.h"
 # include "Creature.h"
-# include "Properties.h"
+# include "properties.h"
 
 inherit PhysicalObject;
 
