@@ -33,6 +33,7 @@
 
 # define MSG_TYPE(msg)			((msg) & 0xffff)
 # define MSG_GROUP(msg)			((msg) >> 16)
+# define MSG_GROUPTYPE(group, type)	(((group) << 16) + (type & 0xffff))
 
 # define MSG_36					0x90024
 # define MSG_39_SERVER				0x10027

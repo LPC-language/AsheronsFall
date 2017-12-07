@@ -56,7 +56,7 @@ private void loginScreen()
 /*
  * receive a message from the client
  */
-static void receive(string blob)
+static void receive(string blob, int group)
 {
     int offset, type, response, id;
     Message message;
@@ -67,8 +67,8 @@ static void receive(string blob)
 	type
     }) = deSerialize(blob, 0, "i");
 
-    switch (type) {
-    case MSG_TYPE(MSG_DDD_INTERROGATION_RESPONSE):
+    switch (MSG_GROUPTYPE(group, type)) {
+    case MSG_DDD_INTERROGATION_RESPONSE:
 	switch (hash_crc16(blob[offset ..])) {
 	case DAT_PLAIN:
 	    plain = TRUE;
@@ -84,11 +84,11 @@ static void receive(string blob)
 	send(new Message(MSG_DDD_END));
 	break;
 
-    case MSG_TYPE(MSG_DDD_END):
+    case MSG_DDD_END:
 	/* no response */
 	break;
 
-    case MSG_TYPE(MSG_CHARACTER_CREATE):
+    case MSG_CHARACTER_CREATE:
 	message = new ClientCharacterCreate(blob);
 	({ response, id }) = account->characterCreate(message->name());
 	if (response == CHARGEN_RESPONSE_OK) {
@@ -98,7 +98,7 @@ static void receive(string blob)
 	}
 	break;
 
-    case MSG_TYPE(MSG_CHARACTER_DELETE):
+    case MSG_CHARACTER_DELETE:
 	message = new ClientCharacterDelete(blob);
 	if (message->accountName() == account->name()) {
 	    response = account->characterDelete(message->slot());
@@ -113,7 +113,7 @@ static void receive(string blob)
 	}
 	break;
 
-    case MSG_TYPE(MSG_CHARACTER_RESTORE):
+    case MSG_CHARACTER_RESTORE:
 	message = new ClientCharacterRestore(blob);
 	({
 	    response,
@@ -127,14 +127,14 @@ static void receive(string blob)
 	}
 	break;
 
-    case MSG_TYPE(MSG_CHARACTER_LOGIN_REQUEST):
+    case MSG_CHARACTER_LOGIN_REQUEST:
 	/*
 	 * provides the opportunity to limit the number of simultaneous logins
 	 */
 	send(new Message(MSG_CHARACTER_SERVER_READY));
 	break;
 
-    case MSG_TYPE(MSG_CHARACTER_ENTER_WORLD):
+    case MSG_CHARACTER_ENTER_WORLD:
 	message = new ClientCharacterEnterWorld(blob);
 	if (message->accountName() != account->name()) {
 	    send(new CharacterError(CHARERR_NOT_OWNED));
@@ -193,7 +193,7 @@ void establishConnection()
 void receiveMessage(string message, int group)
 {
     if (previous_program() == OBJECT_PATH(PacketInterface)) {
-	call_out("receive", 0, message);
+	call_out("receive", 0, message, group);
     }
 }
 
