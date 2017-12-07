@@ -1,5 +1,4 @@
 # include "Message.h"
-# include "GameEvent.h"
 # include "Object.h"
 # include "User.h"
 # include "Creature.h"
@@ -53,12 +52,6 @@ static void create()
     compile_object(OBJECT_PATH(ClientCharacterRestore));
     compile_object(OBJECT_PATH(ServerMessage));
     compile_object(OBJECT_PATH(ServerName));
-
-    /* events */
-    compile_object(OBJECT_PATH(PopupString));
-    compile_object(OBJECT_PATH(PlayerDescription));
-    compile_object(OBJECT_PATH(CharacterTitle));
-    compile_object(OBJECT_PATH(StatusMessage));
 
     call_out("loadXpTables", 0);
 }

@@ -1,10 +1,9 @@
 # include "Serialized.h"
 # include "Interface.h"
 # include "Message.h"
-# include "GameEvent.h"
+# include "Creature.h"
 # include "properties.h"
 # include "chat.h"
-# include "statusmessage.h"
 # include "User.h"
 
 inherit Serialized;
@@ -17,6 +16,7 @@ Account account;	/* account */
 Interface interface;	/* interface */
 int plain;		/* using unaltered DAT files from the installer? */
 int eventSeq;		/* event sequence number */
+Character player;
 
 /*
  * send a required message to the client
@@ -34,14 +34,226 @@ private void sendOptional(Message message)
     interface->sendMessage(message->transport(), message->group(), FALSE);
 }
 
+
+# define EVT_POPUP_STRING		0x0004
+# define EVT_PLAYER_DESCRIPTION		0x0013
+# define EVT_CHARACTER_TITLE		0x0029
+# define EVT_STATUS_MESSAGE		0x028a
+
 /*
  * send an event to the player
  */
-private void sendEvent(GameEvent event)
+private void sendEvent(int eventType, string body)
 {
+    GameEvent event;
+
+    event = new GameEvent(eventType, player, body);
     event->setSequence(++eventSeq);
     interface->sendMessage(event->transport(), event->group(), TRUE);
 }
+
+private void eventPopupString(string text)
+{
+    sendEvent(EVT_POPUP_STRING, serialize("t", text));
+}
+
+# define FLAG_INT		0x01
+# define FLAG_BOOL		0x02
+# define FLAG_DOUBLE		0x04
+# define FLAG_DATA		0x08
+# define FLAG_STRING		0x10
+# define FLAG_POSITION		0x20
+# define FLAG_INSTANCE		0x40
+# define FLAG_LONG		0x80
+
+# define FLAG_ATTRIBUTE		0x001
+# define FLAG_SKILL		0x002
+# define FLAG_SPELL		0x100
+# define FLAG_ENCHANTMENT	0x200
+
+private string properties()
+{
+    int *intList, *longList, *boolList, *doubleList, *stringList, *dataList,
+	flags;
+
+    intList = ({
+	PROP_INT_GEAR_PK_DAMAGE_RESIST_RATING,
+	PROP_INT_OVERPOWER,
+	PROP_INT_OVERPOWER_RESIST,
+	PROP_INT_HEALING_BOOST_RATING,
+	PROP_INT_GEAR_OVERPOWER,
+	PROP_INT_GEAR_OVERPOWER_RESIST,
+	PROP_INT_ENCUMB_VAL,
+	PROP_INT_ENLIGHTENMENT,
+	PROP_INT_PLAYER_KILLER_STATUS,
+	PROP_INT_CONTAINERS_CAPACITY,
+	PROP_INT_WEAKNESS_RATING,
+	PROP_INT_NETHER_OVER_TIME,
+	PROP_INT_NETHER_RESIST_RATING,
+	PROP_INT_LUM_AUG_DAMAGE_RATING,
+	PROP_INT_LUM_AUG_DAMAGE_REDUCTION_RATING,
+	PROP_INT_LUM_AUG_CRIT_DAMAGE_RATING,
+	PROP_INT_LUM_AUG_CRIT_REDUCTION_RATING,
+	PROP_INT_LUM_AUG_SURGE_CHANCE_RATING,
+	PROP_INT_LUM_AUG_ITEM_MANA_USAGE,
+	PROP_INT_LUM_AUG_ITEM_MANA_GAIN,
+	PROP_INT_COIN_VALUE,
+	PROP_INT_LUM_AUG_HEALING_RATING,
+	PROP_INT_LUM_AUG_SKILLED_CRAFT,
+	PROP_INT_LUM_AUG_SKILLED_SPEC,
+	PROP_INT_LEVEL,
+	PROP_INT_DOT_RESIST_RATING,
+	PROP_INT_ALLEGIANCE_RANK,
+	PROP_INT_LIFE_RESIST_RATING,
+	PROP_INT_MELEE_MASTERY,
+	PROP_INT_CREATION_TIMESTAMP,
+	PROP_INT_RANGED_MASTERY,
+	PROP_INT_WEAPON_AURA_DAMAGE,
+	PROP_INT_WEAPON_AURA_SPEED,
+	PROP_INT_LUM_AUG_ALL_SKILLS,
+	PROP_INT_GENDER,
+	PROP_INT_GEAR_DAMAGE,
+	PROP_INT_GEAR_DAMAGE_RESIST,
+	PROP_INT_DAMAGE_RATING,
+	PROP_INT_GEAR_CRIT,
+	PROP_INT_DAMAGE_RESIST_RATING,
+	PROP_INT_GEAR_CRIT_RESIST,
+	PROP_INT_GEAR_CRIT_DAMAGE,
+	PROP_INT_GEAR_CRIT_DAMAGE_RESIST,
+	PROP_INT_GEAR_HEALING_BOOST,
+	PROP_INT_HEAL_OVER_TIME,
+	PROP_INT_GEAR_NETHER_RESIST,
+	PROP_INT_CRIT_RATING,
+	PROP_INT_GEAR_LIFE_RESIST,
+	PROP_INT_CRIT_DAMAGE_RATING,
+	PROP_INT_GEAR_MAX_HEALTH,
+	PROP_INT_CRIT_RESIST_RATING,
+	PROP_INT_CRIT_DAMAGE_RESIST_RATING,
+	PROP_INT_HERITAGE_GROUP,
+	PROP_INT_PK_DAMAGE_RATING,
+	PROP_INT_HEALING_RESIST_RATING,
+	PROP_INT_PK_DAMAGE_RESIST_RATING,
+	PROP_INT_DAMAGE_OVER_TIME,
+	PROP_INT_GEAR_PK_DAMAGE_RATING
+    });
+    longList = ({
+	PROP_LONG_AVAILABLE_LUMINANCE,
+	PROP_LONG_MAXIMUM_LUMINANCE
+    });
+    boolList = ({
+	PROP_BOOL_IS_PSR,
+	PROP_BOOL_ACTD_RECEIVED_ITEMS,
+	PROP_BOOL_IS_ADMIN,
+	PROP_BOOL_IS_ARCH,
+	PROP_BOOL_IS_SENTINEL,
+	PROP_BOOL_IS_ADVOCATE
+    });
+    doubleList = ({
+	PROP_DOUBLE_GLOBAL_XP_MOD,
+	PROP_DOUBLE_WEAPON_AURA_OFFENSE,
+	PROP_DOUBLE_WEAPON_AURA_DEFENSE,
+	PROP_DOUBLE_WEAPON_AURA_ELEMENTAL,
+	PROP_DOUBLE_WEAPON_AURA_MANA_CONV,
+	PROP_DOUBLE_RESIST_HEALTH_DRAIN
+    });
+    stringList = ({ PROP_STRING_NAME });
+    dataList = ({
+	PROP_DATA_MOTION_TABLE,
+	PROP_DATA_COMBAT_TABLE
+    });
+
+    flags = FLAG_INT | FLAG_LONG | FLAG_BOOL | FLAG_DOUBLE | FLAG_STRING |
+	    FLAG_DATA;
+    return serialize("ii", flags, 0x0a) +
+	   serializeMapping(intList, 0x40, player, "getIntProperty") +
+	   serializeMapping(longList, 0x40, player, "getLongProperty") +
+	   serializeMapping(boolList, 0x20, player, "getBoolProperty") +
+	   serializeMapping(doubleList, 0x20, player, "getDoubleProperty") +
+	   serializeMapping(stringList, 0x10, player, "getStringProperty") +
+	   serializeMapping(dataList, 0x20, player, "getDataProperty");
+}
+
+private string abilities()
+{
+    int *skillList, flags;
+
+    skillList = ({
+	SKILL_ITEM_ENCHANTMENT,
+	SKILL_LIFE_MAGIC,
+	SKILL_WAR_MAGIC,
+	SKILL_LEADERSHIP,
+	SKILL_LOYALTY,
+	SKILL_FLETCHING,
+	SKILL_ALCHEMY,
+	SKILL_MELEE_DEFENSE,
+	SKILL_COOKING,
+	SKILL_MISSILE_DEFENSE,
+	SKILL_SALVAGING,
+	SKILL_TWO_HANDED_COMBAT,
+	SKILL_VOID_MAGIC,
+	SKILL_HEAVY_WEAPONS,
+	SKILL_LIGHT_WEAPONS,
+	SKILL_FINESSE_WEAPONS,
+	SKILL_ARCANE_LORE,
+	SKILL_MISSILE_WEAPONS,
+	SKILL_MAGIC_DEFENSE,
+	SKILL_SHIELD,
+	SKILL_MANA_CONVERSION,
+	SKILL_DUAL_WIELD,
+	SKILL_RECKLESSNESS,
+	SKILL_ITEM_TINKERING,
+	SKILL_SNEAK_ATTACK,
+	SKILL_ASSESS_PERSON,
+	SKILL_DIRTY_FIGHTING,
+	SKILL_DECEPTION,
+	SKILL_HEALING,
+	SKILL_SUMMONING,
+	SKILL_JUMP,
+	SKILL_LOCKPICK,
+	SKILL_RUN,
+	SKILL_ASSESS_CREATURE,
+	SKILL_WEAPON_TINKERING,
+	SKILL_ARMOR_TINKERING,
+	SKILL_MAGIC_ITEM_TINKERING,
+	SKILL_CREATURE_ENCHANTMENT
+    });
+
+    flags = FLAG_ATTRIBUTE | FLAG_SKILL;
+    return serialize("iii", flags, 0x01, 0x1ff) +
+	   player->getAttribute(ATTR_STRENGTH) +
+	   player->getAttribute(ATTR_ENDURANCE) +
+	   player->getAttribute(ATTR_QUICKNESS) +
+	   player->getAttribute(ATTR_COORDINATION) +
+	   player->getAttribute(ATTR_FOCUS) +
+	   player->getAttribute(ATTR_SELF) +
+	   player->getVitalAttribute(VITAL_HEALTH) +
+	   player->getVitalAttribute(VITAL_STAMINA) +
+	   player->getVitalAttribute(VITAL_MANA) +
+	   serializeMapping(skillList, 0x20, player, "getSkill");
+}
+
+private void eventPlayerDescription()
+{
+    sendEvent(EVT_PLAYER_DESCRIPTION,
+	      properties() + abilities() + player->options() +
+	      "\0\0\0\0" +	/* inventory */
+	      "\0\0\0\0");	/* equipped */
+}
+
+private void eventCharacterTitle()
+{
+    sendEvent(EVT_CHARACTER_TITLE,
+	      serializeArray(player->displayTitles()) +
+	      serializeArray(player->titleList()));
+}
+
+# define STATMSG_TURBINE_CHAT_ENABLED	0x051d
+
+private void eventStatusMessage(int status)
+{
+    sendEvent(EVT_STATUS_MESSAGE, serialize("i", status));
+}
+
 
 /*
  * show login screen
@@ -60,7 +272,6 @@ static void receive(string blob, int group)
 {
     int offset, type, response, id;
     Message message;
-    Character player;
 
     ({
 	offset,
@@ -147,12 +358,12 @@ static void receive(string blob, int group)
 	}
 	send(new PrivateUpdateBool(player, PROP_BOOL_ACCOUNT_15_DAYS));
 	send(new ServerMessage(CHAT_MAGIC, "Thank you for purchasing the Throne of Destiny expansion! A special gift has been placed in your backpack."));
-	sendEvent(new PlayerDescription(player));
-	sendEvent(new StatusMessage(player, STATMSG_TURBINE_CHAT_ENABLED));
-	sendEvent(new CharacterTitle(player, ({ 9 }), ({ 9 })));
+	eventPlayerDescription();
+	eventStatusMessage(STATMSG_TURBINE_CHAT_ENABLED);
+	eventCharacterTitle();
 	send(new GenericMessage(MSG_PLAYER_CREATE,
 				serialize("i", player->id())));
-	sendEvent(new PopupString(player, "Asheron has been defeated by Wael'Bharon!\nShadows run rampant in Dereth."));
+	eventPopupString("Asheron has been defeated by Wael'Bharon!\nShadows run rampant in Dereth.");
 	break;
 
     default:

@@ -169,6 +169,15 @@ string getSkill(int skill)
 		     new Time(0, 0.0));
 }
 
+int *displayTitles()
+{
+    return ({ 9 });
+}
+
+int *titleList()
+{
+    return ({ 9 });
+}
 
 # define OPTIONLIST_SHORTCUT			0x0001
 # define OPTIONLIST_SQUELCH_LIST		0x0002
