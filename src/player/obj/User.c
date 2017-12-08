@@ -2,6 +2,7 @@
 # include "Interface.h"
 # include "Message.h"
 # include "Creature.h"
+# include "Position.h"
 # include "properties.h"
 # include "chat.h"
 # include "User.h"
@@ -363,6 +364,10 @@ static void receive(string blob, int group)
 	eventCharacterTitle();
 	send(new GenericMessage(MSG_PLAYER_CREATE,
 				serialize("i", player->id())));
+	send(new UpdatePosition(player->id(),
+				new Position(0x800301ad, 12.32, -28.482, 0.005,
+					     0.338946, 0.0, 0.0, 0.9408059),
+				TRUE, 1, 1, 0, 0));
 	eventPopupString("Asheron has been defeated by Wael'Bharon!\nShadows run rampant in Dereth.");
 	break;
 

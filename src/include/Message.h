@@ -25,6 +25,7 @@
 # define ClientCharacterEnterWorld	object "/usr/Asheron/player/lib/message/ClientCharacterEnterWorld"
 # define CharacterList			object "/usr/Asheron/player/lib/message/CharacterList"
 # define CharacterError			object "/usr/Asheron/player/lib/message/CharacterError"
+# define UpdatePosition			object "/usr/Asheron/player/lib/message/UpdatePosition"
 # define GameEvent			object "/usr/Asheron/player/lib/message/GameEvent"
 # define ClientCharacterRestore		object "/usr/Asheron/player/lib/message/ClientCharacterRestore"
 # define ServerMessage			object "/usr/Asheron/player/lib/message/ServerMessage"
@@ -140,7 +141,7 @@
 # define MSG_63301				0xaf745
 # define MSG_PLAYER_CREATE			0xaf746
 # define MSG_63303				0xaf747
-# define MSG_63304				0xaf748
+# define MSG_UPDATE_POSITION			0xaf748
 # define MSG_63305				0xaf749
 # define MSG_63306				0xaf74a
 # define MSG_63307				0xaf74b

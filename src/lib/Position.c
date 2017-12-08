@@ -1,21 +1,10 @@
-# include "Serialized.h"
-# include "Packet.h"
+# include "Vector.h"
 
-inherit NetworkData;
-inherit Serialized;
+inherit Vector;
 
 
-private int cell;			/* environment */
-private float X, Y, Z;			/* location */
-private float rotW, rotX, rotY, rotZ;	/* orientation */
-
-/*
- * layout of position
- */
-static string headerLayout()
-{
-    return "ifffffff";
-}
+private int cell;		/* environment */
+private float qW, qX, qY, qZ;	/* orientation */
 
 /*
  * size in transport
@@ -30,32 +19,27 @@ int size()
  */
 string transport()
 {
-    return serialize(headerLayout(), cell, X, Y, Z, rotW, rotX, rotY, rotZ);
+    return serialize("i", cell) + ::transport() +
+	   serialize("ffff", qW, qX, qY, qZ);
 }
 
 /*
- * initialize
+ * initialize position
  */
 static void create(varargs int cell, float X, float Y, float Z,
-		   float rotW, float rotX, float rotY, float rotZ)
+		   float qW, float qX, float qY, float qZ)
 {
-    ::create(ND_DATA);
+    ::create(X, Y, Z);
     ::cell = cell;
-    ::X = X;
-    ::Y = Y;
-    ::Z = Z;
-    ::rotW = rotW;
-    ::rotX = rotX;
-    ::rotY = rotY;
-    ::rotZ = rotZ;
+    ::qW = qW;
+    ::qX = qX;
+    ::qY = qY;
+    ::qZ = qZ;
 }
 
 
 int cell()	{ return cell; }
-float X()	{ return X; }
-float Y()	{ return Y; }
-float Z()	{ return Z; }
-float rotW()	{ return rotW; }
-float rotX()	{ return rotX; }
-float rotY()	{ return rotY; }
-float rotZ()	{ return rotZ; }
+float qW()	{ return qW; }
+float qX()	{ return qX; }
+float qY()	{ return qY; }
+float qZ()	{ return qZ; }
