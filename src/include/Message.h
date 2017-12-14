@@ -26,7 +26,6 @@
 # define CharacterList			object "/usr/Asheron/player/lib/message/CharacterList"
 # define CharacterError			object "/usr/Asheron/player/lib/message/CharacterError"
 # define UpdatePosition			object "/usr/Asheron/player/lib/message/UpdatePosition"
-# define GameEvent			object "/usr/Asheron/player/lib/message/GameEvent"
 # define ClientCharacterRestore		object "/usr/Asheron/player/lib/message/ClientCharacterRestore"
 # define ServerMessage			object "/usr/Asheron/player/lib/message/ServerMessage"
 # define ServerName			object "/usr/Asheron/player/lib/message/ServerName"

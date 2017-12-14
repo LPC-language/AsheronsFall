@@ -46,11 +46,13 @@ private void sendOptional(Message message)
  */
 private void sendEvent(int eventType, string body)
 {
-    GameEvent event;
+    Message message;
 
-    event = new GameEvent(eventType, player, body);
-    event->setSequence(++eventSeq);
-    interface->sendMessage(event->transport(), event->group(), TRUE);
+    message = new GenericMessage(MSG_GAME_EVENT,
+				 serialize("iii", player->id(), ++eventSeq,
+					   eventType) +
+				 body);
+    interface->sendMessage(message->transport(), message->group(), TRUE);
 }
 
 private void eventPopupString(string text)
