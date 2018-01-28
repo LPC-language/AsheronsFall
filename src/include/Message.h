@@ -1,6 +1,5 @@
 # define Message			object "/usr/Asheron/player/lib/message/Message"
 # define GenericMessage			object "/usr/Asheron/player/lib/message/GenericMessage"
-# define UpdateProperty			object "/usr/Asheron/player/lib/message/UpdateProperty"
 # define PrivateRemoveInstance		object "/usr/Asheron/player/lib/message/PrivateRemoveInstance"
 # define PrivateUpdateInt		object "/usr/Asheron/player/lib/message/PrivateUpdateInt"
 # define UpdateInt			object "/usr/Asheron/player/lib/message/UpdateInt"

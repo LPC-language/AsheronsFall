@@ -1,6 +1,6 @@
 # include "Message.h"
 
-inherit UpdateProperty;
+inherit GenericMessage;
 
 
 /*

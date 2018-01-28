@@ -41,7 +41,6 @@ static void create()
     compile_object(OBJECT_PATH(PrivateUpdateAttribute));
     compile_object(OBJECT_PATH(PrivateUpdateVital));
     compile_object(OBJECT_PATH(PrivateUpdateVitalLevel));
-    compile_object(OBJECT_PATH(GenericMessage));
     compile_object(OBJECT_PATH(CharacterCreateResponse));
     compile_object(OBJECT_PATH(ClientCharacterDelete));
     compile_object(OBJECT_PATH(ClientCharacterCreate));
