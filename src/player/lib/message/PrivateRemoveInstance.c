@@ -6,7 +6,8 @@ inherit UpdateProperty;
 /*
  * create PrivateRemoveInstance
  */
-static void create(int property)
+static void create(object obj, int property)
 {
-    ::create(MSG_PRIVATE_REMOVE_INSTANCE, serialize("i", property));
+    ::create(MSG_PRIVATE_REMOVE_INSTANCE,
+	     obj->removeInstanceProperty(property));
 }

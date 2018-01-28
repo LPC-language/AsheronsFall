@@ -11,9 +11,9 @@ static void create(object obj, int property)
     string body;
 
     /*
-     * note the order: property, objectId, value
+     * note the order: sequence, property, objectId, value
      */
     body = obj->getStringProperty(property);
-    ::create(MSG_UPDATE_STRING, body[.. 3] + serialize("i", obj->id()) +
-				"\0\0\0" + body[4 ..]);
+    ::create(MSG_UPDATE_STRING, body[.. 4] + serialize("i", obj->id()) +
+				"\0\0\0" + body[5 ..]);
 }

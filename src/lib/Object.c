@@ -1,4 +1,4 @@
-# include <status.h>
+# include <type.h>
 # include <Time.h>
 # include "Position.h"
 # include "Serialized.h"
@@ -11,8 +11,9 @@
 inherit Serialized;
 
 
-private int class;	/* "weenie" class id */
-private int id;		/* unique ID that identifies this object */
+private int class;		/* "weenie" class id */
+private int id;			/* unique ID that identifies this object */
+private mapping sequences;	/* sequences for this object */
 
 /*
  * create object
@@ -21,6 +22,7 @@ static void create(int class, int id)
 {
     ::class = class;
     ::id = id;
+    sequences = ([ ]);
 }
 
 
@@ -31,8 +33,73 @@ int id()			{ return id; }
 
 
 /* ========================================================================= *
+ *				sequences				     *
+ * ========================================================================= */
+
+# define SEQ_INDEX(n)		((n) & 0xffff)
+# define SEQ_MASK(n)		((n) >> 16)
+# define SEQ_VALUE		0
+# define SEQ_SEQUENCE		1
+
+# define SEQ_INSTANCE		0xffff0001
+# define SEQ_STATE		0xffff0002
+# define SEQ_OBJDESC		0xffff0003
+# define SEQ_POSITION		0xffff0004
+# define SEQ_VECTOR		0xffff0005
+# define SEQ_MOVEMENT		0xffff0006
+# define SEQ_TELEPORT		0xffff0007
+# define SEQ_FORCED		0xffff0008
+# define SEQ_CONTROLLED		0xffff0009
+# define SEQ_MOTION		0x7fff000a
+# define SEQ_STACK		0xffff000b
+
+/*
+ * update sequence number if value has changed
+ */
+private int seq(int n, mixed value)
+{
+    mixed *arr;
+
+    arr = sequences[SEQ_INDEX(n)];
+    if (!arr) {
+	sequences[SEQ_INDEX(n)] = arr = ({ value, 0 });
+	return 0;
+    } else if ((typeof(value) == T_OBJECT) ?
+		value->equals(arr[SEQ_VALUE]) : (value == arr[SEQ_VALUE])) {
+	return arr[SEQ_SEQUENCE] & SEQ_MASK(n);
+    } else {
+	arr[SEQ_VALUE] = value;
+	return ++arr[SEQ_SEQUENCE] & SEQ_MASK(n);
+    }
+}
+
+static int instanceSeq(int value)	{ return seq(SEQ_INSTANCE, value); }
+static int stateSeq(int value)		{ return seq(SEQ_STATE, value); }
+static int objDescSeq(int value)	{ return seq(SEQ_OBJDESC, value); }
+static int positionSeq(int value)	{ return seq(SEQ_POSITION, value); }
+static int vectorSeq(int value)		{ return seq(SEQ_VECTOR, value); }
+static int movementSeq(int value)	{ return seq(SEQ_MOVEMENT, value); }
+static int teleportSeq(int value)	{ return seq(SEQ_TELEPORT, value); }
+static int forcedSeq(int value)		{ return seq(SEQ_FORCED, value); }
+static int controlledSeq(int value)	{ return seq(SEQ_CONTROLLED, value); }
+
+
+/* ========================================================================= *
  *				properties				     *
  * ========================================================================= */
+
+# define BOOL(prop)		(0xff1000 + (prop))
+# define INT(prop)		(0xff2000 + (prop))
+# define LONG(prop)		(0xff3000 + (prop))
+# define DOUBLE(prop)		(0xff4000 + (prop))
+# define STRING(prop)		(0xff5000 + (prop))
+# define DATA(prop)		(0xff6000 + (prop))
+# define INSTANCE(prop)		(0xff7000 + (prop))
+# define POSITION(prop)		(0xff8000 + (prop))
+# define ATTR(prop)		(0xff9000 + (prop))
+# define VITAL_ATTR(prop)	(0xffa000 + (prop))
+# define VITAL(prop)		(0xffb000 + (prop))
+# define SKILL(prop)		(0xffc000 + (prop))
 
 /*
  * bool properties
@@ -45,7 +112,10 @@ static int boolProperty(int prop)
 
 string getBoolProperty(int prop)
 {
-    return serialize("ii", prop, boolProperty(prop));
+    int value;
+
+    value = boolProperty(prop);
+    return serialize("cii", seq(BOOL(prop), value), prop, value);
 }
 
 /*
@@ -59,7 +129,10 @@ static int intProperty(int prop)
 
 string getIntProperty(int prop)
 {
-    return serialize("ii", prop, intProperty(prop));
+    int value;
+
+    value = intProperty(prop);
+    return serialize("cii", seq(INT(prop), value), prop, value);
 }
 
 /*
@@ -73,7 +146,10 @@ static float longProperty(int prop)
 
 string getLongProperty(int prop)
 {
-    return serialize("il", prop, longProperty(prop));
+    float value;
+
+    value = longProperty(prop);
+    return serialize("cil", seq(LONG(prop), value), prop, value);
 }
 
 /*
@@ -92,6 +168,8 @@ static Time timeProperty(int prop)
 
 string getDoubleProperty(int prop)
 {
+    mixed value;
+
     switch (prop) {
     case PROP_DOUBLE_HEARTBEAT_TIMESTAMP:
     case PROP_DOUBLE_MOTION_TIMESTAMP:
@@ -133,10 +211,14 @@ string getDoubleProperty(int prop)
     case PROP_DOUBLE_START_MISSILE_ATTACK_TIMESTAMP:
     case PROP_DOUBLE_LAST_RARE_USED_TIMESTAMP:
     case PROP_DOUBLE_ALLEGIANCE_GAG_TIMESTAMP:
-	return serialize("iD", prop, timeProperty(prop));
+	value = timeProperty(prop);
+	return serialize("ciD", seq(DOUBLE(prop), value), prop, value);
+	break;
 
     default:
-	return serialize("id", prop, doubleProperty(prop));
+	value = doubleProperty(prop);
+	return serialize("cid", seq(DOUBLE(prop), value), prop, value);
+	break;
     }
 }
 
@@ -151,7 +233,10 @@ static string stringProperty(int prop)
 
 string getStringProperty(int prop)
 {
-    return serialize("it", prop, stringProperty(prop));
+    string value;
+
+    value = stringProperty(prop);
+    return serialize("cit", seq(STRING(prop), value), prop, value);
 }
 
 /*
@@ -165,7 +250,10 @@ static int dataProperty(int prop)
 
 string getDataProperty(int prop)
 {
-    return serialize("ii", prop, dataProperty(prop));
+    int value;
+
+    value = dataProperty(prop);
+    return serialize("cii", seq(DATA(prop), value), prop, value);
 }
 
 /*
@@ -179,7 +267,16 @@ static int instanceProperty(int prop)
 
 string getInstanceProperty(int prop)
 {
-    return serialize("ii", prop, instanceProperty(prop));
+    int value;
+
+    value = instanceProperty(prop);
+    return serialize("cii", seq(INSTANCE(prop), value), prop, value);
+}
+
+string removeInstanceProperty(int prop)
+{
+    /* XXX does this reset the sequence? */
+    return serialize("ci", seq(INSTANCE(prop), nil), prop);
 }
 
 /*
@@ -193,5 +290,77 @@ static Position positionProperty(int prop)
 
 string getPositionProperty(int prop)
 {
-    return serialize("i", prop) + positionProperty(prop)->transport();
+    Position value;
+
+    value = positionProperty(prop);
+    return serialize("ci", seq(POSITION(prop), value), prop) +
+	   value->transport();
+}
+
+/*
+ * attribute properties
+ */
+
+static int attribute(int attr)
+{
+    error("Object without attributes");
+}
+
+string getAttributeProperty(int prop)
+{
+    int value;
+
+    value = attribute(prop);
+    return serialize("cii", seq(ATTR(prop), value), prop, value);
+}
+
+/*
+ * vital attribute properties
+ */
+
+static int vitalAttribute(int vitalAttr)
+{
+    error("Object without vital attributes");
+}
+
+string getVitalAttributeProperty(int prop)
+{
+    int value;
+
+    value = vitalAttribute(prop);
+    return serialize("cii", seq(VITAL_ATTR(prop), value), prop, value);
+}
+
+/*
+ * vital properties
+ */
+
+static int vital(int vital)
+{
+    error("Object without vitals");
+}
+
+string getVitalProperty(int prop)
+{
+    int value;
+
+    value = vital(prop);
+    return serialize("cii", seq(VITAL(prop), value), prop, value);
+}
+
+/*
+ * skill properties
+ */
+
+static int skill(int skill)
+{
+    error("Object without skills");
+}
+
+string getSkillProperty(int prop)
+{
+    int value;
+
+    value = skill(prop);
+    return serialize("cii", seq(SKILL(prop), value), prop, value);
 }

@@ -1,4 +1,5 @@
 # include "Vector.h"
+# include "Position.h"
 
 inherit Vector;
 
@@ -43,3 +44,13 @@ float qW()	{ return qW; }
 float qX()	{ return qX; }
 float qY()	{ return qY; }
 float qZ()	{ return qZ; }
+
+
+/*
+ * this == other
+ */
+int equals(Position other)
+{
+    return (cell == other->cell() && ::equals(other) && qW == other->qW() &&
+	    qX == other->qX() && qY == other->qY() && qZ == other->qZ());
+}

@@ -9,7 +9,7 @@ inherit Position;
 static void create(string blob, int offset)
 {
     int cell;
-    float X, Y, Z, rotW, rotX, rotY, rotZ;
+    float X, Y, Z, qW, qX, qY, qZ;
 
     ({
 	offset,
@@ -17,10 +17,10 @@ static void create(string blob, int offset)
 	X,
 	Y,
 	Z,
-	rotW,
-	rotX,
-	rotY,
-	rotZ
-    }) = deSerialize(blob, offset, headerLayout());
-    ::create(cell, X, Y, Z, rotW, rotX, rotY, rotZ);
+	qW,
+	qX,
+	qY,
+	qZ
+    }) = deSerialize(blob, offset, "ifffffff");
+    ::create(cell, X, Y, Z, qW, qX, qY, qZ);
 }

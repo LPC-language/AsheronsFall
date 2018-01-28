@@ -1,4 +1,4 @@
-# include "ObjDesc.h"
+# include "Object.h"
 # include "dat.h"
 
 inherit ObjDesc;

@@ -1,4 +1,5 @@
 # define Object			object "/usr/Asheron/lib/Object"
+# define ObjDesc		object "/usr/Asheron/lib/ObjDesc"
 # define PhysicalObject		object "/usr/Asheron/lib/PhysicalObject"
 # define Container		object "/usr/Asheron/lib/Container"
 
