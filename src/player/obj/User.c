@@ -168,12 +168,12 @@ private string properties()
     flags = FLAG_INT | FLAG_LONG | FLAG_BOOL | FLAG_DOUBLE | FLAG_STRING |
 	    FLAG_DATA;
     return serialize("ii", flags, 0x0a) +
-	   serializeMapping(intList, 0x40, player, "getIntProperty") +
-	   serializeMapping(longList, 0x40, player, "getLongProperty") +
-	   serializeMapping(boolList, 0x20, player, "getBoolProperty") +
-	   serializeMapping(doubleList, 0x20, player, "getDoubleProperty") +
-	   serializeMapping(stringList, 0x10, player, "getStringProperty") +
-	   serializeMapping(dataList, 0x20, player, "getDataProperty");
+	   serializeMapping(intList, 0x40, player, "rawIntProperty") +
+	   serializeMapping(longList, 0x40, player, "rawLongProperty") +
+	   serializeMapping(boolList, 0x20, player, "rawBoolProperty") +
+	   serializeMapping(doubleList, 0x20, player, "rawDoubleProperty") +
+	   serializeMapping(stringList, 0x10, player, "rawStringProperty") +
+	   serializeMapping(dataList, 0x20, player, "rawDataProperty");
 }
 
 private string abilities()
@@ -223,16 +223,16 @@ private string abilities()
 
     flags = FLAG_ATTRIBUTE | FLAG_SKILL;
     return serialize("iii", flags, 0x01, 0x1ff) +
-	   player->getAttribute(ATTR_STRENGTH) +
-	   player->getAttribute(ATTR_ENDURANCE) +
-	   player->getAttribute(ATTR_QUICKNESS) +
-	   player->getAttribute(ATTR_COORDINATION) +
-	   player->getAttribute(ATTR_FOCUS) +
-	   player->getAttribute(ATTR_SELF) +
-	   player->getVitalAttribute(VITAL_HEALTH) +
-	   player->getVitalAttribute(VITAL_STAMINA) +
-	   player->getVitalAttribute(VITAL_MANA) +
-	   serializeMapping(skillList, 0x20, player, "getSkill");
+	   player->rawAttribute(ATTR_STRENGTH) +
+	   player->rawAttribute(ATTR_ENDURANCE) +
+	   player->rawAttribute(ATTR_QUICKNESS) +
+	   player->rawAttribute(ATTR_COORDINATION) +
+	   player->rawAttribute(ATTR_FOCUS) +
+	   player->rawAttribute(ATTR_SELF) +
+	   player->rawVitalAttribute(VITAL_HEALTH) +
+	   player->rawVitalAttribute(VITAL_STAMINA) +
+	   player->rawVitalAttribute(VITAL_MANA) +
+	   serializeMapping(skillList, 0x20, player, "rawSkill");
 }
 
 private void eventPlayerDescription()

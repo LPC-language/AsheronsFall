@@ -8,5 +8,5 @@ inherit GenericMessage;
  */
 static void create(object obj, int vital)
 {
-    ::create(MSG_PRIVATE_UPDATE_VITAL, obj->getVitalAttributeProperty(vital));
+    ::create(MSG_PRIVATE_UPDATE_VITAL, obj->getVitalAttribute(vital));
 }

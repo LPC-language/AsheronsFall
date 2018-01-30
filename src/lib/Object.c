@@ -53,6 +53,19 @@ int id()			{ return id; }
 # define SEQ_MOTION		0x7fff000a
 # define SEQ_STACK		0xffff000b
 
+# define BOOL(prop)		(0xff1000 + (prop))
+# define INT(prop)		(0xff2000 + (prop))
+# define LONG(prop)		(0xff3000 + (prop))
+# define DOUBLE(prop)		(0xff4000 + (prop))
+# define STRING(prop)		(0xff5000 + (prop))
+# define DATA(prop)		(0xff6000 + (prop))
+# define INSTANCE(prop)		(0xff7000 + (prop))
+# define POSITION(prop)		(0xff8000 + (prop))
+# define ATTR(prop)		(0xff9000 + (prop))
+# define VITAL_ATTR(prop)	(0xffa000 + (prop))
+# define VITAL(prop)		(0xffb000 + (prop))
+# define SKILL(prop)		(0xffc000 + (prop))
+
 /*
  * update sequence number if value has changed
  */
@@ -83,23 +96,29 @@ static int teleportSeq(int value)	{ return seq(SEQ_TELEPORT, value); }
 static int forcedSeq(int value)		{ return seq(SEQ_FORCED, value); }
 static int controlledSeq(int value)	{ return seq(SEQ_CONTROLLED, value); }
 
+static int attributeSeq(int attr, int value)
+{
+    return seq(ATTR(attr), value);
+}
+
+static int vitalAttributeSeq(int vitalAttr, int value)
+{
+    return seq(VITAL_ATTR(vitalAttr), value);
+}
+
+static int vitalSeq(int vital, int value)
+{
+    return seq(VITAL(vital), value);
+}
+
+static int skillSeq(int skill, int value)
+{
+    return seq(SKILL(skill), value);
+}
 
 /* ========================================================================= *
  *				properties				     *
  * ========================================================================= */
-
-# define BOOL(prop)		(0xff1000 + (prop))
-# define INT(prop)		(0xff2000 + (prop))
-# define LONG(prop)		(0xff3000 + (prop))
-# define DOUBLE(prop)		(0xff4000 + (prop))
-# define STRING(prop)		(0xff5000 + (prop))
-# define DATA(prop)		(0xff6000 + (prop))
-# define INSTANCE(prop)		(0xff7000 + (prop))
-# define POSITION(prop)		(0xff8000 + (prop))
-# define ATTR(prop)		(0xff9000 + (prop))
-# define VITAL_ATTR(prop)	(0xffa000 + (prop))
-# define VITAL(prop)		(0xffb000 + (prop))
-# define SKILL(prop)		(0xffc000 + (prop))
 
 /*
  * bool properties
@@ -236,7 +255,8 @@ string getStringProperty(int prop)
     string value;
 
     value = stringProperty(prop);
-    return serialize("cit", seq(STRING(prop), value), prop, value);
+    return serialize("c", seq(STRING(prop), value)) +
+	   serialize("it", prop, value);
 }
 
 /*
@@ -295,72 +315,4 @@ string getPositionProperty(int prop)
     value = positionProperty(prop);
     return serialize("ci", seq(POSITION(prop), value), prop) +
 	   value->transport();
-}
-
-/*
- * attribute properties
- */
-
-static int attribute(int attr)
-{
-    error("Object without attributes");
-}
-
-string getAttributeProperty(int prop)
-{
-    int value;
-
-    value = attribute(prop);
-    return serialize("cii", seq(ATTR(prop), value), prop, value);
-}
-
-/*
- * vital attribute properties
- */
-
-static int vitalAttribute(int vitalAttr)
-{
-    error("Object without vital attributes");
-}
-
-string getVitalAttributeProperty(int prop)
-{
-    int value;
-
-    value = vitalAttribute(prop);
-    return serialize("cii", seq(VITAL_ATTR(prop), value), prop, value);
-}
-
-/*
- * vital properties
- */
-
-static int vital(int vital)
-{
-    error("Object without vitals");
-}
-
-string getVitalProperty(int prop)
-{
-    int value;
-
-    value = vital(prop);
-    return serialize("cii", seq(VITAL(prop), value), prop, value);
-}
-
-/*
- * skill properties
- */
-
-static int skill(int skill)
-{
-    error("Object without skills");
-}
-
-string getSkillProperty(int prop)
-{
-    int value;
-
-    value = skill(prop);
-    return serialize("cii", seq(SKILL(prop), value), prop, value);
 }

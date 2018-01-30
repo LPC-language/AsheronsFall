@@ -141,32 +141,43 @@ static void delete()
 
 string getAttribute(int attr)
 {
-    int incr;
+    int incr, value;
 
     incr = attributes[attr - 1];
-    return serialize("iiu", incr, ::attribute(attr),
+    value = attribute(attr);
+    return serialize("ciiiu", attributeSeq(attr, value), attr, incr, value,
 		     USER_SERVER->attributeXp(incr));
 }
 
 string getVitalAttribute(int vital)
 {
-    int incr;
+    int incr, value;
 
     incr = vitalAttributes[vital - 1];
-    return serialize("iiui", incr, ::vitalAttribute(vital),
-		     USER_SERVER->vitalXp(incr), ::vital(vital));
+    value = vitalAttribute(vital);
+    return serialize("ciiiui", vitalAttributeSeq(vital, value), vital, incr,
+		     value, USER_SERVER->vitalXp(incr), vital(vital));
 }
 
 string getSkill(int skill)
 {
-    int statIncr, stat, incr;
+    int statIncr, stat, incr, value;
 
     statIncr = skills[skill - 1];
     stat = SKILL_STAT(statIncr);
     incr = SKILL_INCR(statIncr);
-    return serialize("issiuiiD", skill, incr, TRUE, stat,
-		     USER_SERVER->skillXp(stat, incr), ::skill(skill), 0,
+    value = skill(skill);
+    return serialize("cissiuiiD", skillSeq(skill, value), skill, incr, TRUE,
+		     stat, USER_SERVER->skillXp(stat, incr), value, 0,
 		     new Time(0, 0.0));
+}
+
+string getVital(int vital)
+{
+    int value;
+
+    value = vital(vital);
+    return serialize("cii", vitalSeq(vital, value), vital, value);
 }
 
 int *displayTitles()
@@ -364,6 +375,18 @@ static float doubleProperty(int prop)
 
     return ::doubleProperty(prop);
 }
+
+string rawBoolProperty(int prop)     { return getBoolProperty(prop)[1 ..]; }
+string rawIntProperty(int prop)      { return getIntProperty(prop)[1 ..]; }
+string rawLongProperty(int prop)     { return getLongProperty(prop)[1 ..]; }
+string rawDoubleProperty(int prop)   { return getDoubleProperty(prop)[1 ..]; }
+string rawStringProperty(int prop)   { return getStringProperty(prop)[1 ..]; }
+string rawDataProperty(int prop)     { return getDataProperty(prop)[1 ..]; }
+string rawInstanceProperty(int prop) { return getInstanceProperty(prop)[1 ..]; }
+string rawPositionProperty(int prop) { return getPositionProperty(prop)[1 ..]; }
+string rawAttribute(int attr)	     { return getAttribute(attr)[5 ..]; }
+string rawVitalAttribute(int vital)  { return getVitalAttribute(vital)[5 ..]; }
+string rawSkill(int skill)	     { return getSkill(skill)[1 ..]; }
 
 
 Account account()	{ return account; }
