@@ -1,7 +1,7 @@
 # include "Object.h"
 
 
-private PhysicalObject *inventory;	/* objects contained */
+private GameObject *inventory;		/* objects contained */
 private int capacity;			/* maximum inventory size */
 
 /*

@@ -3,7 +3,7 @@
 # include "Creature.h"
 # include "properties.h"
 
-inherit PhysicalObject;
+inherit GameObject;
 
 /*
  * a creature with vitals, attributes, skills, level, experience and inventory
