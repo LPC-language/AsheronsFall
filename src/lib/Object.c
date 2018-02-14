@@ -67,9 +67,35 @@ int id()			{ return id; }
 # define SKILL(prop)		(0xffc000 + (prop))
 
 /*
+ * return current sequence number
+ */
+private int seq(int n)
+{
+    mixed seq;
+
+    seq = sequences[SEQ_INDEX(n)];
+    return (seq != nil) ? seq & SEQ_MASK(n) : 0;
+}
+
+/*
+ * increment sequence number
+ */
+private int incrSeq(int n)
+{
+    int index;
+
+    index = SEQ_INDEX(n);
+    if (sequences[index] == nil) {
+	return sequences[index] = 1;
+    } else {
+	return ++sequences[index] & SEQ_MASK(n);
+    }
+}
+
+/*
  * update sequence number if value has changed
  */
-private int seq(int n, mixed value)
+private int updateSeq(int n, mixed value)
 {
     mixed *arr;
 
@@ -86,34 +112,44 @@ private int seq(int n, mixed value)
     }
 }
 
-static int instanceSeq(int value)	{ return seq(SEQ_INSTANCE, value); }
-static int stateSeq(int value)		{ return seq(SEQ_STATE, value); }
-static int objDescSeq(int value)	{ return seq(SEQ_OBJDESC, value); }
-static int positionSeq(int value)	{ return seq(SEQ_POSITION, value); }
-static int vectorSeq(int value)		{ return seq(SEQ_VECTOR, value); }
-static int movementSeq(int value)	{ return seq(SEQ_MOVEMENT, value); }
-static int teleportSeq(int value)	{ return seq(SEQ_TELEPORT, value); }
-static int forcedSeq(int value)		{ return seq(SEQ_FORCED, value); }
-static int controlledSeq(int value)	{ return seq(SEQ_CONTROLLED, value); }
+static int instanceSeq()	{ return seq(SEQ_INSTANCE); }
+static int stateSeq()		{ return seq(SEQ_STATE); }
+static int objDescSeq()		{ return seq(SEQ_OBJDESC); }
+static int positionSeq()	{ return seq(SEQ_POSITION); }
+static int vectorSeq()		{ return seq(SEQ_VECTOR); }
+static int movementSeq()	{ return seq(SEQ_MOVEMENT); }
+static int teleportSeq()	{ return seq(SEQ_TELEPORT); }
+static int forcedSeq()		{ return seq(SEQ_FORCED); }
+static int controlledSeq()	{ return seq(SEQ_CONTROLLED); }
+
+static int incrInstanceSeq()	{ return incrSeq(SEQ_INSTANCE); }
+static int incrStateSeq()	{ return incrSeq(SEQ_STATE); }
+static int incrObjDescSeq()	{ return incrSeq(SEQ_OBJDESC); }
+static int incrPositionSeq()	{ return incrSeq(SEQ_POSITION); }
+static int incrVectorSeq()	{ return incrSeq(SEQ_VECTOR); }
+static int incrMovementSeq()	{ return incrSeq(SEQ_MOVEMENT); }
+static int incrTeleportSeq()	{ return incrSeq(SEQ_TELEPORT); }
+static int incrForcedSeq()	{ return incrSeq(SEQ_FORCED); }
+static int incrControlledSeq()	{ return incrSeq(SEQ_CONTROLLED); }
 
 static int attributeSeq(int attr, int value)
 {
-    return seq(ATTR(attr), value);
+    return updateSeq(ATTR(attr), value);
 }
 
 static int vitalAttributeSeq(int vitalAttr, int value)
 {
-    return seq(VITAL_ATTR(vitalAttr), value);
+    return updateSeq(VITAL_ATTR(vitalAttr), value);
 }
 
 static int vitalSeq(int vital, int value)
 {
-    return seq(VITAL(vital), value);
+    return updateSeq(VITAL(vital), value);
 }
 
 static int skillSeq(int skill, int value)
 {
-    return seq(SKILL(skill), value);
+    return updateSeq(SKILL(skill), value);
 }
 
 /* ========================================================================= *
@@ -134,7 +170,7 @@ string getBoolProperty(int prop)
     int value;
 
     value = boolProperty(prop);
-    return serialize("cii", seq(BOOL(prop), value), prop, value);
+    return serialize("cii", updateSeq(BOOL(prop), value), prop, value);
 }
 
 /*
@@ -151,7 +187,7 @@ string getIntProperty(int prop)
     int value;
 
     value = intProperty(prop);
-    return serialize("cii", seq(INT(prop), value), prop, value);
+    return serialize("cii", updateSeq(INT(prop), value), prop, value);
 }
 
 /*
@@ -168,7 +204,7 @@ string getLongProperty(int prop)
     float value;
 
     value = longProperty(prop);
-    return serialize("cil", seq(LONG(prop), value), prop, value);
+    return serialize("cil", updateSeq(LONG(prop), value), prop, value);
 }
 
 /*
@@ -231,12 +267,12 @@ string getDoubleProperty(int prop)
     case PROP_DOUBLE_LAST_RARE_USED_TIMESTAMP:
     case PROP_DOUBLE_ALLEGIANCE_GAG_TIMESTAMP:
 	value = timeProperty(prop);
-	return serialize("ciD", seq(DOUBLE(prop), value), prop, value);
+	return serialize("ciD", updateSeq(DOUBLE(prop), value), prop, value);
 	break;
 
     default:
 	value = doubleProperty(prop);
-	return serialize("cid", seq(DOUBLE(prop), value), prop, value);
+	return serialize("cid", updateSeq(DOUBLE(prop), value), prop, value);
 	break;
     }
 }
@@ -255,7 +291,7 @@ string getStringProperty(int prop)
     string value;
 
     value = stringProperty(prop);
-    return serialize("c", seq(STRING(prop), value)) +
+    return serialize("c", updateSeq(STRING(prop), value)) +
 	   serialize("it", prop, value);
 }
 
@@ -273,7 +309,7 @@ string getDataProperty(int prop)
     int value;
 
     value = dataProperty(prop);
-    return serialize("cii", seq(DATA(prop), value), prop, value);
+    return serialize("cii", updateSeq(DATA(prop), value), prop, value);
 }
 
 /*
@@ -290,13 +326,13 @@ string getInstanceProperty(int prop)
     int value;
 
     value = instanceProperty(prop);
-    return serialize("cii", seq(INSTANCE(prop), value), prop, value);
+    return serialize("cii", updateSeq(INSTANCE(prop), value), prop, value);
 }
 
 string removeInstanceProperty(int prop)
 {
     /* XXX does this reset the sequence? */
-    return serialize("ci", seq(INSTANCE(prop), nil), prop);
+    return serialize("ci", updateSeq(INSTANCE(prop), nil), prop);
 }
 
 /*
@@ -313,6 +349,6 @@ string getPositionProperty(int prop)
     Position value;
 
     value = positionProperty(prop);
-    return serialize("ci", seq(POSITION(prop), value), prop) +
+    return serialize("ci", updateSeq(POSITION(prop), value), prop) +
 	   value->transport();
 }
