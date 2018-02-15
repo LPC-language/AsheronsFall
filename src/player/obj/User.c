@@ -1,6 +1,8 @@
 # include "Serialized.h"
 # include "Interface.h"
 # include "Message.h"
+# include "GameEvent.h"
+# include "GameAction.h"
 # include "Creature.h"
 # include "Position.h"
 # include "properties.h"
@@ -36,11 +38,6 @@ private void sendOptional(Message message)
 }
 
 
-# define EVT_POPUP_STRING		0x0004
-# define EVT_PLAYER_DESCRIPTION		0x0013
-# define EVT_CHARACTER_TITLE		0x0029
-# define EVT_STATUS_MESSAGE		0x028a
-
 /*
  * send an event to the player
  */
@@ -59,6 +56,26 @@ private void eventPopupString(string text)
 {
     sendEvent(EVT_POPUP_STRING, serialize("t", text));
 }
+
+
+private void receiveAction(string blob)
+{
+    int offset, seq, type;
+    GameAction action;
+
+    ({ offset, seq, type }) = deSerialize(blob, 4, "ii");
+    switch (type) {
+    case ACT_LOGIN_COMPLETE:
+	send(new GenericMessage(MSG_SET_STATE,
+				serialize("iiss", player->id(), 0x00400408,
+					  1, 1)));
+	break;
+
+    default:
+	error("Unhandled GameAction type " + type);
+    }
+}
+
 
 # define FLAG_INT		0x01
 # define FLAG_BOOL		0x02
@@ -368,6 +385,10 @@ static void receive(string blob, int group)
 				serialize("i", player->id())));
 	eventPopupString("Asheron has been defeated by Wael'Bharon!\nShadows run rampant in Dereth.");
 	send(new GenericMessage(MSG_OBJECT_CREATE, player->transport()));
+	break;
+
+    case MSG_GAME_ACTION:
+	receiveAction(blob);
 	break;
 
     default:

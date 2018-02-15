@@ -1,4 +1,5 @@
 # include "Message.h"
+# include "GameAction.h"
 # include "Object.h"
 # include "User.h"
 # include "Creature.h"
@@ -48,6 +49,7 @@ static void create()
     compile_object(OBJECT_PATH(CharacterList));
     compile_object(OBJECT_PATH(CharacterError));
     compile_object(OBJECT_PATH(UpdatePosition));
+    compile_object(OBJECT_PATH(GameAction));
     compile_object(OBJECT_PATH(ClientCharacterRestore));
     compile_object(OBJECT_PATH(ServerMessage));
     compile_object(OBJECT_PATH(ServerName));
