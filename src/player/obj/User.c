@@ -403,6 +403,13 @@ static void receive(string blob, int group)
 	send(new GenericMessage(MSG_OBJECT_CREATE, player->transport()));
 	break;
 
+    case MSG_CHARACTER_LOGOFF:
+	if (deSerialize(blob, 4, "i")[1] == player->id()) {
+	    send(new Message(MSG_CHARACTER_LOGOFF_RESPONSE));
+	    loginScreen();
+	}
+	break;
+
     case MSG_GAME_ACTION:
 	receiveAction(blob);
 	break;
