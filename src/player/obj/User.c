@@ -7,6 +7,7 @@
 # include "Position.h"
 # include "properties.h"
 # include "chat.h"
+# include "motion.h"
 # include "User.h"
 
 inherit Serialized;
@@ -69,6 +70,21 @@ private void receiveAction(string blob)
 	send(new GenericMessage(MSG_SET_STATE,
 				serialize("iiss", player->id(), 0x00400408,
 					  1, 1)));
+	break;
+
+    case ACT_MOVE_TO_STATE:
+	action = new MoveToState(blob, offset);
+	send(new GenericMessage(MSG_MOVEMENT_EVENT,
+				serialize("issssccsi", player->id(), 1, 1, 0,
+					  TRUE, 0, action->flags(),
+					  MOTION_NONCOMBAT, 0)));
+	break;
+
+    case ACT_AUTONOMOUS_POSITION:
+	action = new AutonomousPosition(blob, offset);
+	send(new UpdatePosition(player->id(), action->position(),
+				action->grounded(), action->instanceSeq(), 1,
+				action->teleportSeq(), action->forcedSeq()));
 	break;
 
     default:

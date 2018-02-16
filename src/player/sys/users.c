@@ -54,6 +54,10 @@ static void create()
     compile_object(OBJECT_PATH(ServerMessage));
     compile_object(OBJECT_PATH(ServerName));
 
+    /* actions */
+    compile_object(OBJECT_PATH(MoveToState));
+    compile_object(OBJECT_PATH(AutonomousPosition));
+
     call_out("loadXpTables", 0);
 }
 

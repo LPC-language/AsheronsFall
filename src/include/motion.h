@@ -1,0 +1,2 @@
+# define MOTION_READY		0x0003
+# define MOTION_NONCOMBAT	0x003d
