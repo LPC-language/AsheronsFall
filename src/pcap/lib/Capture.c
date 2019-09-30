@@ -1,4 +1,5 @@
 # include <Iterator.h>
+# include <Time.h>
 # include "Serialized.h"
 # include "File.h"
 # include "pcap.h"
@@ -95,7 +96,7 @@ mixed *iteratorNext(mixed offset)
 
     return ({
 	offset + length,
-	new PacketEther(time, (float) utime / 1000000.0, origLength,
+	new PacketEther(new Time(time, (float) utime / 1000000.0), origLength,
 			file->read(offset, length))
    });
 }

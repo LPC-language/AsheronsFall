@@ -1,3 +1,4 @@
+# include <Time.h>
 # include "pcap.h"
 
 
@@ -19,18 +20,16 @@
 
 # define UDP_HEADER_SIZE	8
 
-private int time;		/* time of capture */
-private float mtime;		/* mtime of capture */
+private Time time;		/* time of capture */
 private int origLength;		/* original length */
 private string blob;		/* raw packet blob */
 
 /*
  * initialize a captured network packet container
  */
-static void create(int time, float mtime, int origLength, string blob)
+static void create(Time time, int origLength, string blob)
 {
     ::time = time;
-    ::mtime = mtime;
     ::origLength = origLength;
     ::blob = blob;
 }
@@ -94,13 +93,12 @@ PacketAC packetAC()
     /*
      * AC layer
      */
-    return new PacketAC(time, mtime, srcAddr, srcPort, destAddr, destPort,
+    return new PacketAC(time, srcAddr, srcPort, destAddr, destPort,
 			blob[ihl + ETHER_HEADER_SIZE + UDP_HEADER_SIZE ..
 					 ihl + length + ETHER_HEADER_SIZE - 1]);
 }
 
 
-int time()		{ return time; }
-float mtime()		{ return mtime; }
+Time time()		{ return time; }
 int origLength()	{ return origLength; }
 string blob()		{ return blob; }

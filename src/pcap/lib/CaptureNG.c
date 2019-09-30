@@ -1,4 +1,5 @@
 # include <Iterator.h>
+# include <Time.h>
 # include "Serialized.h"
 # include "File.h"
 # include "pcap.h"
@@ -107,7 +108,7 @@ mixed *iteratorNext(mixed offset)
 	case PCAPNG_SIMPLE_PACKET:
 	    return ({
 		offset + length,
-		new PacketEther(0, 0.0, origLength,
+		new PacketEther(new Time(0, 0.0), origLength,
 				file->read(offset + PACKET_HEADER_SIZE,
 					   origLength))
 	   });
@@ -135,7 +136,7 @@ mixed *iteratorNext(mixed offset)
 
 	    return ({
 		offset + length,
-		new PacketEther(time, mtime, origLength,
+		new PacketEther(new Time(time, mtime), origLength,
 				file->read(offset + PACKET_HEADER_SIZE +
 							PACKET_ENHANCED_SIZE,
 					   snapLength))
