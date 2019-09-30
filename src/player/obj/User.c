@@ -336,7 +336,7 @@ static void receive(string blob, int group)
 	break;
 
     case MSG_CHARACTER_CREATE:
-	message = new ClientCharacterCreate(blob);
+	message = new RemoteCharacterCreate(blob);
 	({ response, id }) = account->characterCreate(message->name());
 	if (response == CHARGEN_RESPONSE_OK) {
 	    send(new CharacterCreateResponse(response, id, message->name(), 0));
@@ -346,7 +346,7 @@ static void receive(string blob, int group)
 	break;
 
     case MSG_CHARACTER_DELETE:
-	message = new ClientCharacterDelete(blob);
+	message = new RemoteCharacterDelete(blob);
 	if (message->accountName() == account->name()) {
 	    response = account->characterDelete(message->slot());
 	    if (response == CHARERR_OK) {
@@ -361,7 +361,7 @@ static void receive(string blob, int group)
 	break;
 
     case MSG_CHARACTER_RESTORE:
-	message = new ClientCharacterRestore(blob);
+	message = new RemoteCharacterRestore(blob);
 	({
 	    response,
 	    player
@@ -382,7 +382,7 @@ static void receive(string blob, int group)
 	break;
 
     case MSG_CHARACTER_ENTER_WORLD:
-	message = new ClientCharacterEnterWorld(blob);
+	message = new RemoteCharacterEnterWorld(blob);
 	if (message->accountName() != account->name()) {
 	    send(new CharacterError(CHARERR_NOT_OWNED));
 	    break;

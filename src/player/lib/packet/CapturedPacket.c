@@ -1,7 +1,7 @@
 # include "RandSeq.h"
 # include "Packet.h"
 
-inherit ClientPacket;
+inherit RemotePacket;
 
 
 /*
@@ -45,21 +45,21 @@ static int processOptions(int flags, string blob, int offset)
     if (flags & PACKET_REQUEST_RETRANSMIT) {
 	RequestRetransmit requestRetransmit;
 
-	requestRetransmit = new ClientRequestRetransmit(blob, offset);
+	requestRetransmit = new RemoteRequestRetransmit(blob, offset);
 	addData(requestRetransmit);
 	offset += requestRetransmit->size();
     }
     if (flags & PACKET_REJECT_RETRANSMIT) {
 	RejectRetransmit rejectRetransmit;
 
-	rejectRetransmit = new ClientRejectRetransmit(blob, offset);
+	rejectRetransmit = new RemoteRejectRetransmit(blob, offset);
 	addData(rejectRetransmit);
 	offset += rejectRetransmit->size();
     }
     if (flags & PACKET_ACK_SEQUENCE) {
 	AckSequence ackSequence;
 
-	ackSequence = new ClientAckSequence(blob, offset);
+	ackSequence = new RemoteAckSequence(blob, offset);
 	addData(ackSequence);
 	offset += ackSequence->size();
     }
@@ -69,7 +69,7 @@ static int processOptions(int flags, string blob, int offset)
     if (flags & PACKET_LOGIN_REQUEST) {
 	LoginRequest loginRequest;
 
-	loginRequest = new ClientLoginRequest(blob, offset);
+	loginRequest = new RemoteLoginRequest(blob, offset);
 	addData(loginRequest);
 	offset += loginRequest->size();
     }
@@ -90,42 +90,42 @@ static int processOptions(int flags, string blob, int offset)
     if (flags & PACKET_CONNECT_RESPONSE) {
 	ConnectResponse connectResponse;
 
-	connectResponse = new ClientConnectResponse(blob, offset);
+	connectResponse = new RemoteConnectResponse(blob, offset);
 	addData(connectResponse);
 	offset += connectResponse->size();
     }
     if (flags & PACKET_CONNECT_ERROR) {
 	ConnectError connectError;
 
-	connectError = new ClientConnectError(blob, offset);
+	connectError = new RemoteConnectError(blob, offset);
 	addData(connectError);
 	offset += connectError->size();
     }
     if (flags & PACKET_CONNECT_CLOSE) {
 	ConnectClose connectClose;
 
-	connectClose = new ClientConnectClose(blob, offset);
+	connectClose = new RemoteConnectClose(blob, offset);
 	addData(connectClose);
 	offset += connectClose->size();
     }
     if (flags & PACKET_CICMD_COMMAND) {
 	CICMDCommand command;
 
-	command = new ClientCICMDCommand(blob, offset);
+	command = new RemoteCICMDCommand(blob, offset);
 	addData(command);
 	offset += command->size();
     }
     if (flags & PACKET_TIME_SYNCH) {
 	TimeSynch timeSynch;
 
-	timeSynch = new ClientTimeSynch(blob, offset);
+	timeSynch = new RemoteTimeSynch(blob, offset);
 	addData(timeSynch);
 	offset += timeSynch->size();
     }
     if (flags & PACKET_ECHO_REQUEST) {
 	EchoRequest echoRequest;
 
-	echoRequest = new ClientEchoRequest(blob, offset);
+	echoRequest = new RemoteEchoRequest(blob, offset);
 	addData(echoRequest);
 	offset += echoRequest->size();
     }
@@ -139,7 +139,7 @@ static int processOptions(int flags, string blob, int offset)
     if (flags & PACKET_FLOW) {
 	Flow flow;
 
-	flow = new ClientFlow(blob, offset);
+	flow = new RemoteFlow(blob, offset);
 	addData(flow);
 	offset += flow->size();
     }

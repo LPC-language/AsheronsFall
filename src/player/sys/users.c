@@ -43,14 +43,14 @@ static void create()
     compile_object(OBJECT_PATH(PrivateUpdateVital));
     compile_object(OBJECT_PATH(PrivateUpdateVitalLevel));
     compile_object(OBJECT_PATH(CharacterCreateResponse));
-    compile_object(OBJECT_PATH(ClientCharacterDelete));
-    compile_object(OBJECT_PATH(ClientCharacterCreate));
-    compile_object(OBJECT_PATH(ClientCharacterEnterWorld));
+    compile_object(OBJECT_PATH(RemoteCharacterDelete));
+    compile_object(OBJECT_PATH(RemoteCharacterCreate));
+    compile_object(OBJECT_PATH(RemoteCharacterEnterWorld));
     compile_object(OBJECT_PATH(CharacterList));
     compile_object(OBJECT_PATH(CharacterError));
     compile_object(OBJECT_PATH(UpdatePosition));
     compile_object(OBJECT_PATH(GameAction));
-    compile_object(OBJECT_PATH(ClientCharacterRestore));
+    compile_object(OBJECT_PATH(RemoteCharacterRestore));
     compile_object(OBJECT_PATH(ServerMessage));
     compile_object(OBJECT_PATH(ServerName));
 

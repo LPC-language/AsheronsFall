@@ -14,7 +14,7 @@ static void create()
 {
     userd = find_object(USERD);
     compile_object(OBJECT_PATH(UDPRelay));
-    compile_object(OBJECT_PATH(ClientConnectResponse));
+    compile_object(OBJECT_PATH(RemoteConnectResponse));
 
     SYS_INITD->set_connection_manager("datagram", 1, this_object());
 }

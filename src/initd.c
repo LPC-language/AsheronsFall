@@ -14,7 +14,7 @@ static void create()
     /* general use */
     compile_object(OBJECT_PATH(RandSeq));
     compile_object(OBJECT_PATH(Container));
-    compile_object(OBJECT_PATH(ClientPosition));
+    compile_object(OBJECT_PATH(RemotePosition));
 
     /* DAT image server */
     compile_object(DAT_SERVER);

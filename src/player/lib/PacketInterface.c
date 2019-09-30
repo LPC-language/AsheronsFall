@@ -378,7 +378,7 @@ static int receivePacket(string str)
     int sequence, flags, time;
 
     catch {
-	packet = new ClientPacket(str);
+	packet = new RemotePacket(str);
     } : {
 	return MODE_NOCHANGE;		/* ignore bad packets */
     }

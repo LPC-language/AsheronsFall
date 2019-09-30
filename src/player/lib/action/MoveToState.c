@@ -113,7 +113,7 @@ static void create(string blob, int offset)
     }
 
     /* position */
-    position = new ClientPosition(blob, offset);
+    position = new RemotePosition(blob, offset);
     offset += position->size();
 
     /* sequences + flags */

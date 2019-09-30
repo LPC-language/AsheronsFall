@@ -14,20 +14,20 @@ static void create()
 {
     userd = find_object(USERD);
     compile_object(OBJECT_PATH(UDPInterface));
-    compile_object(OBJECT_PATH(ClientPacket));
-    compile_object(OBJECT_PATH(ClientFragment));
-    compile_object(OBJECT_PATH(ClientRequestRetransmit));
-    compile_object(OBJECT_PATH(ClientRejectRetransmit));
-    compile_object(OBJECT_PATH(ClientAckSequence));
-    compile_object(OBJECT_PATH(ClientLoginRequest));
+    compile_object(OBJECT_PATH(RemotePacket));
+    compile_object(OBJECT_PATH(RemoteFragment));
+    compile_object(OBJECT_PATH(RemoteRequestRetransmit));
+    compile_object(OBJECT_PATH(RemoteRejectRetransmit));
+    compile_object(OBJECT_PATH(RemoteAckSequence));
+    compile_object(OBJECT_PATH(RemoteLoginRequest));
     compile_object(OBJECT_PATH(ConnectRequest));
-    compile_object(OBJECT_PATH(ClientConnectError));
-    compile_object(OBJECT_PATH(ClientConnectClose));
-    compile_object(OBJECT_PATH(ClientCICMDCommand));
-    compile_object(OBJECT_PATH(ClientTimeSynch));
-    compile_object(OBJECT_PATH(ClientEchoRequest));
+    compile_object(OBJECT_PATH(RemoteConnectError));
+    compile_object(OBJECT_PATH(RemoteConnectClose));
+    compile_object(OBJECT_PATH(RemoteCICMDCommand));
+    compile_object(OBJECT_PATH(RemoteTimeSynch));
+    compile_object(OBJECT_PATH(RemoteEchoRequest));
     compile_object(OBJECT_PATH(EchoResponse));
-    compile_object(OBJECT_PATH(ClientFlow));
+    compile_object(OBJECT_PATH(RemoteFlow));
 
     SYS_INITD->set_connection_manager("datagram", 0, this_object());
 }

@@ -17,7 +17,7 @@ private int grounded;
 static void create(string blob, int offset)
 {
     ::create(ACT_AUTONOMOUS_POSITION);
-    position = new ClientPosition(blob, offset);
+    position = new RemotePosition(blob, offset);
     offset += position->size();
     ({
 	offset,
