@@ -88,6 +88,17 @@ int computeChecksum()
     return (headerChecksum + (bodyChecksum ^ xorValue)) & 0xffffffff;
 }
 
+/*
+ * verify checksum and atomically update pseudorandom generator
+ */
+atomic void verifyEncryptedChecksum(object rand)
+{
+    xorValue = rand->rand(sequence - 2);
+    if (checksum != computeChecksum()) {
+	error("Bad checksum");
+    }
+}
+
 
 /*
  * packet header layout string

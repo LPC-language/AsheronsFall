@@ -405,20 +405,24 @@ static int receivePacket(string str)
 	if (sequence <= clientSeq) {
 	    return MODE_NOCHANGE;	/* duplicate with encrypted checksum */
 	}
-	packet->setXorValue(clientRand->rand(sequence - 2));
-    } else if (flags & ~(PACKET_REQUEST_RETRANSMIT | PACKET_REJECT_RETRANSMIT |
-			 PACKET_ACK_SEQUENCE | PACKET_DISCONNECT |
-			 PACKET_CONNECT_ERROR | PACKET_CICMD_COMMAND)) {
-	return MODE_NOCHANGE;		/* missing encrypted checksum */
-    } else if (sequence == 0) {
-	if (flags & ~(PACKET_DISCONNECT | PACKET_CICMD_COMMAND)) {
-	    return MODE_NOCHANGE;	/* missing sequence */
+	catch {
+	    packet->verifyEncryptedChecksum(clientRand);
+	} : return MODE_NOCHANGE;
+    } else {
+	if (flags & ~(PACKET_REQUEST_RETRANSMIT | PACKET_REJECT_RETRANSMIT |
+		      PACKET_ACK_SEQUENCE | PACKET_DISCONNECT |
+		      PACKET_CONNECT_ERROR | PACKET_CICMD_COMMAND)) {
+	    return MODE_NOCHANGE;		/* missing encrypted checksum */
+	} else if (sequence == 0) {
+	    if (flags & ~(PACKET_DISCONNECT | PACKET_CICMD_COMMAND)) {
+		return MODE_NOCHANGE;	/* missing sequence */
+	    }
+	} else if (sequence <= clientSeq - 10) {
+	    return MODE_NOCHANGE;		/* too far back */
 	}
-    } else if (sequence <= clientSeq - 10) {
-	return MODE_NOCHANGE;		/* too far back */
-    }
-    if (packet->checksum() != packet->computeChecksum()) {
-	return MODE_NOCHANGE;		/* corrupted or different session */
+	if (packet->checksum() != packet->computeChecksum()) {
+	    return MODE_NOCHANGE;	/* corrupted or different session */
+	}
     }
 
     switch (flags) {
