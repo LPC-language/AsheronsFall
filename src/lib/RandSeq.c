@@ -3,8 +3,10 @@
  * by Robert Jenkins.
  */
 
+# define RAND_SIZE	2560
+
 private int *mem;			/* internal state */
-private int *rand0, *rand1, *rand2;	/* pseudorandom results */
+private int *rand;			/* pseudorandom results */
 private int offset;			/* offset in result arrays */
 private int seedA, seedB, seedC;	/* seed, initially all the same */
 
@@ -15,7 +17,7 @@ private void isaac()
 {
     int i, x, y;
 
-    rand0 = allocate_int(256);
+    rand = allocate_int(256) + rand[.. RAND_SIZE - 1 - 256];
     seedB += ++seedC;
     for (i = 0; i < 256; i++) {
 	x = mem[i];
@@ -40,7 +42,7 @@ private void isaac()
 	seedA += mem[(i + 128) & 0xff];
 
 	mem[i] = y = mem[(x >> 2) & 0xff] + seedA + seedB;
-	rand0[i] = seedB = (mem[(y >> 10) & 0xff] + x) & 0xffffffff;
+	rand[i] = seedB = (mem[(y >> 10) & 0xff] + x) & 0xffffffff;
     }
 }
 
@@ -98,28 +100,24 @@ static void create(int seed)
 	0x352ee316, 0xe046b5ca, 0xe94e08bc, 0x41bffb5a
     });
     seedA = seedB = seedC = seed;
-    offset = -256;
+    rand = allocate(RAND_SIZE);
+    offset = -1;
 }
 
 /*
- * Maintain a sequence of up to 768 indexed pseudo-random numbers.  As the
- * index increases, update the pseudo-random number table.
+ * Maintain a sequence of indexed pseudo-random numbers.  As the index
+ * increases, update the pseudo-random number table.
  */
 int rand(int index)
 {
-    if (index < offset) {
-	if (index < offset - 512) {
-	    error("Out of range");	/* too far back */
-	}
-	return (index < offset - 256) ?
-		rand2[offset - 257 - index] : rand1[offset - 1 - index];
+    if (index <= offset - RAND_SIZE) {
+	error("Out of range");		/* too far back */
     } else {
-	while (index >= offset + 256) {
-	    rand2 = rand1;
-	    rand1 = rand0;
+	while (index > offset) {
 	    isaac();
 	    offset += 256;
 	}
-	return rand0[offset + 255 - index];
     }
+
+    return rand[offset - index];
 }
