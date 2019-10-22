@@ -5,7 +5,7 @@
 
 /*
  * Scanner for the collection of pcaps gathered in January 2017.  Scan
- * through all captures, save info in captures.dat.
+ * through all captures, save info in messages.dat.
  */
 
 # define IP_NET_TURBINE		((198 << 16) + (252 << 8) + 160)
@@ -130,7 +130,7 @@ static void scan(object iter, mapping pcap, string *files, int index)
 		packet = packet->packetUDP();
 		if (packet) {
 		    /*
-		     * AC-like
+		     * possible AC packet
 		     */
 		    if ((packet->srcAddr() >> 8) == IP_NET_TURBINE &&
 			packet->srcPort() >= 1024) {
