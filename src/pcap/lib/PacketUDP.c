@@ -1,5 +1,4 @@
 # include <Time.h>
-# include "RandSeq.h"
 # include "Packet.h"
 
 
@@ -25,7 +24,7 @@ static void create(Time time, int srcAddr, int srcPort,
 /*
  * create an AC packet from the captured data
  */
-Packet packet()
+Packet packetAC()
 {
     return new CapturedPacket(blob);
 }

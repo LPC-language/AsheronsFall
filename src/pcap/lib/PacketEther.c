@@ -35,9 +35,9 @@ static void create(Time time, int origLength, string blob)
 }
 
 /*
- * retrieve an AC packet container from this packet
+ * retrieve a UDP packet container from this packet
  */
-PacketAC packetAC()
+PacketUDP packetUDP()
 {
     int ihl, length;
     int srcAddr, srcPort;
@@ -90,11 +90,8 @@ PacketAC packetAC()
     destPort = (blob[ihl + UDP_DEST_PORT] << 8) +
 	       blob[ihl + UDP_DEST_PORT + 1];
 
-    /*
-     * AC layer
-     */
-    return new PacketAC(time, srcAddr, srcPort, destAddr, destPort,
-			blob[ihl + ETHER_HEADER_SIZE + UDP_HEADER_SIZE ..
+    return new PacketUDP(time, srcAddr, srcPort, destAddr, destPort,
+			 blob[ihl + ETHER_HEADER_SIZE + UDP_HEADER_SIZE ..
 					 ihl + length + ETHER_HEADER_SIZE - 1]);
 }
 

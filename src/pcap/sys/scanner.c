@@ -21,7 +21,7 @@ static void create()
     compile_object(OBJECT_PATH(Capture));
     compile_object(OBJECT_PATH(CaptureNG));
     compile_object(OBJECT_PATH(PacketEther));
-    compile_object(OBJECT_PATH(PacketAC));
+    compile_object(OBJECT_PATH(PacketUDP));
     compile_object(OBJECT_PATH(File));
 
     compile_object(OBJECT_PATH(CapturedPacket));
@@ -127,7 +127,7 @@ static void scan(object iter, mapping pcap, string *files, int index)
 	}
 	if (packet) {
 	    catch {
-		packet = packet->packetAC();
+		packet = packet->packetUDP();
 		if (packet) {
 		    /*
 		     * AC-like
@@ -137,7 +137,7 @@ static void scan(object iter, mapping pcap, string *files, int index)
 			/*
 			 * server
 			 */
-			packet = packet->packet();
+			packet = packet->packetAC();
 			if (packet->flags() & PACKET_BLOB_FRAGMENTS) {
 			    markMessages(packet, pcap, pcap["server"]);
 			}
@@ -147,7 +147,7 @@ static void scan(object iter, mapping pcap, string *files, int index)
 			/*
 			 * client
 			 */
-			packet = packet->packet();
+			packet = packet->packetAC();
 			if ((packet->flags() & PACKET_BLOB_FRAGMENTS) &&
 			    !(packet->flags() & PACKET_RETRANSMISSION)) {
 			    markMessages(packet, pcap, pcap["client"]);
