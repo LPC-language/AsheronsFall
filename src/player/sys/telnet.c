@@ -35,6 +35,14 @@ object select(string name)
 }
 
 /*
+ * the initial mode for a telnet login
+ */
+int query_mode(object obj)
+{
+    return MODE_ECHO;
+}
+
+/*
  * the default timeout for a telnet login
  */
 int query_timeout(object obj)

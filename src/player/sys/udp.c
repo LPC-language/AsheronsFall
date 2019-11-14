@@ -43,6 +43,14 @@ object select(string login)
 }
 
 /*
+ * don't change the mode
+ */
+int query_mode(object obj)
+{
+    return MODE_NOCHANGE;
+}
+
+/*
  * let the interface handle login timeouts
  */
 int query_timeout(object obj)
