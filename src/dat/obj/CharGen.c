@@ -46,7 +46,7 @@ static void create(DatReader reader)
     n = reader->read("c")[0];
     heritageGroups = allocate(n);
 
-    cont = new IterativeContinuation(new IntIterator(0, n - 1), "readHeritage",
+    cont = new IterativeContinuation("readHeritage", new IntIterator(0, n - 1),
 				     reader);
     cont->runNext();
 }
