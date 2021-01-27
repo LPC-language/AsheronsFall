@@ -14,7 +14,7 @@ inherit Serialized;
 
 
 # define DAT_PLAIN	0x80ed
-# define DAT_FULL	0x4f56
+# define DAT_FULL	0xb6fd
 
 Account account;	/* account */
 Interface interface;	/* interface */
