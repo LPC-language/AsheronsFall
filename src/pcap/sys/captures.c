@@ -168,9 +168,11 @@ private void markChecksum(Packet packet, object rand, mapping pcap,
 {
     if (packet->flags() & PACKET_ENCRYPTED_CHECKSUM) {
 	if (rand) {
-	    catch {
+	    try {
 		packet->verifyEncryptedChecksum(rand);
-	    } : mark("badEncryptedChecksum", pcap, state);
+	    } catch (...) {
+		mark("badEncryptedChecksum", pcap, state);
+	    }
 	} else {
 	    mark("noSeedChecksum", pcap, state);
 	}
@@ -189,13 +191,13 @@ static void scan(object iter, mapping pcap, mapping rand, object walker)
 
     for (i = 0; i < 64; i++) {
 	packet = nil;
-	catch {
+	try {
 	    packet = iter->next();
-	} : {
+	} catch (...) {
 	    pcap["errorCapture"] = 1;
 	}
 	if (packet) {
-	    catch {
+	    try {
 		packet = packet->packetUDP();
 		if (packet) {
 		    if (pcap["packets"] == 0) {
@@ -237,7 +239,7 @@ static void scan(object iter, mapping pcap, mapping rand, object walker)
 			pcap["nonACPackets"]++;
 		    }
 		}
-	    } : {
+	    } catch (..) {
 		mark("errorPackets", pcap, pcap);
 	    }
 	    pcap["packets"]++;

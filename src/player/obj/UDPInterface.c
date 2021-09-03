@@ -37,9 +37,9 @@ static int _login(string str, object connObj)
     string name, password;
     int interfaceCookie, clientId, clientSeed;
 
-    catch {
+    try {
 	packet = new RemotePacket(str);
-    } : {
+    } catch (..) {
 	/* drop connection without sending anything back */
 	return MODE_DISCONNECT;
     }

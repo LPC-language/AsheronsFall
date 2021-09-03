@@ -223,9 +223,9 @@ static int _login(string str, object connObj)
     ConnectResponse connectResponse;
     int clientId, interfaceCookie, serverSeed;
 
-    catch {
+    try {
 	packet = new RemotePacket(str);
-    } : {
+    } catch (...) {
 	/* drop connection without sending anything back */
 	return MODE_DISCONNECT;
     }

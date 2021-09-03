@@ -321,7 +321,7 @@ static int login(string name, string password, int serverId, int clientId,
 {
     string message;
 
-    catch {
+    try {
 	({ user, message }) = ::login(name, password);
 	if (!user) {
 	    if (message) {
@@ -330,7 +330,7 @@ static int login(string name, string password, int serverId, int clientId,
 		return FALSE;	/* no response whatsoever */
 	    }
 	}
-    } : {
+    } catch (...) {
 	return FALSE;		/* error during login: disconnect immediately */
     }
 
@@ -377,9 +377,9 @@ static int receivePacket(string str)
     Packet packet;
     int sequence, flags, time;
 
-    catch {
+    try {
 	packet = new RemotePacket(str);
-    } : {
+    } catch (...) {
 	return MODE_NOCHANGE;		/* ignore bad packets */
     }
 
@@ -405,9 +405,11 @@ static int receivePacket(string str)
 	if (sequence <= clientSeq) {
 	    return MODE_NOCHANGE;	/* duplicate with encrypted checksum */
 	}
-	catch {
+	try {
 	    packet->verifyEncryptedChecksum(clientRand);
-	} : return MODE_NOCHANGE;
+	} catch (...) {
+	    return MODE_NOCHANGE;
+	}
     } else {
 	if (flags & ~(PACKET_REQUEST_RETRANSMIT | PACKET_REJECT_RETRANSMIT |
 		      PACKET_ACK_SEQUENCE | PACKET_DISCONNECT |
