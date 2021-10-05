@@ -39,7 +39,7 @@ static int _login(string str, object connObj)
 
     try {
 	packet = new RemotePacket(str);
-    } catch (..) {
+    } catch (...) {
 	/* drop connection without sending anything back */
 	return MODE_DISCONNECT;
     }
