@@ -1,7 +1,5 @@
 # include <kernel/user.h>
 
-private inherit "/lib/util/string";
-
 
 # define SYS_INITD		"/usr/System/initd"
 # define TELNET_INTERFACE	"/usr/Asheron/player/obj/TelnetInterface"
