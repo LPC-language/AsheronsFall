@@ -239,7 +239,7 @@ static void scan(object iter, mapping pcap, mapping rand, object walker)
 			pcap["nonACPackets"]++;
 		    }
 		}
-	    } catch (..) {
+	    } catch (...) {
 		mark("errorPackets", pcap, pcap);
 	    }
 	    pcap["packets"]++;
