@@ -1,12 +1,12 @@
 /*
- * BTree used by DatImage internally.  This object knows how to construct
+ * DTree used by DatImage internally.  This object knows how to construct
  * itself, but otherwise is a simple data container for use by DatImage.
  */
 
 # include "Serialized.h"
 # include "dat.h"
 
-# define ENTRY_SIZE	24	/* size of BTree entry, 6 * sizeof(uint32_t) */
+# define ENTRY_SIZE	24	/* size of DTree entry, 6 * sizeof(uint32_t) */
 
 
 inherit Serialized;

@@ -1,4 +1,4 @@
-# include "BTree.h"
+# include "DTree.h"
 # include "dat.h"
 
 
@@ -13,7 +13,7 @@ static void create()
 {
     DatItem item;
 
-    compile_object(OBJECT_PATH(BTree));
+    compile_object(OBJECT_PATH(DTree));
     compile_object(OBJECT_PATH(DatItem));
     compile_object(OBJECT_PATH(DatReader));
     compile_object(OBJECT_PATH(DatImage));

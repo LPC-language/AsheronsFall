@@ -6,7 +6,7 @@
 # include <String.h>
 # include <Iterator.h>
 # include "Serialized.h"
-# include "BTree.h"
+# include "DTree.h"
 # include "dat.h"
 
 inherit Iterable;
@@ -14,7 +14,7 @@ inherit Serialized;
 
 
 string fileName;			/* name of the DAT file */
-BTree root;				/* btree of DAT items */
+DTree root;				/* btree of DAT items */
 
 # define HEADER_OFFSET	320		/* offet of header in DAT image */
 # define FILE_TYPE	0x5442		/* file type magic number */
@@ -28,10 +28,10 @@ int dataSubset;
 int freeHead;
 int freeTail;
 int freeCount;
-int blockBTree;				/* block of BTree root node */
+int blockDTree;				/* block of DTree root node */
 
 /*
- * Load the header from the DAT image, after which the BTrees and DatItems
+ * Load the header from the DAT image, after which the DTrees and DatItems
  * can be retrieved.
  */
 private void loadHeader()
@@ -53,7 +53,7 @@ private void loadHeader()
 	freeHead,
 	freeTail,
 	freeCount,
-	blockBTree
+	blockDTree
     }) = deSerialize(header, 0, "iiiiiiiii");
 
     /*
@@ -113,11 +113,11 @@ private StringBuffer getData(int block, int length)
 }
 
 /*
- * load a BTree from the DAT image
+ * load a DTree from the DAT image
  */
-private BTree getBTree(int block)
+private DTree getDTree(int block)
 {
-    return new BTree(getData(block, BTREE_SIZE)->chunk());
+    return new DTree(getData(block, DTREE_SIZE)->chunk());
 }
 
 /*
@@ -138,13 +138,13 @@ DatReader getItemReader(DatItem item)
 
 
 /*
- * initialize the image handler: load header and root BTree
+ * initialize the image handler: load header and root DTree
  */
 static void create(string file)
 {
     fileName = file;
     loadHeader();
-    root = getBTree(blockBTree);
+    root = getDTree(blockDTree);
 }
 
 string fileName() { return fileName; }
@@ -157,7 +157,7 @@ mixed iteratorStart(mixed from, mixed to)
     mixed *stack;
     float index, id;
     int low, high, mid;
-    BTree node;
+    DTree node;
     DatItem *entries;
     int *branches;
 
@@ -166,11 +166,11 @@ mixed iteratorStart(mixed from, mixed to)
     }
 
     /*
-     * find the starting entry in the BTree
+     * find the starting entry in the DTree
      */
     stack = ({ to });
     index = unsignedToFloat(from);
-    for (node = root; ; node = getBTree(branches[mid])) {
+    for (node = root; ; node = getDTree(branches[mid])) {
 	entries = node->entries();
 	high = sizeof(entries);
 	low = 0;
@@ -199,13 +199,13 @@ mixed iteratorStart(mixed from, mixed to)
 
 /*
  * Get the next DatItem for the iterator.  The iterator state is a stack of
- * BTree nodes and offsets.  Walk depth-first through the BTrees and retrieve
+ * DTree nodes and offsets.  Walk depth-first through the DTrees and retrieve
  * DatItems in id-sorted order.
  */
 mixed *iteratorNext(mixed stack)
 {
     int size, offset, i;
-    BTree node;
+    DTree node;
     int *branches;
     DatItem *entries;
 
@@ -226,7 +226,7 @@ mixed *iteratorNext(mixed stack)
 		     * push branch node on the stack
 		     */
 		    stack[size - 1] = offset;
-		    stack += ({ getBTree(branches[i]), 0 });
+		    stack += ({ getDTree(branches[i]), 0 });
 		    size += 2;
 		    continue;
 		}
